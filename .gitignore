@@ -1,5 +1,8 @@
+# Executable
+webserv
+
 # Nvim
-ccls-cache
+.ccls-cache/
 
 # Prerequisites
 *.d
