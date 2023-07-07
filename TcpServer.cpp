@@ -1,5 +1,9 @@
 #include "TcpServer.hpp"
 
+#include <fstream>
+
+#include "HTTPResponse.hpp"
+
 const int BUFFER_SIZE = 30720;
 const int QUEUE_LEN = 20;
 
@@ -70,7 +74,7 @@ void TcpServer::startListen() {
      << " PORT: " << ntohs(socketAddress_.sin_port) << " ***\n\n";
   log(ss.str());
 
-  int bytesReceived = 0;
+  ssize_t bytesReceived = 0;
 
   while (true) {
     log("====== Waiting for a new connection ======\n\n\n");
@@ -105,23 +109,20 @@ void TcpServer::acceptConnection(int& new_socket) {
 }
 
 std::string TcpServer::buildResponse() {
-  std::string htmlFile =
-      "<!DOCTYPE html><html lang=\"en\"><body> \
-    <h1> Hello Parent </h1><p> Hello from your Server :)</p></body></html>";
-  std::ostringstream ss;
-  ss << "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: "
-     << htmlFile.size() << "\n\n"
-     << htmlFile;
-
-  return ss.str();
+  std::ifstream htmlFile("index.html");
+  std::stringstream htmlBuffer;
+  htmlBuffer << htmlFile.rdbuf();
+  HTTPResponse defaultRes("HTTP/1.1 200 OK\nContent-Type: text/html",
+                          htmlBuffer.str());
+  return defaultRes.toString();
 }
 
 void TcpServer::sendResponse() {
-  size_t bytesSent = 0;
+  ssize_t bytesSent = 0;
 
   bytesSent = write(new_socket_, serverMessage_.c_str(), serverMessage_.size());
 
-  if (bytesSent == serverMessage_.size()) {
+  if (bytesSent == static_cast<ssize_t>(serverMessage_.size())) {
     log("------ Server Response sent to client ------\n\n");
   } else {
     log("Error sending response to client");
