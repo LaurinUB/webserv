@@ -1,6 +1,6 @@
 name: cpp-linter
 
-on: push
+on: pull-request
 
 jobs:
   cpp-linter:
