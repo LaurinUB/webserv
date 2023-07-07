@@ -16,7 +16,7 @@
 
 class TcpServer {
  public:
-  TcpServer(std::string ip_addr, int port);
+  TcpServer(const std::string &ip_addr, int port);
   ~TcpServer();
   TcpServer(const TcpServer& obj);
   TcpServer& operator=(const TcpServer& obj);
@@ -32,9 +32,9 @@ class TcpServer {
   std::string serverMessage_;
 
   int startServer();
-  void closeServer();
+  void closeServer() const;
   void acceptConnection(int& new_socket);
-  std::string buildResponse();
+  static std::string buildResponse();
   void  sendResponse();
 };
 
