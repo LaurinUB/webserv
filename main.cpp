@@ -1,6 +1,7 @@
-#include <iostream>
+#include "TcpServer.hpp"
 
 int main() {
-  std::cout << "Hello Parent" << std::endl;
+  TcpServer server = TcpServer("0.0.0.0", 6969);
+  server.startListen();
   return 0;
 }

@@ -7,7 +7,7 @@ CYAN =	\033[0;36m
 RED =	\033[0;31m
 WHITE =	\033[0;0m
 
-SRC =	main.cpp
+SRC =	main.cpp TcpServer.cpp
 OBJ =	$(SRC:.cpp=.o)
 
 all:	$(NAME)
