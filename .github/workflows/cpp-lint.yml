@@ -14,11 +14,3 @@ jobs:
         exclude: './lib'
         extensions: 'hpp,cpp'
         clangFormatVersion: 16
-        inplace: True
-    - uses: EndBug/add-and-commit@v9
-      with:
-        author_name: Format-O-Bot
-        author_email: robot@example.com
-        message: 'Format-O-Bot commiting clang-format changes'
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
