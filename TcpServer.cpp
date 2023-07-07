@@ -10,7 +10,7 @@ void exitWithError(const std::string& errorMsg) {
   exit(EXIT_FAILURE);
 }
 
-TcpServer::TcpServer(const std::string &ip_addr, int port)
+TcpServer::TcpServer(const std::string& ip_addr, int port)
     : ip_addr_(ip_addr),
       port_(port),
       socket_(),
@@ -107,7 +107,7 @@ void TcpServer::acceptConnection(int& new_socket) {
 std::string TcpServer::buildResponse() {
   std::string htmlFile =
       "<!DOCTYPE html><html lang=\"en\"><body> \
-    <h1> Hello Parent </h1><p> Hello from your Server                     :)</p></body></html>";
+    <h1> Hello Parent </h1><p> Hello from your Server :)</p></body></html>";
   std::ostringstream ss;
   ss << "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: "
      << htmlFile.size() << "\n\n"
