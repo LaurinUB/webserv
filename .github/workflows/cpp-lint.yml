@@ -1,22 +1,11 @@
-name: cpp-linter
-
-on: pull_request
-
+name: Clang Format Checker
+on: [push]
 jobs:
-  cpp-linter:
+  clang-format-checking:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: cpp-linter/cpp-linter-action@v2
-        id: linter
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v2
+      - uses: RafikFarhad/clang-format-github-action@v3
         with:
+          sources: "**/*.hpp,**/*.cpp"
           style: file
-          extra-args: -std=c++98 -Wall -Wextra -Werror
-          thread-comments: true
-          step-summary: true
-
-      - name: Fail fast?!
-        if: steps.linter.outputs.checks-failed > 0
-        run: exit 1
