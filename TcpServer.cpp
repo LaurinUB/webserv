@@ -114,7 +114,7 @@ void  TcpServer::acceptConnection(int& new_socket) {
 
 std::string TcpServer::buildResponse() {
   std::string htmlFile = "<!DOCTYPE html><html lang=\"en\"><body> \
-    <h1> Hello Parent </h1><p> Hello from your Server :) </p></body></html>";
+    <h1> Hello Parent </h1><p> Hello from your Server :) We appreciate you stopping by at our construction site</p></body></html>";
   std::ostringstream ss;
   ss << "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: "
     << htmlFile.size() << "\n\n"
