@@ -5,18 +5,19 @@
 #define PORT 6969;
 #endif
 
-#include <sys/socket.h>
 #include <arpa/inet.h>
+#include <sys/socket.h>
 #include <unistd.h>
-#include <cstdlib>
+
 #include <cstdio>
+#include <cstdlib>
 #include <iostream>
-#include <string>
 #include <sstream>
+#include <string>
 
 class TcpServer {
  public:
-  TcpServer(std::string ip_addr, int port);
+  TcpServer(const std::string& ip_addr, int port);
   ~TcpServer();
   TcpServer(const TcpServer& obj);
   TcpServer& operator=(const TcpServer& obj);
@@ -32,13 +33,13 @@ class TcpServer {
   std::string serverMessage_;
 
   int startServer();
-  void closeServer();
+  void closeServer() const;
   void acceptConnection(int& new_socket);
-  std::string buildResponse();
-  void  sendResponse();
+  static std::string buildResponse();
+  void sendResponse();
 };
 
-void  log(const std::string& msg);
-void  exitWithError(const std::string& errorMsg);
+void log(const std::string& msg);
+void exitWithError(const std::string& errorMsg);
 
 #endif  // TCPSERVER_HPP_

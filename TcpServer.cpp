@@ -1,17 +1,16 @@
 #include "TcpServer.hpp"
 
 const int BUFFER_SIZE = 30720;
+const int QUEUE_LEN = 20;
 
-void  log(const std::string& msg) {
-  std::cout << msg << std::endl;
-}
+void log(const std::string& msg) { std::cout << msg << std::endl; }
 
 void exitWithError(const std::string& errorMsg) {
   log("Error: " + errorMsg);
   exit(EXIT_FAILURE);
 }
 
-TcpServer::TcpServer(std::string ip_addr, int port)
+TcpServer::TcpServer(const std::string& ip_addr, int port)
     : ip_addr_(ip_addr),
       port_(port),
       socket_(),
@@ -25,18 +24,14 @@ TcpServer::TcpServer(std::string ip_addr, int port)
   if (startServer() != 0) {
     std::ostringstream ss;
     ss << "Failed to start server with PORT: "
-      << ntohs(socketAddress_.sin_port);
+       << ntohs(socketAddress_.sin_port);
     log(ss.str());
   }
 }
 
-TcpServer::~TcpServer() {
-  closeServer();
-}
+TcpServer::~TcpServer() { closeServer(); }
 
-TcpServer::TcpServer(const TcpServer& obj) {
-*this = obj;
-}
+TcpServer::TcpServer(const TcpServer& obj) { *this = obj; }
 
 TcpServer& TcpServer::operator=(const TcpServer& obj) {
   if (this != &obj) {
@@ -51,33 +46,31 @@ int TcpServer::startServer() {
     exitWithError("Cannot create socket");
     return EXIT_FAILURE;
   }
-  if (bind(socket_, reinterpret_cast<sockaddr *>(&socketAddress_),
-        socketAddress_len_) < 0) {
+  if (bind(socket_, reinterpret_cast<sockaddr*>(&socketAddress_),
+           socketAddress_len_) < 0) {
     exitWithError("Cannot connect socket to address");
     return EXIT_FAILURE;
   }
   return EXIT_SUCCESS;
 }
 
-void TcpServer::closeServer() {
+void TcpServer::closeServer() const {
   close(socket_);
   close(new_socket_);
   exit(EXIT_SUCCESS);
 }
 
-void  TcpServer::startListen() {
-  if (listen(socket_, 20) < 0) {
+void TcpServer::startListen() {
+  if (listen(socket_, QUEUE_LEN) < 0) {
     exitWithError("Socket listen failed");
   }
 
   std::ostringstream ss;
-  ss << "\n*** Listening on ADDRESS: "
-    << inet_ntoa(socketAddress_.sin_addr)
-    << " PORT: " << ntohs(socketAddress_.sin_port)
-    << " ***\n\n";
+  ss << "\n*** Listening on ADDRESS: " << inet_ntoa(socketAddress_.sin_addr)
+     << " PORT: " << ntohs(socketAddress_.sin_port) << " ***\n\n";
   log(ss.str());
 
-  int bytesReceived;
+  int bytesReceived = 0;
 
   while (true) {
     log("====== Waiting for a new connection ======\n\n\n");
@@ -99,32 +92,32 @@ void  TcpServer::startListen() {
   }
 }
 
-void  TcpServer::acceptConnection(int& new_socket) {
-  new_socket = accept(socket_, reinterpret_cast<sockaddr *>(&socketAddress_),
-      &socketAddress_len_);
+void TcpServer::acceptConnection(int& new_socket) {
+  new_socket = accept(socket_, reinterpret_cast<sockaddr*>(&socketAddress_),
+                      &socketAddress_len_);
   if (new_socket < 0) {
     std::ostringstream ss;
-    ss <<
-      "Server failed to accept incoming connection from ADDRESS: "
-      << inet_ntoa(socketAddress_.sin_addr) << "; PORT: "
-      << ntohs(socketAddress_.sin_port);
+    ss << "Server failed to accept incoming connection from ADDRESS: "
+       << inet_ntoa(socketAddress_.sin_addr)
+       << "; PORT: " << ntohs(socketAddress_.sin_port);
     exitWithError(ss.str());
   }
 }
 
 std::string TcpServer::buildResponse() {
-  std::string htmlFile = "<!DOCTYPE html><html lang=\"en\"><body> \
-    <h1> Hello Parent </h1><p> Hello from your Server :) </p></body></html>";
+  std::string htmlFile =
+      "<!DOCTYPE html><html lang=\"en\"><body> \
+    <h1> Hello Parent </h1><p> Hello from your Server :)</p></body></html>";
   std::ostringstream ss;
   ss << "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: "
-    << htmlFile.size() << "\n\n"
-    << htmlFile;
+     << htmlFile.size() << "\n\n"
+     << htmlFile;
 
   return ss.str();
 }
 
 void TcpServer::sendResponse() {
-  size_t bytesSent;
+  size_t bytesSent = 0;
 
   bytesSent = write(new_socket_, serverMessage_.c_str(), serverMessage_.size());
 
