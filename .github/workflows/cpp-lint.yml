@@ -1,11 +1,24 @@
-name: Clang Format Checker
-on: [push]
+name: Run clang-format Linter
+
+on: [pull_request]
+
 jobs:
-  clang-format-checking:
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v2
-      - uses: RafikFarhad/clang-format-github-action@v3
-        with:
-          sources: "**.hpp,**.cpp"
-          style: Google
+    - uses: actions/checkout@v2
+    - uses: DoozyX/clang-format-lint-action@v0.16.2
+      with:
+        source: '.'
+        exclude: './lib'
+        extensions: 'hpp,cpp'
+        clangFormatVersion: 16
+        inplace: True
+    - uses: EndBug/add-and-commit@v9
+      with:
+        author_name: Format-O-Bot
+        author_email: robot@example.com
+        message: 'Format-O-Bot commiting clang-format changes'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
