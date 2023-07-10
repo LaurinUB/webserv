@@ -21,9 +21,10 @@ class HTTPRequest {
  private:
   std::map<std::string, std::string> header_;
   std::string body_;
-  // method request_method_;
+  method request_method_;
   // std::string URI_;
   // version protocol_version_;
+  method parseMethodToken(std::string token);
 };
 
 #endif  // HTTPREQUEST_HPP_
