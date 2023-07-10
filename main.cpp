@@ -1,10 +1,10 @@
 #include "TcpServer.hpp"
 
-sig_atomic_t signaled = 0;
+sig_atomic_t g_signaled = 0;
 
 void handleSIGINT(int param) {
   (void)param;
-  signaled = 1;
+  g_signaled = 1;
   _exit(SIGINT);
 }
 
