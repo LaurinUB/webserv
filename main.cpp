@@ -3,7 +3,7 @@
 sig_atomic_t signaled = 0;
 
 void handleSIGINT(int param) {
-  (void) param;
+  (void)param;
   signaled = 1;
   _exit(SIGINT);
 }
