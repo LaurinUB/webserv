@@ -4,6 +4,8 @@
 
 #include "HTTPResponse.hpp"
 
+extern sig_atomic_t signaled;
+
 const int BUFFER_SIZE = 30720;
 const int QUEUE_LEN = 20;
 
@@ -76,7 +78,7 @@ void TcpServer::startListen() {
 
   ssize_t bytesReceived = 0;
 
-  while (true) {
+  while (signaled == 0) {
     log("====== Waiting for a new connection ======\n\n\n");
     acceptConnection(new_socket_);
 
