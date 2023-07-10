@@ -2,6 +2,7 @@
 
 #include <fstream>
 
+#include "HTTPRequest.hpp"
 #include "HTTPResponse.hpp"
 
 const int BUFFER_SIZE = 30720;
@@ -87,6 +88,8 @@ void TcpServer::startListen() {
     }
     log("------ Received Request from client ------\n\n");
     log(buffer);
+    std::string stringyfied_buff(buffer);
+    HTTPRequest req(stringyfied_buff);
 
     sendResponse();
 
@@ -122,7 +125,7 @@ void TcpServer::sendResponse() {
 
   if (bytesSent == static_cast<ssize_t>(serverMessage_.size())) {
     log("------ Server Response sent to client ------\n\n");
-    log(serverMessage_);
+    log(this->serverMessage_);
   } else {
     log("Error sending response to client");
   }
