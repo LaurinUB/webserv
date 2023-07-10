@@ -85,10 +85,8 @@ void TcpServer::startListen() {
     if (bytesReceived < 0) {
       exitWithError("Failed to read bytes from client socket connection");
     }
-
-    std::ostringstream ss;
-    ss << "------ Received Request from client ------\n\n";
-    log(ss.str());
+    log("------ Received Request from client ------\n\n");
+    log(buffer);
 
     sendResponse();
 
@@ -124,6 +122,7 @@ void TcpServer::sendResponse() {
 
   if (bytesSent == static_cast<ssize_t>(serverMessage_.size())) {
     log("------ Server Response sent to client ------\n\n");
+    log(serverMessage_);
   } else {
     log("Error sending response to client");
   }
