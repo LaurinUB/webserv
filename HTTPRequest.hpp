@@ -33,7 +33,7 @@ class HTTPRequest {
   std::string protocol_version_;
   method parseMethodToken(std::string& token);
   std::vector<std::string> splitLine(
-      std::string line, std::vector<std::string>::value_type::value_type delim);
+      std::string line, std::vector<std::string>::value_type delim);
 };
 
 #endif  // HTTPREQUEST_HPP_

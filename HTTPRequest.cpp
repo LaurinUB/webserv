@@ -21,13 +21,22 @@ HTTPRequest& HTTPRequest::operator=(const HTTPRequest& obj) {
 //// Public Member Functions
 
 HTTPRequest::HTTPRequest(std::string& input) {
-  std::istringstream iss(input);
+  std::size_t header_end = input.find("\r\n\r\n");
+  std::string header(input.begin(), input.begin() + header_end);
+  std::string body(input.begin() + header_end + 4, input.end());
+  std::istringstream header_iss(header);
   std::string line;
-  std::getline(iss, line);
-  std::vector<std::string> requet_line = this->splitLine(line, ' ');
-  this->request_method_ = this->parseMethodToken(*requet_line.begin());
-  this->URI_ = requet_line[1];
-  this->protocol_version_ = requet_line.at(2);
+  std::getline(header_iss, line);
+  std::vector<std::string> request_line = this->splitLine(line, " ");
+  this->request_method_ = this->parseMethodToken(*request_line.begin());
+  this->URI_ = request_line[1];
+  this->protocol_version_ = request_line.at(2);
+  while (std::getline(header_iss, line)) {
+    std::vector<std::string> temp = this->splitLine(line, ": ");
+    this->header_.insert(
+        std::pair<std::string, std::string>(temp.at(0), temp.at(1)));
+  }
+  this->body_ = body;
 }
 
 //// Private Member Functions
@@ -60,13 +69,14 @@ HTTPRequest::method HTTPRequest::parseMethodToken(std::string& token) {
 }
 
 std::vector<std::string> HTTPRequest::splitLine(
-    std::string line, std::vector<std::string>::value_type::value_type delim) {
+    std::string line, std::vector<std::string>::value_type delim) {
   std::vector<std::string> res;
-  std::istringstream iss(line);
-  while (!iss.eof()) {
-    std::string field;
-    std::getline(iss, field, delim);
-    res.push_back(field);
-  }
+  std::size_t current;
+  std::size_t next = -1;
+  do {
+    current = next + 1;
+    next = line.find_first_of(delim, current);
+    res.push_back(line.substr(current, next - current));
+  } while (next != std::vector<std::string>::value_type::npos);
   return res;
 }
