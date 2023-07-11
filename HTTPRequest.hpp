@@ -1,12 +1,14 @@
 #ifndef HTTPREQUEST_HPP_
 #define HTTPREQUEST_HPP_
 
+#include <iostream>
 #include <map>
 #include <string>
 #include <vector>
 
 class HTTPRequest {
  public:
+  //// Constructors
   HTTPRequest();
   ~HTTPRequest();
   HTTPRequest(const HTTPRequest& obj);
@@ -25,6 +27,13 @@ class HTTPRequest {
     CONNECT
   } method;
 
+  //// Accessors
+  std::map<std::string, std::string> getHeader() const;
+  std::string getBody() const;
+  HTTPRequest::method getMethod() const;
+  std::string getURI() const;
+  std::string getProtocol() const;
+
  private:
   std::map<std::string, std::string> header_;
   std::string body_;
@@ -35,5 +44,7 @@ class HTTPRequest {
   std::vector<std::string> splitLine(
       std::string line, std::vector<std::string>::value_type delim);
 };
+
+std::ostream& operator<<(std::ostream& os, HTTPRequest& obj);
 
 #endif  // HTTPREQUEST_HPP_

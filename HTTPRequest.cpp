@@ -18,8 +18,6 @@ HTTPRequest& HTTPRequest::operator=(const HTTPRequest& obj) {
   return *this;
 }
 
-//// Public Member Functions
-
 HTTPRequest::HTTPRequest(std::string& input) {
   std::size_t header_end = input.find("\r\n\r\n");
   std::string header(input.begin(), input.begin() + header_end);
@@ -34,10 +32,26 @@ HTTPRequest::HTTPRequest(std::string& input) {
   while (std::getline(header_iss, line)) {
     std::vector<std::string> temp = this->splitLine(line, ": ");
     this->header_.insert(
-        std::pair<std::string, std::string>(temp.at(0), temp.at(1)));
+        std::pair<std::string, std::string>(temp.at(0), temp.at(2)));
   }
   this->body_ = body;
 }
+
+//// Accessors
+
+std::map<std::string, std::string> HTTPRequest::getHeader() const {
+  return this->header_;
+}
+
+std::string HTTPRequest::getBody() const { return this->body_; }
+
+HTTPRequest::method HTTPRequest::getMethod() const {
+  return this->request_method_;
+}
+
+std::string HTTPRequest::getURI() const { return this->URI_; }
+
+std::string HTTPRequest::getProtocol() const { return this->protocol_version_; }
 
 //// Private Member Functions
 
@@ -79,4 +93,23 @@ std::vector<std::string> HTTPRequest::splitLine(
     res.push_back(line.substr(current, next - current));
   } while (next != std::vector<std::string>::value_type::npos);
   return res;
+}
+
+std::ostream& operator<<(std::ostream& os, HTTPRequest& obj) {
+  std::string methods[9] = {"UNKNOWN", "OPTIONS", "GET",   "HEAD",   "POST",
+                            "PUT",     "DELETE",  "TRACE", "CONNECT"};
+  os << "--- Header: ---" << std::endl;
+  os << "Method: " << methods[obj.getMethod()] << std::endl;
+  os << "URI: " << obj.getURI() << std::endl;
+  os << "Protocol: " << obj.getProtocol() << std::endl;
+  os << "--- Additional Header Fields: ---" << std::endl;
+  std::map<std::string, std::string> header_fields = obj.getHeader();
+  for (std::map<std::string, std::string>::const_iterator it =
+           header_fields.begin();
+       it != header_fields.end(); ++it) {
+    os << it->first << ": " << it->second << std::endl;
+  }
+  os << "--- Body: ---" << std::endl;
+  os << obj.getBody() << std::endl;
+  return os;
 }

@@ -86,8 +86,8 @@ void TcpServer::startListen() {
       exitWithError("Failed to read bytes from client socket connection");
     }
     std::string stringyfied_buff(buffer);
-    std::cout << "stringyfied_buff: " << stringyfied_buff << std::endl;
     HTTPRequest req(stringyfied_buff);
+    std::cout << req << std::endl;
 
     sendResponse();
 
