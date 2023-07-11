@@ -2,15 +2,19 @@
 #define TCPSERVER_HPP_
 
 #ifndef PORT
-#define PORT 6969;
+#define PORT 8080
 #endif
 
 #include <arpa/inet.h>
+#include <sys/select.h>
 #include <sys/socket.h>
+#include <sys/time.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #include <cstdio>
 #include <cstdlib>
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
