@@ -39,19 +39,19 @@ HTTPRequest::method HTTPRequest::parseMethodToken(std::string& token) {
   std::remove(token.begin(), token.end(), '\r');
   if (token.compare("OPTIONS") == 0) {
     res = OPTIONS;
-  } else if (token.compare("GET") == 0 ) {
+  } else if (token.compare("GET") == 0) {
     res = GET;
-  } else if (token.compare("HEAD") == 0 ) {
+  } else if (token.compare("HEAD") == 0) {
     res = HEAD;
-  } else if (token.compare("POST") == 0 ) {
+  } else if (token.compare("POST") == 0) {
     res = POST;
-  } else if (token.compare("PUT") == 0 ) {
+  } else if (token.compare("PUT") == 0) {
     res = PUT;
-  } else if (token.compare("DELETE") == 0 ) {
+  } else if (token.compare("DELETE") == 0) {
     res = DELETE;
-  } else if (token.compare("TRACE") == 0 ) {
+  } else if (token.compare("TRACE") == 0) {
     res = TRACE;
-  } else if (token.compare("CONNECT") == 0 ) {
+  } else if (token.compare("CONNECT") == 0) {
     res = CONNECT;
   } else {
     res = UNKNOWN;
