@@ -1,5 +1,6 @@
 #include "TcpServer.hpp"
 
+#include "HTTPRequest.hpp"
 #include "HTTPResponse.hpp"
 
 extern sig_atomic_t g_signaled;
@@ -91,10 +92,9 @@ void TcpServer::startListen() {
     if (bytesReceived < 0) {
       exitWithError("Failed to read bytes from client socket connection");
     }
-
-    std::ostringstream ss;
-    ss << "------ Received Request from client ------\n\n";
-    log(ss.str());
+    std::string stringyfied_buff(buffer);
+    HTTPRequest req(stringyfied_buff);
+    std::cout << req << std::endl;
 
     sendResponse();
 
