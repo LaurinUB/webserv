@@ -78,7 +78,6 @@ void TcpServer::startListen() {
   ssize_t bytesReceived = 0;
 
   while (true) {
-    log("====== Waiting for a new connection ======\n\n\n");
     acceptConnection(new_socket_);
 
     char buffer[BUFFER_SIZE] = {0};
@@ -86,9 +85,8 @@ void TcpServer::startListen() {
     if (bytesReceived < 0) {
       exitWithError("Failed to read bytes from client socket connection");
     }
-    log("------ Received Request from client ------\n\n");
-    log(buffer);
     std::string stringyfied_buff(buffer);
+    std::cout << "stringyfied_buff: " << stringyfied_buff << std::endl;
     HTTPRequest req(stringyfied_buff);
 
     sendResponse();
@@ -125,7 +123,6 @@ void TcpServer::sendResponse() {
 
   if (bytesSent == static_cast<ssize_t>(serverMessage_.size())) {
     log("------ Server Response sent to client ------\n\n");
-    log(this->serverMessage_);
   } else {
     log("Error sending response to client");
   }

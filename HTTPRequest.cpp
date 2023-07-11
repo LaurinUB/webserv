@@ -21,26 +21,22 @@ HTTPRequest& HTTPRequest::operator=(const HTTPRequest& obj) {
 //// Public Member Functions
 
 HTTPRequest::HTTPRequest(std::string& input) {
-  std::string header(input.begin(),
-                     input.begin() + static_cast<long>(input.find("\r\n\r\n")));
-  std::string body(
-      input.begin() + static_cast<long>(input.find("\r\n\r\n")) + 1,
-      input.end());
-  std::cout << "HEADER" << std::endl;
-  std::cout << header << std::endl;
-  std::istringstream iss(header);
+  std::istringstream iss(input);
   std::string line;
-  while (std::getline(iss, line)) {
-    this->request_method_ = parseMethodToken(line.substr(0, line.find(' ')));
-  }
-  std::cout << "BODY" << std::endl;
-  std::cout << body << std::endl;
+  std::getline(iss, line);
+  std::vector<std::string> requet_line = this->splitLine(line, ' ');
+  this->request_method_ = this->parseMethodToken(*requet_line.begin());
+  this->URI_ = requet_line[1];
+  this->protocol_version_ = requet_line.at(2);
 }
 
 //// Private Member Functions
 
-HTTPRequest::method HTTPRequest::parseMethodToken(std::string token) {
+HTTPRequest::method HTTPRequest::parseMethodToken(std::string& token) {
   HTTPRequest::method res;
+  std::remove(token.begin(), token.end(), ' ');
+  std::remove(token.begin(), token.end(), '\n');
+  std::remove(token.begin(), token.end(), '\r');
   if (token.compare("OPTIONS") == 0) {
     res = OPTIONS;
   } else if (token.compare("GET") == 0 ) {
@@ -58,7 +54,19 @@ HTTPRequest::method HTTPRequest::parseMethodToken(std::string token) {
   } else if (token.compare("CONNECT") == 0 ) {
     res = CONNECT;
   } else {
-    throw std::runtime_error("Error: unknown request method");
+    res = UNKNOWN;
+  }
+  return res;
+}
+
+std::vector<std::string> HTTPRequest::splitLine(
+    std::string line, std::vector<std::string>::value_type::value_type delim) {
+  std::vector<std::string> res;
+  std::istringstream iss(line);
+  while (!iss.eof()) {
+    std::string field;
+    std::getline(iss, field, delim);
+    res.push_back(field);
   }
   return res;
 }
