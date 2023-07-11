@@ -1,7 +1,4 @@
 #include "TcpServer.hpp"
-
-#include <fstream>
-
 #include "HTTPResponse.hpp"
 
 extern sig_atomic_t g_signaled;
@@ -47,14 +44,19 @@ TcpServer& TcpServer::operator=(const TcpServer& obj) {
 }
 
 int TcpServer::startServer() {
+  int opt = 1;
   this->socket_ = socket(AF_INET, SOCK_STREAM, 0);
   if (this->socket_ < 0) {
     exitWithError("Cannot create socket");
     return EXIT_FAILURE;
   }
-  if (bind(this->socket_, reinterpret_cast<sockaddr*>(&this->socketAddress_),
+  if (setsockopt(this->socket_,  SOL_SOCKET, SO_REUSEADDR,
+        &opt, sizeof(opt)) == -1) {
+    exitWithError("Cannot set socket options");
+  }
+  if (bind(this->socket_, (struct sockaddr*)&this->socketAddress_,
            this->socketAddress_len_) < 0) {
-    exitWithError("Cannot connect socket to address");
+    exitWithError("Cannot bind to socket address");
     return EXIT_FAILURE;
   }
   return EXIT_SUCCESS;
@@ -101,7 +103,7 @@ void TcpServer::startListen() {
 
 void TcpServer::acceptConnection(int& new_socket) {
   new_socket =
-      accept(this->socket_, reinterpret_cast<sockaddr*>(&this->socketAddress_),
+      accept(this->socket_, (struct sockaddr*)&this->socketAddress_,
              &this->socketAddress_len_);
   if (new_socket < 0) {
     std::ostringstream ss;

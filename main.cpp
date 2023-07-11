@@ -3,14 +3,13 @@
 sig_atomic_t g_signaled = 0;
 
 void handleSIGINT(int param) {
-  (void)param;
-  g_signaled = 1;
+  g_signaled = param;
   _exit(SIGINT);
 }
 
 int main() {
   signal(SIGINT, handleSIGINT);
-  TcpServer server = TcpServer("0.0.0.0", 6969);
+  TcpServer server = TcpServer("127.0.0.1", PORT);
   server.startListen();
   return 0;
 }
