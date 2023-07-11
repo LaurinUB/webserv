@@ -52,7 +52,7 @@ int TcpServer::startServer() {
     return EXIT_FAILURE;
   }
   if (setsockopt(this->socket_,  SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) ==
-    -1) {
+      -1) {
     exitWithError("Cannot set socket options");
   }
   if (bind(this->socket_, (struct sockaddr*)&this->socketAddress_,
@@ -104,7 +104,7 @@ void TcpServer::startListen() {
 
 void TcpServer::acceptConnection(int& new_socket) {
   new_socket = accept(this->socket_, (struct sockaddr*)&this->socketAddress_,
-             &this->socketAddress_len_);
+              &this->socketAddress_len_);
   if (new_socket < 0) {
     std::ostringstream ss;
     ss << "Server failed to accept incoming connection from ADDRESS: "
