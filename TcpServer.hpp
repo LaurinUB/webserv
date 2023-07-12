@@ -19,6 +19,8 @@
 #include <sstream>
 #include <string>
 
+#include "HTTPRequest.hpp"
+
 class TcpServer {
  public:
   TcpServer(const std::string& ip_addr, int port);
@@ -34,13 +36,12 @@ class TcpServer {
   int new_socket_;
   struct sockaddr_in socketAddress_;
   unsigned int socketAddress_len_;
-  std::string serverMessage_;
 
   int startServer();
   void closeServer() const;
   void acceptConnection(int& new_socket);
-  static std::string buildResponse();
-  void sendResponse();
+  std::string buildResponse(HTTPRequest& req);
+  void sendResponse(HTTPRequest& req);
 };
 
 void log(const std::string& msg);

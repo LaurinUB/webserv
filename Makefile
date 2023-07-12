@@ -1,6 +1,6 @@
 NAME =	webserv
 CXX =	c++
-CXXFLAGS =	-std=c++98 -Wall -Wextra -Werror #-Wconversion
+CXXFLAGS =	-std=c++98 -Wall -Wextra -Werror -g -fsanitize=address
 
 GREEN =	\033[0;32m
 CYAN =	\033[0;36m
@@ -13,7 +13,7 @@ OBJ =	$(SRC:.cpp=.o)
 all:	$(NAME)
 
 $(NAME): $(OBJ)
-	@$(CXX) $(OBJ) -o $(NAME)
+	@$(CXX) $(CXXFLAGS) $(OBJ) -o $(NAME)
 	@echo "$(GREEN)Compiled successfully$(WHITE)"
 
 %.o:	%.cpp
