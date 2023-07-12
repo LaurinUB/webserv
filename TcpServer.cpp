@@ -80,13 +80,39 @@ void TcpServer::startListen() {
      << " PORT: " << ntohs(this->socketAddress_.sin_port) << " ***\n\n";
   log(ss.str());
 
+  pollfd pfds[FD_SETSIZE];
+  pfds->fd = this->socket_;
+  pfds->events = POLLIN;
+  pfds->revents = 0;
+
+  nfds_t nfds = 0;
+  nfds_t numfds = 0;
+
   ssize_t bytesReceived = 0;
+  char buffer[BUFFER_SIZE] = {0};
 
   while (g_signaled == 0) {
+    nfds = numfds;
+    if (poll(pfds, nfds, 15000) == -1) {
+      exitWithError("Poll failed");
+    }
     log("====== Waiting for a new connection ======\n\n\n");
-    acceptConnection(this->new_socket_);
+    for (nfds_t fd = 0; fd < nfds + 1; ++fd) {
+      if ((pfds + fd)->fd <= 2) {
+        continue;
+      }
+      if (((pfds + fd)->revents & POLLIN) == POLLIN) {
+        if ((pfds +fd)->fd == this->socket_) {
+          acceptConnection(this->new_socket_);
+       }
+        numfds++;
+        (pfds + numfds - 1)->fd = this->new_socket_;
+        (pfds + numfds - 1)->events = POLLIN;
+        (pfds + numfds - 1)->revents = 0;
+        log("connection from client");
+      }
+    }
 
-    char buffer[BUFFER_SIZE] = {0};
     bytesReceived = read(this->new_socket_, buffer, BUFFER_SIZE);
     if (bytesReceived < 0) {
       exitWithError("Failed to read bytes from client socket connection");
