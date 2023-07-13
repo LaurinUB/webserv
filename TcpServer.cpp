@@ -5,7 +5,7 @@
 
 extern sig_atomic_t g_signaled;
 
-const int BUFFER_SIZE = 30720;
+const int BUFFER_SIZE = 2048;
 const int QUEUE_LEN = 20;
 
 void log(const std::string& msg) { std::cout << msg << std::endl; }
@@ -81,50 +81,49 @@ void TcpServer::startListen() {
      << " PORT: " << ntohs(this->socketAddress_.sin_port) << " ***\n\n";
   log(ss.str());
 
-  pollfd pfds[FD_SETSIZE];
-  pfds->fd = this->socket_;
-  pfds->events = POLLIN;
-  pfds->revents = 0;
-
-  nfds_t nfds = 0;
-  nfds_t numfds = 0;
+  this->poll_.fd = this->socket_;
+  this->poll_.events = POLLIN;
+  this->poll_.revents = 0;
+  this->pollfds_.push_back(this->poll_);
 
   ssize_t bytesReceived = 0;
-  char buffer[BUFFER_SIZE] = {0};
 
   while (g_signaled == 0) {
-    nfds = numfds;
-    if (poll(pfds, nfds, 15000) == -1) {
+    if (poll(&this->pollfds_[0], this->pollfds_.size() - 1, 1500) == -1) {
       exitWithError("Poll failed");
     }
     log("====== Waiting for a new connection ======\n\n\n");
-    for (nfds_t fd = 0; fd < nfds + 1; ++fd) {
-      if ((pfds + fd)->fd <= 2) {
+    for (size_t fd = 0; fd < this->pollfds_.size(); ++fd) {
+      if (this->pollfds_[fd].fd <= 0) {
         continue;
       }
-      if (((pfds + fd)->revents & POLLIN) == POLLIN) {
-        if ((pfds +fd)->fd == this->socket_) {
+      if ((this->pollfds_[fd].revents & POLLIN)) {
+        std::cout << "IF" << std::endl;
+        if (this->pollfds_[fd].fd == this->socket_) {
           acceptConnection(this->new_socket_);
-       }
-        numfds++;
-        (pfds + numfds - 1)->fd = this->new_socket_;
-        (pfds + numfds - 1)->events = POLLIN;
-        (pfds + numfds - 1)->revents = 0;
-        log("connection from client");
+          this->poll_.fd = this->new_socket_;
+          this->poll_.events = POLLIN;
+          this->poll_.revents = 0;
+          this->pollfds_.push_back(this->poll_);
+          log("connection from client");
+        }
+      } else {
+        acceptConnection(this->new_socket_);
+        std::cout << "Connected" << std::endl;
+        char buffer[BUFFER_SIZE] = {0};
+        bytesReceived = read(this->new_socket_, buffer, BUFFER_SIZE);
+        if (bytesReceived < 0) {
+          exitWithError("Failed to read bytes from client socket connection");
+        }
+        std::string stringyfied_buff(buffer);
+        HTTPRequest req(stringyfied_buff);
+        std::cout << req << std::endl;
+
+        sendResponse();
+
+        close(this->new_socket_);
       }
     }
-
-    bytesReceived = read(this->new_socket_, buffer, BUFFER_SIZE);
-    if (bytesReceived < 0) {
-      exitWithError("Failed to read bytes from client socket connection");
-    }
-    std::string stringyfied_buff(buffer);
-    HTTPRequest req(stringyfied_buff);
-    std::cout << req << std::endl;
-
-    sendResponse();
-
-    close(this->new_socket_);
   }
 }
 

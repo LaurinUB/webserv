@@ -19,6 +19,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <vector>
 
 class TcpServer {
  public:
@@ -36,6 +37,8 @@ class TcpServer {
   struct sockaddr_in socketAddress_;
   unsigned int socketAddress_len_;
   std::string serverMessage_;
+  std::vector<pollfd> pollfds_;
+  pollfd  poll_;
 
   int startServer();
   void closeServer() const;
