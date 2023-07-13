@@ -98,7 +98,6 @@ void TcpServer::startListen() {
         continue;
       }
       if ((this->pollfds_[fd].revents & POLLIN)) {
-        std::cout << "IF" << std::endl;
         if (this->pollfds_[fd].fd == this->socket_) {
           acceptConnection(this->new_socket_);
           this->poll_.fd = this->new_socket_;

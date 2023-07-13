@@ -9,7 +9,7 @@ void handleSIGINT(int param) {
 
 int main() {
   signal(SIGINT, handleSIGINT);
-  TcpServer server = TcpServer("127.0.0.1", PORT);
+  TcpServer server = TcpServer("0.0.0.0", PORT);
   server.startListen();
   return 0;
 }
