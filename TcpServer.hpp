@@ -6,6 +6,7 @@
 #endif
 
 #include <arpa/inet.h>
+#include <fcntl.h>
 #include <poll.h>
 #include <sys/select.h>
 #include <sys/socket.h>
@@ -37,14 +38,13 @@ class TcpServer {
   struct sockaddr_in socketAddress_;
   unsigned int socketAddress_len_;
   std::string serverMessage_;
-  std::vector<pollfd> pollfds_;
-  pollfd  poll_;
+  pollfd pollfds_[1024];
 
   int startServer();
   void closeServer() const;
   void acceptConnection(int& new_socket);
   static std::string buildResponse();
-  void sendResponse();
+  void sendResponse(int sockfd);
 };
 
 void log(const std::string& msg);

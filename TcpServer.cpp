@@ -47,6 +47,7 @@ TcpServer& TcpServer::operator=(const TcpServer& obj) {
 
 int TcpServer::startServer() {
   int opt = 1;
+  memset(this->pollfds_, 0, 1024);
   this->socket_ = socket(AF_INET, SOCK_STREAM, 0);
   if (this->socket_ < 0) {
     exitWithError("Cannot create socket");
@@ -81,48 +82,53 @@ void TcpServer::startListen() {
      << " PORT: " << ntohs(this->socketAddress_.sin_port) << " ***\n\n";
   log(ss.str());
 
-  this->poll_.fd = this->socket_;
-  this->poll_.events = POLLIN;
-  this->poll_.revents = 0;
-  this->pollfds_.push_back(this->poll_);
+  this->pollfds_[0].fd = this->socket_;
+  this->pollfds_[0].events = POLLIN;
+  this->pollfds_[0].revents = 0;
 
-  ssize_t bytesReceived = 0;
+  ssize_t rec = 0;
+  size_t  numfds = 1;
+  size_t  fds = 1;
 
   while (g_signaled == 0) {
-    if (poll(&this->pollfds_[0], this->pollfds_.size() - 1, 1500) == -1) {
+    if (poll(this->pollfds_, fds, 60000) == -1) {
       exitWithError("Poll failed");
     }
     log("====== Waiting for a new connection ======\n\n\n");
-    for (size_t fd = 0; fd < this->pollfds_.size(); ++fd) {
-      if (this->pollfds_[fd].fd <= 0) {
+    for (size_t fd = 1; fd < fds + 1; ++fd) {
+      if (this->pollfds_[fd].fd < 0) {
         continue;
       }
-      if ((this->pollfds_[fd].revents & POLLIN)) {
-        if (this->pollfds_[fd].fd == this->socket_) {
-          acceptConnection(this->new_socket_);
-          this->poll_.fd = this->new_socket_;
-          this->poll_.events = POLLIN;
-          this->poll_.revents = 0;
-          this->pollfds_.push_back(this->poll_);
-          log("connection from client");
-        }
+      std::cout << "fd: " << fd << std::endl;
+      std::cout << "pollfds_[fd].fd = " << this->pollfds_[fd].fd << std::endl;
+      if (this->pollfds_[0].revents != POLLIN) {
+        // acceptConnection(this->new_socket_);
+        this->pollfds_[fd].fd = this->new_socket_;
+        this->pollfds_[fd].events = POLLIN;
+        this->pollfds_[fd].revents = 0;
+        std::cout << "New connection success on : "
+          << inet_ntoa(this->socketAddress_.sin_addr) << " with socket nbr: "
+          << this->pollfds_[fd].fd << std::endl;
+        numfds++;
       } else {
-        acceptConnection(this->new_socket_);
-        std::cout << "Connected" << std::endl;
+        std::cout << "Accepting connection" << std::endl;
+        acceptConnection(this->pollfds_[fd].fd);
+        std::cout << "Connected on socket: " << this->pollfds_[fd].fd
+          << std::endl;
         char buffer[BUFFER_SIZE] = {0};
-        bytesReceived = read(this->new_socket_, buffer, BUFFER_SIZE);
-        if (bytesReceived < 0) {
+        rec = recv(this->pollfds_[fd].fd, buffer, BUFFER_SIZE, 0);
+        if (rec < 0) {
           exitWithError("Failed to read bytes from client socket connection");
         }
         std::string stringyfied_buff(buffer);
         HTTPRequest req(stringyfied_buff);
         std::cout << req << std::endl;
 
-        sendResponse();
-
-        close(this->new_socket_);
+        sendResponse(this->pollfds_[fd].fd);
+        // close(this->pollfds_[fd].fd);
       }
     }
+    fds = numfds;
   }
 }
 
@@ -147,11 +153,11 @@ std::string TcpServer::buildResponse() {
   return defaultRes.toString();
 }
 
-void TcpServer::sendResponse() {
+void TcpServer::sendResponse(int sockfd) {
   ssize_t bytesSent = 0;
 
-  bytesSent = write(this->new_socket_, this->serverMessage_.c_str(),
-                    this->serverMessage_.size());
+  bytesSent = send(sockfd, this->serverMessage_.c_str(),
+                    this->serverMessage_.size(), O_NONBLOCK);
 
   if (bytesSent == static_cast<ssize_t>(this->serverMessage_.size())) {
     log("------ Server Response sent to client ------\n\n");
