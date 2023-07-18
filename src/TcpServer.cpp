@@ -115,7 +115,7 @@ void TcpServer::acceptConnection(int& new_socket) {
 }
 
 std::string TcpServer::buildResponse() {
-  std::ifstream htmlFile("index.html");
+  std::ifstream htmlFile("www/index.html");
   std::stringstream htmlBuffer;
   htmlBuffer << htmlFile.rdbuf();
   HTTPResponse defaultRes("HTTP/1.1 200 OK\nContent-Type: text/html",
