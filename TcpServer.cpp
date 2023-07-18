@@ -132,8 +132,10 @@ std::string TcpServer::buildResponse(HTTPRequest& req) {
       std::ifstream errorPage("404.html");
       std::stringstream errorPageHtml;
       errorPageHtml << errorPage.rdbuf();
+      std::string errorPageString = errorPageHtml.str();
+      errorPageString.replace(errorPageString.find("${URI}"), 6, req.getURI());
       HTTPResponse res("HTTP/1.1 404 OK\nContent-Type: text/html",
-                       errorPageHtml.str());
+                       errorPageString);
       return res.toString();
     }
   }
