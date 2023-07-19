@@ -1,6 +1,6 @@
 NAME =	webserv
 CXX =	c++
-CXXFLAGS =	-std=c++98 -Wall -Wextra -Werror #-Wconversion
+CXXFLAGS =	-std=c++98 -Wall -Wextra -Werror -g -fsanitize=address
 
 GREEN =	\033[0;32m
 CYAN =	\033[0;36m
