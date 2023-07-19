@@ -13,7 +13,7 @@ OBJ =	$(SRC:.cpp=.o)
 all:	$(NAME)
 
 $(NAME): $(OBJ)
-	@$(CXX) $(CXXFLAGS) $(OBJ) -o $(NAME)
+	@$(CXX) $(OBJ) -o $(NAME)
 	@echo "$(GREEN)Compiled successfully$(WHITE)"
 
 %.o:	%.cpp
