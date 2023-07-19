@@ -8,10 +8,10 @@ webserv
 *.d
 
 # Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
+**.slo
+**.lo
+**.o
+**.obj
 
 # Precompiled Headers
 *.gch
