@@ -117,7 +117,7 @@ std::string TcpServer::buildResponse(HTTPRequest& req) {
   if (req.getMethod() == HTTPRequest::GET) {
     std::string filepath;
     if (req.getURI() == "/") {
-      filepath = "/index.html";
+      filepath = "www/index.html";
     } else {
       filepath = req.getURI();
     }
