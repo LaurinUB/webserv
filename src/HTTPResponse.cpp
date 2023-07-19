@@ -23,6 +23,39 @@ HTTPResponse& HTTPResponse::operator=(const HTTPResponse& obj) {
 HTTPResponse::HTTPResponse(std::string header, std::string body)
     : header_(header), body_(body) {}
 
+HTTPResponse::HTTPResponse(HTTPRequest& req) {
+  HTTPRequest::method req_method = req.getMethod();
+  switch (req_method) {
+    case HTTPRequest::UNKNOWN:
+      std::cout << "UNKNOWN method" << std::endl;
+      break;
+    case HTTPRequest::OPTIONS:
+      std::cout << "OPTIONS method" << std::endl;
+      break;
+    case HTTPRequest::GET:
+      std::cout << "GET method" << std::endl;
+      break;
+    case HTTPRequest::HEAD:
+      std::cout << "HEAD method" << std::endl;
+      break;
+    case HTTPRequest::POST:
+      std::cout << "POST method" << std::endl;
+      break;
+    case HTTPRequest::PUT:
+      std::cout << "PUT method" << std::endl;
+      break;
+    case HTTPRequest::DELETE:
+      std::cout << "DELETE method" << std::endl;
+      break;
+    case HTTPRequest::TRACE:
+      std::cout << "TRACE method" << std::endl;
+      break;
+    case HTTPRequest::CONNECT:
+      std::cout << "CONNECT method" << std::endl;
+      break;
+  }
+}
+
 //// Public Member Functions
 
 std::string HTTPResponse::toString() const {
