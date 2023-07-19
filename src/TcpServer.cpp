@@ -70,6 +70,23 @@ void TcpServer::closeServer() const {
   exit(EXIT_SUCCESS);
 }
 
+int pollError(pollfd fd) {
+  if (fd.revents & POLLERR) {
+    std::cout << "Error: POLLERR" << std::endl;
+    return 1;
+  } else if (fd.revents & POLLPRI) {
+    std::cout << "Error: POLLPRI" << std::endl;
+    return 1;
+  } else if (fd.revents & POLLNVAL) {
+    std::cout << "Error: POLLNVAL" << std::endl;
+    return 1;
+  } else if (fd.revents & POLLHUP) {
+    std::cout << "Error: POLLHUP" << std::endl;
+    return 1;
+  }
+  return 0;
+}
+
 void TcpServer::startListen() {
   if (listen(this->socket_, QUEUE_LEN) < 0) {
     exitWithError("Socket listen failed");
@@ -86,48 +103,58 @@ void TcpServer::startListen() {
   this->pollfds_[0].revents = 0;
 
   ssize_t rec = 0;
-  size_t  numfds = 1;
   size_t  fds = 1;
+  int pollres;
+
 
   while (g_signaled == 0) {
-    if (poll(this->pollfds_, fds, 60000) == -1) {
+    std::cout << "Pollin'" << std::endl;
+    pollres = poll(this->pollfds_, fds, 60000);
+    if (pollres == -1) {
       exitWithError("Poll failed");
+    } else if (pollres > 0) {
+      log("====== Waiting for a new connection ======\n\n\n");
     }
-    log("====== Waiting for a new connection ======\n\n\n");
-    for (size_t fd = 1; fd < fds + 1; ++fd) {
-      if (this->pollfds_[fd].fd < 0) {
-        continue;
-      }
+    for (size_t fd = 0; fd < fds; ++fd) {
       std::cout << "fd: " << fd << std::endl;
       std::cout << "pollfds_[fd].fd = " << this->pollfds_[fd].fd << std::endl;
-      if (this->pollfds_[0].revents != POLLIN) {
-        // acceptConnection(this->new_socket_);
-        this->pollfds_[fd].fd = this->new_socket_;
-        this->pollfds_[fd].events = POLLIN;
-        this->pollfds_[fd].revents = 0;
-        std::cout << "New connection success on : "
-          << inet_ntoa(this->socketAddress_.sin_addr) << " with socket nbr: "
-          << this->pollfds_[fd].fd << std::endl;
-        numfds++;
-      } else {
-        std::cout << "Accepting connection" << std::endl;
-        acceptConnection(this->pollfds_[fd].fd);
-        std::cout << "Connected on socket: " << this->pollfds_[fd].fd
-          << std::endl;
-        char buffer[BUFFER_SIZE] = {0};
-        rec = recv(this->pollfds_[fd].fd, buffer, BUFFER_SIZE, 0);
-        if (rec < 0) {
-          exitWithError("Failed to read bytes from client socket connection");
-        }
-        std::string stringyfied_buff(buffer);
-        HTTPRequest req(stringyfied_buff);
-        std::cout << req << std::endl;
+      std::cout << "pollfds_[" << "].events = " << this->pollfds_[fd].events << std::endl;
+      std::cout << "pollfds_[" << "].revents = " << this->pollfds_[fd].revents << std::endl;
+      if (pollError(this->pollfds_[fd])) {
+        exit(EXIT_FAILURE);
+      }
+      if (this->pollfds_[fd].revents & POLLIN) {
+        if (this->pollfds_[fd].fd == this->socket_) {
+          std::cout << "Accepting Connection" << std::endl;
+          acceptConnection(this->new_socket_);
+          this->pollfds_[fds].fd = this->new_socket_;
+          this->pollfds_[fds].events = POLLIN;
+          this->pollfds_[fds].revents = 0;
+          std::cout << "New connection success on : "
+            << inet_ntoa(this->socketAddress_.sin_addr) << " with socket nbr: "
+            << this->pollfds_[fds].fd << std::endl;
+          fds++;
+        } else {
+          // std::cout << "Accepting connection" << std::endl;
+          // acceptConnection(this->pollfds_[fd].fd);
+          char buffer[BUFFER_SIZE] = {0};
+          std::cout << "== Connected on socket: " << this->pollfds_[fd].fd
+            << " ==" << std::endl << std::endl;
+          rec = recv(this->pollfds_[fd].fd, buffer, BUFFER_SIZE, O_NONBLOCK);
+          if (rec < 0) {
+            exitWithError("Failed to read bytes from client socket connection");
+          } else if (rec == 0) {
+            exitWithError("Client closed connection");
+          }
+          std::string stringyfied_buff(buffer);
+          HTTPRequest req(stringyfied_buff);
+          std::cout << req << std::endl;
 
-        sendResponse(req, this->pollfds_[fd].fd);
-        // close(this->pollfds_[fd].fd);
+          sendResponse(req, this->pollfds_[fd].fd);
+          // close(this->pollfds_[fd].fd);
+        }
       }
     }
-    fds = numfds;
   }
 }
 
@@ -176,7 +203,7 @@ void TcpServer::sendResponse(HTTPRequest& req, int sockfd) {
   ssize_t bytesSent = 0;
 
   std::string res = this->buildResponse(req);
-  bytesSent = write(sockfd, res.c_str(), res.size());
+  bytesSent = send(sockfd, res.c_str(), res.size(), O_NONBLOCK);
 
   if (bytesSent == static_cast<ssize_t>(res.size())) {
     log("------ Server Response sent to client ------\n\n");
