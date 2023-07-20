@@ -106,7 +106,6 @@ void TcpServer::startListen() {
   size_t  fds = 1;
   int pollres;
 
-
   while (g_signaled == 0) {
     std::cout << "Pollin'" << std::endl;
     pollres = poll(this->pollfds_, fds, 60000);
@@ -147,10 +146,13 @@ void TcpServer::startListen() {
             exitWithError("Client closed connection");
           }
           std::string stringyfied_buff(buffer);
-          HTTPRequest req(stringyfied_buff);
-          std::cout << req << std::endl;
-
-          sendResponse(req, this->pollfds_[fd].fd);
+          try {
+            HTTPRequest req(stringyfied_buff);
+            std::cout << req << std::endl;
+            this->sendResponse(req, this->pollfds_[fd].fd);
+          } catch (std::exception& e) {
+            std::cout << e.what() << std::endl;
+          }
           // close(this->pollfds_[fd].fd);
         }
       }

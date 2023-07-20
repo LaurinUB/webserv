@@ -21,7 +21,7 @@ HTTPRequest& HTTPRequest::operator=(const HTTPRequest& obj) {
 
 HTTPRequest::HTTPRequest(std::string& input) {
   if (input.size() <= 1) {
-    exitWithError("HTTPRequest Constructor");
+    throw std::runtime_error("Error: tried to create request with size <= 1");
   }
   std::size_t header_end = input.find("\r\n\r\n");
   std::string header(input.begin(), input.begin() + header_end);
