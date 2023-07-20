@@ -2,6 +2,7 @@
 #define HTTPRESPONSE_HPP_
 
 #include <string>
+#include <fstream>
 
 #include "HTTPRequest.hpp"
 
@@ -18,9 +19,12 @@ class HTTPResponse {
   //// Member Functions
   std::string toString() const;
 
+  static std::map<std::string, std::string> mime_types;
  private:
   std::string header_;
   std::string body_;
+  static std::map<std::string, std::string> getMimeTypes(std::string path);
+  void handleGET(HTTPRequest& req);
 };
 
 #endif  // HTTPRESPONSE_HPP_
