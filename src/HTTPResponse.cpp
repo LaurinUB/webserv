@@ -56,6 +56,8 @@ HTTPResponse::HTTPResponse(HTTPRequest& req) {
       break;
     case HTTPRequest::HEAD:
       std::cout << "HEAD method" << std::endl;
+      this->handleGET(req);
+      this->body_ = "";
       break;
     case HTTPRequest::POST:
       std::cout << "POST method" << std::endl;
