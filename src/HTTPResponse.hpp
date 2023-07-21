@@ -1,8 +1,8 @@
 #ifndef HTTPRESPONSE_HPP_
 #define HTTPRESPONSE_HPP_
 
-#include <string>
 #include <fstream>
+#include <string>
 
 #include "HTTPRequest.hpp"
 
@@ -20,6 +20,8 @@ class HTTPResponse {
   std::string toString() const;
 
   static std::map<std::string, std::string> mime_types;
+  static std::string createResponseBody(std::string& path);
+
  private:
   std::string header_;
   std::string body_;

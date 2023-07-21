@@ -21,6 +21,17 @@ std::map<std::string, std::string> HTTPResponse::getMimeTypes(
   return res;
 }
 
+std::string HTTPResponse::createResponseBody(std::string& path) {
+  std::ifstream file_stream(path);
+  if (file_stream.is_open()) {
+    std::stringstream file_string_stream;
+    file_string_stream << file_stream.rdbuf();
+    return file_string_stream.str();
+  } else {
+    throw std::exception();
+  }
+}
+
 //// Constructors and Operator overloads
 
 HTTPResponse::HTTPResponse() {}
@@ -86,30 +97,19 @@ std::string HTTPResponse::toString() const {
 }
 
 void HTTPResponse::handleGET(HTTPRequest& req) {
-  std::cout << "HANDLING GET REQUEST" << std::endl;
-  std::string filepath;
-  if (req.getURI() == "/") {
-    filepath = "/index.html";
-  } else {
-    filepath = req.getURI();
-  }
-  std::ifstream fileStream("./www" + filepath);
-  if (!fileStream.is_open()) {
-    std::ifstream errorPage("./data/404.html");
-    std::stringstream errorPageHtml;
-    errorPageHtml << errorPage.rdbuf();
-    std::string errorPageString = errorPageHtml.str();
-    errorPageString.replace(errorPageString.find("${URI}"), 6, req.getURI());
+  std::string path =
+      (req.getURI() == "/" ? "./www/index.html" : "./www" + req.getURI());
+  std::string mimetype =
+      path.substr(path.find_last_of('.') + 1, path.size() - 1);
+  std::string content_type = this->mime_types.find(mimetype)->second;
+  try {
+    this->body_ = this->createResponseBody(path);
+    this->header_ = "HTTP/1.1 200 OK\nContent-Type: " + content_type;
+  } catch (std::exception& e) {
+    path = "./data/404.html";
+    this->body_ = this->createResponseBody(path);
+    this->body_.replace(this->body_.find("${URI}"), 6, req.getURI());
     this->header_ = "HTTP/1.1 404 OK\nContent-Type: text/html";
-    this->body_ = errorPageString;
-    return;
   }
-  std::stringstream fileBuffer;
-  fileBuffer << fileStream.rdbuf();
-  std::string file_extension =
-      filepath.substr(filepath.find_last_of('.') + 1, filepath.size() - 1);
-  std::string content_type = this->mime_types.find(file_extension)->second;
-  this->header_ = "HTTP/1.1 200 OK\nContent-Type: " + content_type;
-  this->body_ = fileBuffer.str();
   return;
 }
