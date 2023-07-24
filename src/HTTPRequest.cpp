@@ -35,6 +35,7 @@ HTTPRequest::HTTPRequest(std::string& input) {
   this->protocol_version_ = request_line.at(2);
   while (std::getline(header_iss, line)) {
     std::vector<std::string> temp = this->splitLine(line, ": ");
+    temp.at(2).pop_back();
     this->header_.insert(
         std::pair<std::string, std::string>(temp.at(0), temp.at(2)));
   }

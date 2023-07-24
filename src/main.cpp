@@ -10,6 +10,6 @@ void handleSIGINT(int param) {
 int main() {
   signal(SIGINT, handleSIGINT);
   TcpServer server = TcpServer("0.0.0.0", PORT);
-  server.startListen();
+  server.run();
   return 0;
 }

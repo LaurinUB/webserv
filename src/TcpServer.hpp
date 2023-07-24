@@ -30,13 +30,13 @@ class TcpServer {
   ~TcpServer();
   TcpServer(const TcpServer& obj);
   TcpServer& operator=(const TcpServer& obj);
-  void startListen();
+  void run();
 
  private:
   std::string ip_addr_;
   int port_;
-  int socket_;
-  int new_socket_;
+  int listen_;
+  size_t numfds_;
   struct sockaddr_in socketAddress_;
   unsigned int socketAddress_len_;
   std::string serverMessage_;
@@ -46,6 +46,8 @@ class TcpServer {
   void closeServer() const;
   void acceptConnection(int& new_socket);
   void sendResponse(HTTPRequest& req, int sockfd);
+  bool newConnection();
+  void handleConnection();
 };
 
 void log(const std::string& msg);
