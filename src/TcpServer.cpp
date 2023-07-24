@@ -172,42 +172,14 @@ void TcpServer::acceptConnection(int& new_socket) {
   }
 }
 
-std::string TcpServer::buildResponse(HTTPRequest& req) {
-  if (req.getMethod() == HTTPRequest::GET) {
-    std::string filepath;
-    if (req.getURI() == "/") {
-      filepath = "www/index.html";
-    } else {
-      filepath = req.getURI();
-    }
-    std::ifstream htmlFile("./www" + filepath);
-    if (htmlFile.is_open()) {
-      std::stringstream htmlBuffer;
-      htmlBuffer << htmlFile.rdbuf();
-      HTTPResponse res("HTTP/1.1 200 OK\nContent-Type: text/html",
-                       htmlBuffer.str());
-      return res.toString();
-    } else {
-      std::ifstream errorPage("404.html");
-      std::stringstream errorPageHtml;
-      errorPageHtml << errorPage.rdbuf();
-      std::string errorPageString = errorPageHtml.str();
-      errorPageString.replace(errorPageString.find("${URI}"), 6, req.getURI());
-      HTTPResponse res("HTTP/1.1 404 OK\nContent-Type: text/html",
-                       errorPageString);
-      return res.toString();
-    }
-  }
-  return "HTTP/1.1 404 OK\nContent-Type: text/html";
-}
-
 void TcpServer::sendResponse(HTTPRequest& req, int sockfd) {
   ssize_t bytesSent = 0;
 
-  std::string res = this->buildResponse(req);
-  bytesSent = send(sockfd, res.c_str(), res.size(), O_NONBLOCK);
+  HTTPResponse res(req);
+  std::string res_string = res.toString();
+  bytesSent = send(sockfd, res_string.c_str(), res_string.size(), O_NONBLOCK);
 
-  if (bytesSent == static_cast<ssize_t>(res.size())) {
+  if (bytesSent == static_cast<ssize_t>(res_string.size())) {
     log("------ Server Response sent to client ------\n\n");
   } else {
     log("Error sending response to client");

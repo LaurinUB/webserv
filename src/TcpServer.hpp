@@ -45,7 +45,6 @@ class TcpServer {
   int startServer();
   void closeServer() const;
   void acceptConnection(int& new_socket);
-  std::string buildResponse(HTTPRequest& req);
   void sendResponse(HTTPRequest& req, int sockfd);
 };
 
