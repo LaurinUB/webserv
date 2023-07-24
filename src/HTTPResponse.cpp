@@ -1,5 +1,8 @@
 #include "HTTPResponse.hpp"
 
+#include <dirent.h>
+#include <sys/types.h>
+
 #include <sstream>
 
 std::map<std::string, std::string> HTTPResponse::mime_types =
@@ -21,7 +24,28 @@ std::map<std::string, std::string> HTTPResponse::getMimeTypes(
   return res;
 }
 
+std::string buildDirIndexRes(DIR* directory) {
+  std::string res =
+      "<html><head><title>Index of</title></head><body><h1>INDEX</h1><hr/><ul>";
+  while (true) {
+    struct dirent* test = readdir(directory);
+    if (test == NULL) {
+      break;
+    }
+    res += "<li><a href=\"" + std::string(test->d_name) + "\">" + std::string(test->d_name) + "</a></li>";
+  }
+  res += "</ul><hr/></body></html>";
+  return res;
+}
+
 std::string HTTPResponse::createResponseBody(std::string& path) {
+  DIR* directory_list;
+  directory_list = opendir(path.c_str());
+  if (directory_list != NULL) {
+    std::string res = buildDirIndexRes(directory_list);
+    closedir(directory_list);
+    return res;
+  }
   std::ifstream file_stream(path);
   if (file_stream.is_open()) {
     std::stringstream file_string_stream;
