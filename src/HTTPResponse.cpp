@@ -1,7 +1,9 @@
 #include "HTTPResponse.hpp"
 
 #include <dirent.h>
+#include <sys/stat.h>
 #include <sys/types.h>
+#include <time.h>
 
 #include <sstream>
 
@@ -24,17 +26,24 @@ std::map<std::string, std::string> HTTPResponse::getMimeTypes(
   return res;
 }
 
-std::string buildDirIndexRes(DIR* directory) {
+std::string buildDirIndexRes(DIR* directory, std::string path) {
   std::string res =
-      "<html><head><title>Index of</title></head><body><h1>INDEX</h1><hr/><ul>";
+      "<html><head><title>Index "
+      "of</title></head><body><h1>INDEX</h1><hr/><pre>";
   while (true) {
+    struct stat attr;
     struct dirent* test = readdir(directory);
     if (test == NULL) {
       break;
     }
-    res += "<li><a href=\"" + std::string(test->d_name) + "\">" + std::string(test->d_name) + "</a></li>";
+    stat((path + std::string(test->d_name)).c_str(), &attr);
+    char time_changed[20];
+    strftime(time_changed, 20, "%d-%m-%y", localtime(&(attr.st_ctime)));
+    res += "<a href=\"" + std::string(test->d_name) + "\">" +
+           std::string(test->d_name) + "</a>\t\t\t\t" + std::string(time_changed)
+           + "\t\t\t\t0\n";
   }
-  res += "</ul><hr/></body></html>";
+  res += "</pre><hr/></body></html>";
   return res;
 }
 
@@ -42,7 +51,7 @@ std::string HTTPResponse::createResponseBody(std::string& path) {
   DIR* directory_list;
   directory_list = opendir(path.c_str());
   if (directory_list != NULL) {
-    std::string res = buildDirIndexRes(directory_list);
+    std::string res = buildDirIndexRes(directory_list, path);
     closedir(directory_list);
     return res;
   }
