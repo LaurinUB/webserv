@@ -1,8 +1,9 @@
 #include "HTTPRequest.hpp"
-#include "TcpServer.hpp"
 
 #include <iostream>
 #include <sstream>
+
+#include "TcpServer.hpp"
 
 //// Constuctors and Opearator overloads
 

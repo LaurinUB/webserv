@@ -1,6 +1,5 @@
 #include "HTTPResponse.hpp"
 
-#include <stdlib.h>
 #include <sstream>
 
 std::map<std::string, std::string> HTTPResponse::mime_types =

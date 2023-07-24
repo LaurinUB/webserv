@@ -107,8 +107,9 @@ bool TcpServer::newConnection() {
   this->pollfds_[this->numfds_].events = POLLIN;
   this->pollfds_[this->numfds_].revents = 0;
   std::cout << "New connection success on : "
-            << inet_ntoa(this->socketAddress_.sin_addr) << " with socket nbr: "
-            << this->pollfds_[this->numfds_].fd << std::endl;
+            << inet_ntoa(this->socketAddress_.sin_addr)
+            << " with socket nbr: " << this->pollfds_[this->numfds_].fd
+            << std::endl;
   if (fcntl(new_fd, F_SETFL, O_NONBLOCK) == -1) {
     exitWithError("fcntl");
   }
@@ -117,37 +118,38 @@ bool TcpServer::newConnection() {
 }
 
 void TcpServer::handleConnection() {
-  char  buffer[BUFFER_SIZE] = {0};
+  char buffer[BUFFER_SIZE] = {0};
   ssize_t rec = 0;
 
   for (size_t i = 1; i < this->numfds_; ++i) {
     if (this->pollfds_[i].revents & POLLIN) {
       std::cout << "== Connected on socket: " << this->pollfds_[i].fd
-            << " ==" << std::endl << std::endl;
-          rec = recv(this->pollfds_[i].fd, buffer, BUFFER_SIZE, O_NONBLOCK);
-          if (rec < 0) {
-            exitWithError("Failed to read bytes from client socket connection");
-          } else if (rec == 0) {
-            exitWithError("Client closed connection");
-          }
-          std::string stringyfied_buff(buffer);
-          try {
-            HTTPRequest req(stringyfied_buff);
-            std::cout << req << std::endl;
-            this->sendResponse(req, this->pollfds_[i].fd);
-            // close(this->pollfds_[i].fd);
-            // this->pollfds_[i].fd = -1;
-          } catch (std::exception& e) {
-            std::cout << e.what() << std::endl;
-          }
+                << " ==" << std::endl
+                << std::endl;
+      rec = recv(this->pollfds_[i].fd, buffer, BUFFER_SIZE, O_NONBLOCK);
+      if (rec < 0) {
+        exitWithError("Failed to read bytes from client socket connection");
+      } else if (rec == 0) {
+        exitWithError("Client closed connection");
+      }
+      std::string stringyfied_buff(buffer);
+      try {
+        HTTPRequest req(stringyfied_buff);
+        std::cout << req << std::endl;
+        this->sendResponse(req, this->pollfds_[i].fd);
+        // close(this->pollfds_[i].fd);
+        // this->pollfds_[i].fd = -1;
+      } catch (std::exception& e) {
+        std::cout << e.what() << std::endl;
+      }
     }
   }
 }
 
 void TcpServer::run() {
   std::cout << "\n*** Listening on ADDRESS: "
-     << inet_ntoa(this->socketAddress_.sin_addr)
-     << " PORT: " << ntohs(this->socketAddress_.sin_port) << " ***\n\n";
+            << inet_ntoa(this->socketAddress_.sin_addr)
+            << " PORT: " << ntohs(this->socketAddress_.sin_port) << " ***\n\n";
   int pollres;
 
   while (g_signaled == 0) {
@@ -158,7 +160,9 @@ void TcpServer::run() {
     } else if (pollres > 0) {
       log("====== Waiting for a new connection ======\n\n\n");
     }
-    if (newConnection()) { continue; }
+    if (newConnection()) {
+      continue;
+    }
     handleConnection();
   }
 }
