@@ -20,7 +20,7 @@ class HTTPResponse {
   std::string toString() const;
 
   static std::map<std::string, std::string> mime_types;
-  static std::string createResponseBody(std::string& path);
+  static std::string createResponseBody(std::string& path, HTTPRequest& req);
 
  private:
   std::string header_;

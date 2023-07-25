@@ -26,32 +26,38 @@ std::map<std::string, std::string> HTTPResponse::getMimeTypes(
   return res;
 }
 
-std::string buildDirIndexRes(DIR* directory, std::string path) {
+std::string buildDirIndexRes(DIR* directory, HTTPRequest& req, std::string path) {
   std::string res =
-      "<html><head><title>Index "
-      "of</title></head><body><h1>INDEX</h1><hr/><pre>";
+      "<html><head><title>Index of " + req.getURI() + "</title></head><body><h1>Index of " + req.getURI() + "</h1><hr/><pre>";
   while (true) {
     struct stat attr;
     struct dirent* test = readdir(directory);
     if (test == NULL) {
       break;
     }
+    if (std::string(test->d_name) == ".") {
+      continue;
+    }
     stat((path + std::string(test->d_name)).c_str(), &attr);
     char time_changed[20];
-    strftime(time_changed, 20, "%d-%m-%y", localtime(&(attr.st_ctime)));
-    res += "<a href=\"" + std::string(test->d_name) + "\">" +
-           std::string(test->d_name) + "</a>\t\t\t\t" + std::string(time_changed)
-           + "\t\t\t\t0\n";
+    strftime(time_changed, 20, "%d-%b-%Y %H:%M", localtime(&(attr.st_ctime)));
+    res += "<a href=\"" + std::string(test->d_name) + "\">" + std::string(test->d_name) + "</a>";
+    if (std::string(test->d_name) != "..") {
+      res += "\t\t\t\t\t" + std::string(time_changed) + "\t\t" +
+             "file size should go here" + "\n";
+    } else {
+      res += "\n";
+    }
   }
   res += "</pre><hr/></body></html>";
   return res;
 }
 
-std::string HTTPResponse::createResponseBody(std::string& path) {
+std::string HTTPResponse::createResponseBody(std::string& path, HTTPRequest& req) {
   DIR* directory_list;
   directory_list = opendir(path.c_str());
   if (directory_list != NULL) {
-    std::string res = buildDirIndexRes(directory_list, path);
+    std::string res = buildDirIndexRes(directory_list, req, path);
     closedir(directory_list);
     return res;
   }
@@ -136,11 +142,11 @@ void HTTPResponse::handleGET(HTTPRequest& req) {
       path.substr(path.find_last_of('.') + 1, path.size() - 1);
   std::string content_type = this->mime_types.find(mimetype)->second;
   try {
-    this->body_ = this->createResponseBody(path);
+    this->body_ = this->createResponseBody(path, req);
     this->header_ = "HTTP/1.1 200 OK\nContent-Type: " + content_type;
   } catch (std::exception& e) {
     path = "./data/404.html";
-    this->body_ = this->createResponseBody(path);
+    this->body_ = this->createResponseBody(path, req);
     this->body_.replace(this->body_.find("${URI}"), 6, req.getURI());
     this->header_ = "HTTP/1.1 404 OK\nContent-Type: text/html";
   }
