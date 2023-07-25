@@ -44,10 +44,10 @@ class TcpServer {
 
   int startServer();
   void closeServer() const;
-  void acceptConnection(int& new_socket);
+  pollfd acceptConnection();
   void sendResponse(HTTPRequest& req, int sockfd);
-  bool newConnection();
-  void handleConnection();
+  void newConnection();
+  void handleConnection(size_t fd);
 };
 
 void log(const std::string& msg);

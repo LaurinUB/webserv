@@ -105,7 +105,6 @@ void HTTPResponse::handleGET(HTTPRequest& req) {
   try {
     this->body_ = this->createResponseBody(path);
     this->header_ = "HTTP/1.1 200 OK\nContent-Type: " + content_type;
-    std::cout << req.getHeader().find("Connection")->second << std::endl;
     if (req.getHeader().find("Connection")->second.compare("keep-alive") == 0) {
       int size = this->body_.size();
       std::stringstream ss;
