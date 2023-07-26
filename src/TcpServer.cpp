@@ -5,7 +5,7 @@
 
 extern sig_atomic_t g_signaled;
 
-const int BUFFER_SIZE = 2048;
+const int BUFFER_SIZE = 30640;
 const int QUEUE_LEN = 20;
 
 void log(const std::string& msg) { std::cout << msg << std::endl; }
@@ -33,7 +33,13 @@ TcpServer::TcpServer(const std::string& ip_addr, int port)
   }
 }
 
-TcpServer::~TcpServer() { closeServer(); }
+TcpServer::~TcpServer() {
+  close(this->listen_);
+  for (int i = 4; i < 25; ++i) {
+    close(i);
+  }
+  exit(EXIT_SUCCESS);
+}
 
 TcpServer::TcpServer(const TcpServer& obj) { *this = obj; }
 
@@ -46,7 +52,7 @@ TcpServer& TcpServer::operator=(const TcpServer& obj) {
 
 int TcpServer::startServer() {
   int opt = 1;
-  memset(this->pollfds_, 0, 1024);
+  memset(this->pollfds_, -1, 1024);
   this->listen_ = socket(AF_INET, SOCK_STREAM, 0);
   if (this->listen_ < 0) {
     exitWithError("Cannot create socket");
@@ -73,11 +79,6 @@ int TcpServer::startServer() {
   return EXIT_SUCCESS;
 }
 
-void TcpServer::closeServer() const {
-  close(this->listen_);
-  exit(EXIT_SUCCESS);
-}
-
 int pollError(pollfd fd) {
   if (fd.revents & POLLERR) {
     std::cout << "Error: POLLERR" << std::endl;
@@ -96,7 +97,10 @@ int pollError(pollfd fd) {
 }
 
 void TcpServer::newConnection() {
-  pollfd new_poll = acceptConnection();
+  pollfd new_poll;
+  if (!acceptConnection(new_poll)) {
+    return;
+  }
   this->pollfds_[this->numfds_]= new_poll;
   // this->sockets_.insert(std::make_pair(new_poll.fd, Socket(new_poll, false)));
   std::cout << "New connection success on : "
@@ -124,8 +128,11 @@ void TcpServer::handleConnection(size_t fd) {
     HTTPRequest req(stringyfied_buff);
     std::cout << req << std::endl;
     this->sendResponse(req, this->pollfds_[fd].fd);
-    // close(this->pollfds_[i].fd);
-    // this->pollfds_[i].fd = -1;
+    if (req.getHeader().find("Connection")->second != "keep-alive") {
+      close(this->pollfds_[fd].fd);
+      this->pollfds_[fd].fd = -1;
+      this->numfds_--;
+    }
   } catch (std::exception& e) {
     std::cout << e.what() << std::endl;
   }
@@ -158,8 +165,7 @@ void TcpServer::run() {
   }
 }
 
-pollfd TcpServer::acceptConnection() {
-  pollfd new_poll;
+bool TcpServer::acceptConnection(pollfd& new_poll) {
   int new_socket = accept(this->listen_, (struct sockaddr*)&this->socketAddress_,
                       &this->socketAddress_len_);
   if (new_socket < 0) {
@@ -169,22 +175,49 @@ pollfd TcpServer::acceptConnection() {
        << "; PORT: " << ntohs(this->socketAddress_.sin_port);
     exitWithError(ss.str());
   }
+  std::string buff;
   new_poll.fd = new_socket;
   new_poll.events = POLLIN;
   new_poll.revents = 0;
-  return new_poll;
+  return true;
 }
 
+bool TcpServer::isKnown(std::string address) {
+  for (size_t i = 0; i < this->knownIps_.size(); ++i) {
+    if (address == knownIps_[i]) {
+      return true;
+    }
+  }
+  return false;
+}
+
+#include <algorithm>
+
 void TcpServer::sendResponse(HTTPRequest& req, int sockfd) {
-  ssize_t bytesSent = 0;
+  int bytesSent = 0;
   HTTPResponse res(req);
   std::string res_string = res.toString();
-  bytesSent = send(sockfd, res_string.c_str(), res_string.size(), 0);
-
-  if (bytesSent == static_cast<ssize_t>(res_string.size())) {
-    log("------ Server Response sent to client ------\n\n");
-    std::cout << "To socket: " << sockfd << std::endl;
-  } else {
-    log("Error sending response to client");
+  std::cout << "Size before loop " << res_string.size() << std::endl;
+  size_t bytes = res_string.size();
+  size_t totalBytes = 0;
+  size_t chunk = 1000;
+  while (totalBytes < bytes) {
+    size_t remaining_size = bytes - totalBytes;
+    size_t currentChunk = std::min(chunk, remaining_size);
+    bytesSent = send(sockfd, res_string.data() + totalBytes, currentChunk, 0);
+    std::cout << "loop" << std::endl;
+    std::cout << bytesSent << std::endl;
+    if (bytesSent < 0) {
+      std::cout << "Error sneding response to client"  << std::endl;
+      break;
+    }
+    totalBytes += bytesSent;
   }
+  // bytesSent = send(sockfd, res_string.c_str(), res_string.size(), 0);
+  // if (bytesSent == res_string.size()) {
+  //   log("------ Server Response sent to client ------\n\n");
+  //   std::cout << "To socket: " << sockfd << std::endl;
+  // } else {
+  //   log("Error sending response to client");
+  // }
 }
