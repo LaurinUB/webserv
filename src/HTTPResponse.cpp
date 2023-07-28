@@ -18,6 +18,13 @@ void HTTPResponse::handleGET(HTTPRequest& req) {
   try {
     this->body_ = this->createResponseBody(path, req);
     this->header_ = "HTTP/1.1 200 OK\nContent-Type: " + content_type;
+    if (req.getHeader().find("Connection")->second.compare("keep-alive") == 0) {
+      int size = this->body_.size();
+      std::stringstream ss;
+      ss << size;
+      std::string ssize = ss.str();
+      this->header_ += "\r\nContent-Length: " + ssize;
+    }
   } catch (std::exception& e) {
     path = "./data/404.html";
     this->body_ = this->createResponseBody(path, req);
@@ -97,22 +104,6 @@ std::map<std::string, std::string> HTTPResponse::getMimeTypes(
   return res;
 }
 
-<<<<<<< HEAD
-=======
-std::string HTTPResponse::createResponseBody(std::string& path) {
-  std::ifstream file_stream(path);
-  if (file_stream.is_open()) {
-    std::stringstream file_string_stream;
-    file_string_stream << file_stream.rdbuf();
-    std::cout << file_string_stream.str().size() << std::endl;
-    file_stream.close();
-    return file_string_stream.str();
-  } else {
-    throw std::exception();
-  }
-}
-
->>>>>>> main
 //// Constructors and Operator overloads
 
 HTTPResponse::HTTPResponse() {}
