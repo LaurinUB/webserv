@@ -14,7 +14,7 @@ WHITE =	\033[0;0m
 ##   Source file handling
 SRC_DIR = src/
 SRC = $(addprefix $(SRC_DIR), $(SRC_FILES))
-SRC_FILES = HTTPRequest.cpp HTTPResponse.cpp TcpServer.cpp main.cpp
+SRC_FILES = HTTPRequest.cpp HTTPResponse.cpp TcpServer.cpp main.cpp ServerSettings.cpp
 ALL_SRC = $(SRC)
 
 ##   Object file handling
