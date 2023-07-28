@@ -9,9 +9,7 @@ Socket::Socket(pollfd fd, bool keepalive) : pollfd_(fd), keepalive_(keepalive) {
 
 Socket::~Socket() {}
 
-Socket::Socket(const Socket& obj) {
-  *this = obj;
-}
+Socket::Socket(const Socket& obj) { *this = obj; }
 
 Socket& Socket::operator=(const Socket& obj) {
   if (this != &obj) {
@@ -28,22 +26,12 @@ void Socket::setOpt() {
   }
 }
 
-int Socket::getFd() const {
-  return this->pollfd_.fd;
-}
+int Socket::getFd() const { return this->pollfd_.fd; }
 
-int Socket::getREvent() const {
-  return this->pollfd_.revents;
-}
+int Socket::getREvent() const { return this->pollfd_.revents; }
 
-pollfd Socket::getPoll() const {
-  return this->pollfd_;
-}
+pollfd Socket::getPoll() const { return this->pollfd_; }
 
-bool Socket::getState() const {
-  return this->keepalive_;
-}
+bool Socket::getState() const { return this->keepalive_; }
 
-void Socket::setState(bool state) {
-  this->keepalive_ = state;
-}
+void Socket::setState(bool state) { this->keepalive_ = state; }

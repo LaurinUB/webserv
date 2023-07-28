@@ -26,10 +26,8 @@ TcpServer::TcpServer(const std::string& ip_addr, int port)
   socketAddress_.sin_port = htons(port_);
   socketAddress_.sin_addr.s_addr = INADDR_ANY;
   if (startServer() != 0) {
-    std::ostringstream ss;
-    ss << "Failed to start server with PORT: "
-       << ntohs(socketAddress_.sin_port);
-    log(ss.str());
+    std::cout << "Failed to start server with PORT: "
+              << ntohs(socketAddress_.sin_port) << std::endl;
   }
 }
 
@@ -70,7 +68,7 @@ int TcpServer::startServer() {
   if (listen(this->listen_, QUEUE_LEN) == -1) {
     exitWithError("Failed to listen on connection");
   }
-  if (fcntl(this->listen_, F_SETFL, O_NONBLOCK) == -1) {
+  if (fcntl(this->listen_, F_SETFL, O_NONBLOCK, FD_CLOEXEC) == -1) {
     exitWithError("fcntl");
   }
   this->pollfds_[0].fd = this->listen_;
@@ -101,8 +99,7 @@ void TcpServer::newConnection() {
   if (!acceptConnection(new_poll)) {
     return;
   }
-  this->pollfds_[this->numfds_]= new_poll;
-  // this->sockets_.insert(std::make_pair(new_poll.fd, Socket(new_poll, false)));
+  this->pollfds_[this->numfds_] = new_poll;
   std::cout << "New connection success on : "
             << inet_ntoa(this->socketAddress_.sin_addr)
             << " with socket nbr: " << this->pollfds_[this->numfds_].fd
@@ -154,7 +151,7 @@ void TcpServer::run() {
     }
     for (size_t fd = 0; fd < this->numfds_; ++fd) {
       if (this->pollfds_[fd].revents & POLLIN) {
-        if (this->pollfds_[fd].fd== this->listen_) {
+        if (this->pollfds_[fd].fd == this->listen_) {
           newConnection();
           break;
         } else {
@@ -166,8 +163,9 @@ void TcpServer::run() {
 }
 
 bool TcpServer::acceptConnection(pollfd& new_poll) {
-  int new_socket = accept(this->listen_, (struct sockaddr*)&this->socketAddress_,
-                      &this->socketAddress_len_);
+  int new_socket =
+      accept(this->listen_, (struct sockaddr*)&this->socketAddress_,
+             &this->socketAddress_len_);
   if (new_socket < 0) {
     std::ostringstream ss;
     ss << "Server failed to accept incoming connection from ADDRESS: "
@@ -191,33 +189,25 @@ bool TcpServer::isKnown(std::string address) {
   return false;
 }
 
-#include <algorithm>
-
 void TcpServer::sendResponse(HTTPRequest& req, int sockfd) {
   int bytesSent = 0;
   HTTPResponse res(req);
   std::string res_string = res.toString();
-  std::cout << "Size before loop " << res_string.size() << std::endl;
   size_t bytes = res_string.size();
   size_t totalBytes = 0;
-  size_t chunk = 1000;
+  size_t chunk = 100000;
   while (totalBytes < bytes) {
     size_t remaining_size = bytes - totalBytes;
     size_t currentChunk = std::min(chunk, remaining_size);
-    bytesSent = send(sockfd, res_string.data() + totalBytes, currentChunk, 0);
-    std::cout << "loop" << std::endl;
-    std::cout << bytesSent << std::endl;
+    bytesSent = send(sockfd, res_string.c_str() + totalBytes, currentChunk, 0);
     if (bytesSent < 0) {
-      std::cout << "Error sneding response to client"  << std::endl;
+      // TODO(luntiet): remove errno because its forbidden by subject
+      if (errno == EAGAIN || errno == EWOULDBLOCK) {
+        continue;
+      }
+      std::cout << "Error sending response to client" << std::endl;
       break;
     }
     totalBytes += bytesSent;
   }
-  // bytesSent = send(sockfd, res_string.c_str(), res_string.size(), 0);
-  // if (bytesSent == res_string.size()) {
-  //   log("------ Server Response sent to client ------\n\n");
-  //   std::cout << "To socket: " << sockfd << std::endl;
-  // } else {
-  //   log("Error sending response to client");
-  // }
 }
