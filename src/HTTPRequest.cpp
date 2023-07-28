@@ -3,46 +3,6 @@
 #include <iostream>
 #include <sstream>
 
-#include "TcpServer.hpp"
-
-//// Constuctors and Opearator overloads
-
-HTTPRequest::HTTPRequest() {}
-
-HTTPRequest::~HTTPRequest() {}
-
-HTTPRequest::HTTPRequest(const HTTPRequest& obj) { *this = obj; }
-
-HTTPRequest& HTTPRequest::operator=(const HTTPRequest& obj) {
-  if (this != &obj) {
-    *this = obj;
-  }
-  return *this;
-}
-
-HTTPRequest::HTTPRequest(std::string& input) {
-  if (input.size() <= 1) {
-    throw std::runtime_error("Error: tried to create request with size <= 1");
-  }
-  std::size_t header_end = input.find("\r\n\r\n");
-  std::string header(input.begin(), input.begin() + header_end);
-  std::string body(input.begin() + header_end + 4, input.end());
-  std::istringstream header_iss(header);
-  std::string line;
-  std::getline(header_iss, line);
-  std::vector<std::string> request_line = this->splitLine(line, " ");
-  this->request_method_ = this->parseMethodToken(*request_line.begin());
-  this->URI_ = request_line[1];
-  this->protocol_version_ = request_line.at(2);
-  while (std::getline(header_iss, line)) {
-    std::vector<std::string> temp = this->splitLine(line, ": ");
-    temp.at(2).pop_back();
-    this->header_.insert(
-        std::pair<std::string, std::string>(temp.at(0), temp.at(2)));
-  }
-  this->body_ = body;
-}
-
 //// Accessors
 
 std::map<std::string, std::string> HTTPRequest::getHeader() const {
@@ -99,6 +59,60 @@ std::vector<std::string> HTTPRequest::splitLine(
     res.push_back(line.substr(current, next - current));
   } while (next != std::vector<std::string>::value_type::npos);
   return res;
+}
+
+std::string HTTPRequest::cleanURI(std::string& uri_str) {
+  std::string to_replace = "../";
+  std::string::size_type n = to_replace.length();
+  for (std::string::size_type i = uri_str.find(to_replace);
+       i != std::string::npos; i = uri_str.find(to_replace)) {
+    uri_str.erase(i, n);
+  }
+  // remove occurances of .. that remains
+  to_replace = "..";
+  n = to_replace.length();
+  for (std::string::size_type i = uri_str.find(to_replace);
+       i != std::string::npos; i = uri_str.find(to_replace)) {
+    uri_str.erase(i, n);
+  }
+  return uri_str;
+}
+
+//// Constuctors and Opearator overloads
+
+HTTPRequest::HTTPRequest() {}
+
+HTTPRequest::~HTTPRequest() {}
+
+HTTPRequest::HTTPRequest(const HTTPRequest& obj) { *this = obj; }
+
+HTTPRequest& HTTPRequest::operator=(const HTTPRequest& obj) {
+  if (this != &obj) {
+    *this = obj;
+  }
+  return *this;
+}
+
+HTTPRequest::HTTPRequest(std::string& input) {
+  if (input.size() <= 1) {
+    throw std::runtime_error("Error: tried to create request with size <= 1");
+  }
+  std::size_t header_end = input.find("\r\n\r\n");
+  std::string header(input.begin(), input.begin() + header_end);
+  std::string body(input.begin() + header_end + 4, input.end());
+  std::istringstream header_iss(header);
+  std::string line;
+  std::getline(header_iss, line);
+  std::vector<std::string> request_line = this->splitLine(line, " ");
+  this->request_method_ = this->parseMethodToken(*request_line.begin());
+  this->URI_ = this->cleanURI(request_line[1]);
+  this->protocol_version_ = request_line.at(2);
+  while (std::getline(header_iss, line)) {
+    std::vector<std::string> temp = this->splitLine(line, ": ");
+    this->header_.insert(
+        std::pair<std::string, std::string>(temp.at(0), temp.at(2)));
+  }
+  this->body_ = body;
 }
 
 std::ostream& operator<<(std::ostream& os, HTTPRequest& obj) {
