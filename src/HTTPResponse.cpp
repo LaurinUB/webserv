@@ -97,6 +97,22 @@ std::map<std::string, std::string> HTTPResponse::getMimeTypes(
   return res;
 }
 
+<<<<<<< HEAD
+=======
+std::string HTTPResponse::createResponseBody(std::string& path) {
+  std::ifstream file_stream(path);
+  if (file_stream.is_open()) {
+    std::stringstream file_string_stream;
+    file_string_stream << file_stream.rdbuf();
+    std::cout << file_string_stream.str().size() << std::endl;
+    file_stream.close();
+    return file_string_stream.str();
+  } else {
+    throw std::exception();
+  }
+}
+
+>>>>>>> main
 //// Constructors and Operator overloads
 
 HTTPResponse::HTTPResponse() {}
