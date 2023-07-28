@@ -26,9 +26,11 @@ std::map<std::string, std::string> HTTPResponse::getMimeTypes(
   return res;
 }
 
-std::string buildDirIndexRes(DIR* directory, HTTPRequest& req, std::string path) {
-  std::string res =
-      "<html><head><title>Index of " + req.getURI() + "</title></head><body><h1>Index of " + req.getURI() + "</h1><hr/><pre>";
+std::string buildDirIndexRes(DIR* directory, HTTPRequest& req,
+                             std::string path) {
+  std::string res = "<html><head><title>Index of " + req.getURI() +
+                    "</title></head><body><h1>Index of " + req.getURI() +
+                    "</h1><hr/><pre>";
   while (true) {
     struct stat attr;
     struct dirent* test = readdir(directory);
@@ -41,7 +43,8 @@ std::string buildDirIndexRes(DIR* directory, HTTPRequest& req, std::string path)
     stat((path + std::string(test->d_name)).c_str(), &attr);
     char time_changed[20];
     strftime(time_changed, 20, "%d-%b-%Y %H:%M", localtime(&(attr.st_ctime)));
-    res += "<a href=\"" + std::string(test->d_name) + "\">" + std::string(test->d_name) + "</a>";
+    res += "<a href=\"" + std::string(test->d_name) + "\">" +
+           std::string(test->d_name) + "</a>";
     if (std::string(test->d_name) != "..") {
       res += "\t\t\t\t\t" + std::string(time_changed) + "\t\t" +
              "file size should go here" + "\n";
@@ -53,7 +56,8 @@ std::string buildDirIndexRes(DIR* directory, HTTPRequest& req, std::string path)
   return res;
 }
 
-std::string HTTPResponse::createResponseBody(std::string& path, HTTPRequest& req) {
+std::string HTTPResponse::createResponseBody(std::string& path,
+                                             HTTPRequest& req) {
   DIR* directory_list;
   directory_list = opendir(path.c_str());
   if (directory_list != NULL) {

@@ -30,6 +30,21 @@ HTTPRequest::HTTPRequest(std::string& input) {
   std::getline(header_iss, line);
   std::vector<std::string> request_line = this->splitLine(line, " ");
   this->request_method_ = this->parseMethodToken(*request_line.begin());
+  // remove occurances of ../ to avoid directory listing of unallowed dirs
+  std::string to_replace = "../";
+  std::string::size_type n = to_replace.length();
+  for (std::string::size_type i = request_line[1].find(to_replace);
+       i != std::string::npos; i = request_line[1].find(to_replace)) {
+    request_line[1].erase(i, n);
+  }
+  // remove occurances of .. that remains
+  to_replace = "..";
+  n = to_replace.length();
+  for (std::string::size_type i = request_line[1].find(to_replace);
+       i != std::string::npos; i = request_line[1].find(to_replace)) {
+    request_line[1].erase(i, n);
+  }
+  std::cout << "cleared URI: " << request_line[1] << std::endl;
   this->URI_ = request_line[1];
   this->protocol_version_ = request_line.at(2);
   while (std::getline(header_iss, line)) {
