@@ -8,7 +8,7 @@
 
 class HTTPRequest {
  public:
-  //// Constructors
+  //// Constructors and Operator overloads
   HTTPRequest();
   ~HTTPRequest();
   HTTPRequest(const HTTPRequest& obj);
@@ -40,9 +40,11 @@ class HTTPRequest {
   method request_method_;
   std::string URI_;
   std::string protocol_version_;
+  //// Private Member Functions
   method parseMethodToken(std::string& token);
   std::vector<std::string> splitLine(
       std::string line, std::vector<std::string>::value_type delim);
+  std::string cleanURI(std::string& uri_str);
 };
 
 std::ostream& operator<<(std::ostream& os, HTTPRequest& obj);

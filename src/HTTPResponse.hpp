@@ -1,6 +1,8 @@
 #ifndef HTTPRESPONSE_HPP_
 #define HTTPRESPONSE_HPP_
 
+#include <dirent.h>
+
 #include <fstream>
 #include <string>
 
@@ -19,14 +21,18 @@ class HTTPResponse {
   //// Member Functions
   std::string toString() const;
 
+  //// Static Members
   static std::map<std::string, std::string> mime_types;
-  static std::string createResponseBody(std::string& path, HTTPRequest& req);
+  static std::map<std::string, std::string> getMimeTypes(std::string path);
 
  private:
   std::string header_;
   std::string body_;
-  static std::map<std::string, std::string> getMimeTypes(std::string path);
+  //// Private Member Functions
   void handleGET(HTTPRequest& req);
+  std::string createResponseBody(std::string& path, HTTPRequest& req);
+  std::string buildDirIndexRes(DIR* directory, HTTPRequest& req,
+                               std::string path);
 };
 
 #endif  // HTTPRESPONSE_HPP_

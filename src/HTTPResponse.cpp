@@ -7,27 +7,47 @@
 
 #include <sstream>
 
-std::map<std::string, std::string> HTTPResponse::mime_types =
-    HTTPResponse::getMimeTypes("./data/mime_types.csv");
+//// Private Member Functions
 
-std::map<std::string, std::string> HTTPResponse::getMimeTypes(
-    std::string path) {
-  std::ifstream fs(path);
-  std::map<std::string, std::string> res;
-  if (fs.is_open()) {
-    std::string line;
-    while (std::getline(fs, line)) {
-      std::pair<std::string, std::string> parsed_pair;
-      parsed_pair.second = line.substr(0, line.find(','));
-      parsed_pair.first = line.substr(line.find(',') + 1, line.size() - 1);
-      res.insert(parsed_pair);
-    }
+void HTTPResponse::handleGET(HTTPRequest& req) {
+  std::string path =
+      (req.getURI() == "/" ? "./www/index.html" : "./www" + req.getURI());
+  std::string mimetype =
+      path.substr(path.find_last_of('.') + 1, path.size() - 1);
+  std::string content_type = this->mime_types.find(mimetype)->second;
+  try {
+    this->body_ = this->createResponseBody(path, req);
+    this->header_ = "HTTP/1.1 200 OK\nContent-Type: " + content_type;
+  } catch (std::exception& e) {
+    path = "./data/404.html";
+    this->body_ = this->createResponseBody(path, req);
+    this->body_.replace(this->body_.find("${URI}"), 6, req.getURI());
+    this->header_ = "HTTP/1.1 404 OK\nContent-Type: text/html";
   }
-  return res;
+  return;
 }
 
-std::string buildDirIndexRes(DIR* directory, HTTPRequest& req,
-                             std::string path) {
+std::string HTTPResponse::createResponseBody(std::string& path,
+                                             HTTPRequest& req) {
+  DIR* directory_list;
+  directory_list = opendir(path.c_str());
+  if (directory_list != NULL) {
+    std::string res = this->buildDirIndexRes(directory_list, req, path);
+    closedir(directory_list);
+    return res;
+  }
+  std::ifstream file_stream(path);
+  if (file_stream.is_open()) {
+    std::stringstream file_string_stream;
+    file_string_stream << file_stream.rdbuf();
+    return file_string_stream.str();
+  } else {
+    throw std::exception();
+  }
+}
+
+std::string HTTPResponse::buildDirIndexRes(DIR* directory, HTTPRequest& req,
+                                           std::string path) {
   std::string res = "<html><head><title>Index of " + req.getURI() +
                     "</title></head><body><h1>Index of " + req.getURI() +
                     "</h1><hr/><pre>";
@@ -56,23 +76,25 @@ std::string buildDirIndexRes(DIR* directory, HTTPRequest& req,
   return res;
 }
 
-std::string HTTPResponse::createResponseBody(std::string& path,
-                                             HTTPRequest& req) {
-  DIR* directory_list;
-  directory_list = opendir(path.c_str());
-  if (directory_list != NULL) {
-    std::string res = buildDirIndexRes(directory_list, req, path);
-    closedir(directory_list);
-    return res;
+//// Static Members
+
+std::map<std::string, std::string> HTTPResponse::mime_types =
+    HTTPResponse::getMimeTypes("./data/mime_types.csv");
+
+std::map<std::string, std::string> HTTPResponse::getMimeTypes(
+    std::string path) {
+  std::ifstream fs(path);
+  std::map<std::string, std::string> res;
+  if (fs.is_open()) {
+    std::string line;
+    while (std::getline(fs, line)) {
+      std::pair<std::string, std::string> parsed_pair;
+      parsed_pair.second = line.substr(0, line.find(','));
+      parsed_pair.first = line.substr(line.find(',') + 1, line.size() - 1);
+      res.insert(parsed_pair);
+    }
   }
-  std::ifstream file_stream(path);
-  if (file_stream.is_open()) {
-    std::stringstream file_string_stream;
-    file_string_stream << file_stream.rdbuf();
-    return file_string_stream.str();
-  } else {
-    throw std::exception();
-  }
+  return res;
 }
 
 //// Constructors and Operator overloads
@@ -137,22 +159,4 @@ std::string HTTPResponse::toString() const {
   std::ostringstream oss;
   oss << this->header_ << "\r\n\r\n" << this->body_;
   return oss.str();
-}
-
-void HTTPResponse::handleGET(HTTPRequest& req) {
-  std::string path =
-      (req.getURI() == "/" ? "./www/index.html" : "./www" + req.getURI());
-  std::string mimetype =
-      path.substr(path.find_last_of('.') + 1, path.size() - 1);
-  std::string content_type = this->mime_types.find(mimetype)->second;
-  try {
-    this->body_ = this->createResponseBody(path, req);
-    this->header_ = "HTTP/1.1 200 OK\nContent-Type: " + content_type;
-  } catch (std::exception& e) {
-    path = "./data/404.html";
-    this->body_ = this->createResponseBody(path, req);
-    this->body_.replace(this->body_.find("${URI}"), 6, req.getURI());
-    this->header_ = "HTTP/1.1 404 OK\nContent-Type: text/html";
-  }
-  return;
 }
