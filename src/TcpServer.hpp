@@ -6,6 +6,8 @@
 #endif
 
 #include <arpa/inet.h>
+#include <fcntl.h>
+#include <poll.h>
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/time.h>
@@ -18,6 +20,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include "HTTPRequest.hpp"
 
@@ -27,20 +30,24 @@ class TcpServer {
   ~TcpServer();
   TcpServer(const TcpServer& obj);
   TcpServer& operator=(const TcpServer& obj);
-  void startListen();
+  void run();
 
  private:
   std::string ip_addr_;
   int port_;
-  int socket_;
-  int new_socket_;
+  int listen_;
+  size_t numfds_;
   struct sockaddr_in socketAddress_;
   unsigned int socketAddress_len_;
+  std::string serverMessage_;
+  pollfd pollfds_[1024];
 
   int startServer();
   void closeServer() const;
   void acceptConnection(int& new_socket);
-  void sendResponse(HTTPRequest& req);
+  void sendResponse(HTTPRequest& req, int sockfd);
+  bool newConnection();
+  void handleConnection();
 };
 
 void log(const std::string& msg);
