@@ -5,7 +5,7 @@
 
 extern sig_atomic_t g_signaled;
 
-const int BUFFER_SIZE = 2048;
+const int BUFFER_SIZE = 30640;
 const int QUEUE_LEN = 20;
 
 void log(const std::string& msg) { std::cout << msg << std::endl; }
@@ -26,14 +26,18 @@ TcpServer::TcpServer(const std::string& ip_addr, int port)
   socketAddress_.sin_port = htons(port_);
   socketAddress_.sin_addr.s_addr = INADDR_ANY;
   if (startServer() != 0) {
-    std::ostringstream ss;
-    ss << "Failed to start server with PORT: "
-       << ntohs(socketAddress_.sin_port);
-    log(ss.str());
+    std::cout << "Failed to start server with PORT: "
+              << ntohs(socketAddress_.sin_port) << std::endl;
   }
 }
 
-TcpServer::~TcpServer() { closeServer(); }
+TcpServer::~TcpServer() {
+  close(this->listen_);
+  for (int i = 4; i < 25; ++i) {
+    close(i);
+  }
+  exit(EXIT_SUCCESS);
+}
 
 TcpServer::TcpServer(const TcpServer& obj) { *this = obj; }
 
@@ -46,7 +50,7 @@ TcpServer& TcpServer::operator=(const TcpServer& obj) {
 
 int TcpServer::startServer() {
   int opt = 1;
-  memset(this->pollfds_, 0, 1024);
+  memset(this->pollfds_, -1, 1024);
   this->listen_ = socket(AF_INET, SOCK_STREAM, 0);
   if (this->listen_ < 0) {
     exitWithError("Cannot create socket");
@@ -64,18 +68,13 @@ int TcpServer::startServer() {
   if (listen(this->listen_, QUEUE_LEN) == -1) {
     exitWithError("Failed to listen on connection");
   }
-  if (fcntl(this->listen_, F_SETFL, O_NONBLOCK) == -1) {
+  if (fcntl(this->listen_, F_SETFL, O_NONBLOCK, FD_CLOEXEC) == -1) {
     exitWithError("fcntl");
   }
   this->pollfds_[0].fd = this->listen_;
   this->pollfds_[0].events = POLLIN;
 
   return EXIT_SUCCESS;
-}
-
-void TcpServer::closeServer() const {
-  close(this->listen_);
-  exit(EXIT_SUCCESS);
 }
 
 int pollError(pollfd fd) {
@@ -95,54 +94,44 @@ int pollError(pollfd fd) {
   return 0;
 }
 
-bool TcpServer::newConnection() {
-  for (size_t i = 1; i < this->numfds_; ++i) {
-    if (this->pollfds_[i].revents & POLLIN) {
-      return false;
-    }
+void TcpServer::newConnection() {
+  pollfd new_poll;
+  if (!acceptConnection(new_poll)) {
+    return;
   }
-  int new_fd;
-  acceptConnection(new_fd);
-  this->pollfds_[this->numfds_].fd = new_fd;
-  this->pollfds_[this->numfds_].events = POLLIN;
-  this->pollfds_[this->numfds_].revents = 0;
+  this->pollfds_[this->numfds_] = new_poll;
   std::cout << "New connection success on : "
             << inet_ntoa(this->socketAddress_.sin_addr)
             << " with socket nbr: " << this->pollfds_[this->numfds_].fd
             << std::endl;
-  if (fcntl(new_fd, F_SETFL, O_NONBLOCK) == -1) {
-    exitWithError("fcntl");
-  }
   this->numfds_++;
-  return true;
 }
 
-void TcpServer::handleConnection() {
+void TcpServer::handleConnection(size_t fd) {
   char buffer[BUFFER_SIZE] = {0};
   ssize_t rec = 0;
 
-  for (size_t i = 1; i < this->numfds_; ++i) {
-    if (this->pollfds_[i].revents & POLLIN) {
-      std::cout << "== Connected on socket: " << this->pollfds_[i].fd
-                << " ==" << std::endl
-                << std::endl;
-      rec = recv(this->pollfds_[i].fd, buffer, BUFFER_SIZE, O_NONBLOCK);
-      if (rec < 0) {
-        exitWithError("Failed to read bytes from client socket connection");
-      } else if (rec == 0) {
-        exitWithError("Client closed connection");
-      }
-      std::string stringyfied_buff(buffer);
-      try {
-        HTTPRequest req(stringyfied_buff);
-        std::cout << req << std::endl;
-        this->sendResponse(req, this->pollfds_[i].fd);
-        // close(this->pollfds_[i].fd);
-        // this->pollfds_[i].fd = -1;
-      } catch (std::exception& e) {
-        std::cout << e.what() << std::endl;
-      }
+  std::cout << "== Connected on socket: " << this->pollfds_[fd].fd
+            << " ==" << std::endl
+            << std::endl;
+  rec = recv(this->pollfds_[fd].fd, buffer, BUFFER_SIZE, O_NONBLOCK);
+  if (rec < 0) {
+    exitWithError("Failed to read bytes from client socket connection");
+  } else if (rec == 0) {
+    exitWithError("Client closed connection");
+  }
+  std::string stringyfied_buff(buffer);
+  try {
+    HTTPRequest req(stringyfied_buff);
+    std::cout << req << std::endl;
+    this->sendResponse(req, this->pollfds_[fd].fd);
+    if (req.getHeader().find("Connection")->second != "keep-alive") {
+      close(this->pollfds_[fd].fd);
+      this->pollfds_[fd].fd = -1;
+      this->numfds_--;
     }
+  } catch (std::exception& e) {
+    std::cout << e.what() << std::endl;
   }
 }
 
@@ -160,16 +149,23 @@ void TcpServer::run() {
     } else if (pollres > 0) {
       log("====== Waiting for a new connection ======\n\n\n");
     }
-    if (newConnection()) {
-      continue;
+    for (size_t fd = 0; fd < this->numfds_; ++fd) {
+      if (this->pollfds_[fd].revents & POLLIN) {
+        if (this->pollfds_[fd].fd == this->listen_) {
+          newConnection();
+          break;
+        } else {
+          handleConnection(fd);
+        }
+      }
     }
-    handleConnection();
   }
 }
 
-void TcpServer::acceptConnection(int& new_socket) {
-  new_socket = accept(this->listen_, (struct sockaddr*)&this->socketAddress_,
-                      &this->socketAddress_len_);
+bool TcpServer::acceptConnection(pollfd& new_poll) {
+  int new_socket =
+      accept(this->listen_, (struct sockaddr*)&this->socketAddress_,
+             &this->socketAddress_len_);
   if (new_socket < 0) {
     std::ostringstream ss;
     ss << "Server failed to accept incoming connection from ADDRESS: "
@@ -177,18 +173,32 @@ void TcpServer::acceptConnection(int& new_socket) {
        << "; PORT: " << ntohs(this->socketAddress_.sin_port);
     exitWithError(ss.str());
   }
+  std::string buff;
+  new_poll.fd = new_socket;
+  new_poll.events = POLLIN;
+  new_poll.revents = 0;
+  return true;
 }
 
 void TcpServer::sendResponse(HTTPRequest& req, int sockfd) {
-  ssize_t bytesSent = 0;
+  int bytesSent = 0;
   HTTPResponse res(req);
   std::string res_string = res.toString();
-  bytesSent = send(sockfd, res_string.c_str(), res_string.size(), 0);
-
-  if (bytesSent == static_cast<ssize_t>(res_string.size())) {
-    log("------ Server Response sent to client ------\n\n");
-    std::cout << "To socket: " << sockfd << std::endl;
-  } else {
-    log("Error sending response to client");
+  size_t bytes = res_string.size();
+  size_t totalBytes = 0;
+  size_t chunk = 100000;
+  while (totalBytes < bytes) {
+    size_t remaining_size = bytes - totalBytes;
+    size_t currentChunk = std::min(chunk, remaining_size);
+    bytesSent = send(sockfd, res_string.c_str() + totalBytes, currentChunk, 0);
+    if (bytesSent < 0) {
+      // TODO(luntiet): remove errno because its forbidden by subject
+      if (errno == EAGAIN || errno == EWOULDBLOCK) {
+        continue;
+      }
+      std::cout << "Error sending response to client" << std::endl;
+      break;
+    }
+    totalBytes += bytesSent;
   }
 }

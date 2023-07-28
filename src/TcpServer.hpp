@@ -14,6 +14,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
@@ -43,11 +44,10 @@ class TcpServer {
   pollfd pollfds_[1024];
 
   int startServer();
-  void closeServer() const;
-  void acceptConnection(int& new_socket);
+  bool acceptConnection(pollfd& fd);
   void sendResponse(HTTPRequest& req, int sockfd);
-  bool newConnection();
-  void handleConnection();
+  void newConnection();
+  void handleConnection(size_t fd);
 };
 
 void log(const std::string& msg);
