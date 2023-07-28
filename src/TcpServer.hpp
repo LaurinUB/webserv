@@ -42,9 +42,7 @@ class TcpServer {
   unsigned int socketAddress_len_;
   std::string serverMessage_;
   pollfd pollfds_[1024];
-  std::vector<std::string> knownIps_;
 
-  bool isKnown(std::string address);
   int startServer();
   bool acceptConnection(pollfd& fd);
   void sendResponse(HTTPRequest& req, int sockfd);

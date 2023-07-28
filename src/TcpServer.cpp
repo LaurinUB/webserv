@@ -180,15 +180,6 @@ bool TcpServer::acceptConnection(pollfd& new_poll) {
   return true;
 }
 
-bool TcpServer::isKnown(std::string address) {
-  for (size_t i = 0; i < this->knownIps_.size(); ++i) {
-    if (address == knownIps_[i]) {
-      return true;
-    }
-  }
-  return false;
-}
-
 void TcpServer::sendResponse(HTTPRequest& req, int sockfd) {
   int bytesSent = 0;
   HTTPResponse res(req);
