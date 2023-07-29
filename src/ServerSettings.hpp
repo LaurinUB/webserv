@@ -11,6 +11,13 @@ class ServerSettings {
   ServerSettings& operator=(const ServerSettings& obj);
   ServerSettings(std::string& config_path);
 
+  typedef enum {
+    END_TOKEN,
+    DEFAULT_TOKEN,
+    OPEN_CBR_TOKEN,
+    CLOSE_CBR_TOKEN,
+  } token_type;
+
  private:
   unsigned int port_;
 };

@@ -19,7 +19,7 @@ ServerSettings& ServerSettings::operator=(const ServerSettings& obj) {
 ServerSettings::ServerSettings(std::string& config_path) {
   std::ifstream file_stream(config_path);
   std::string line;
-  std::vector<std::string> tokenized_file;
+  std::vector<std::pair<std::string, token_type> > tokenized_file;
   while (std::getline(file_stream, line)) {
     std::string token;
     std::istringstream iss(line);
@@ -27,12 +27,13 @@ ServerSettings::ServerSettings(std::string& config_path) {
       if (*token.begin() == '#') {
         break;
       }
-      tokenized_file.push_back(token);
+      tokenized_file.push_back(
+          std::pair<std::string, token_type>(token, DEFAULT_TOKEN));
     }
   }
-  std::cout << "Tokenized file:" << std::endl;
-  for (std::vector<std::string>::iterator i = tokenized_file.begin();
+  for (std::vector<std::pair<std::string, token_type> >::iterator i =
+           tokenized_file.begin();
        i != tokenized_file.end(); ++i) {
-    std::cout << *i << std::endl;
+    std::cout << i->first << "---" << i->second << std::endl;
   }
 }
