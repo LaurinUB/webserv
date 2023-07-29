@@ -10,7 +10,7 @@ void handleSIGINT(int param) {
 
 int main() {
   signal(SIGINT, handleSIGINT);
-  std::string conf_path("./config/default.conf");
+  std::string conf_path("./config/test.conf");
   ServerSettings settings(conf_path);
   TcpServer server = TcpServer("0.0.0.0", PORT);
   server.run();
