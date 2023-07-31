@@ -8,8 +8,8 @@ Socket::Socket() {
   this->data_written_ = true;
 }
 
-Socket::Socket(pollfd fd, bool keepalive):
-    keepalive_(keepalive), data_written_(true) {
+Socket::Socket(pollfd fd, bool keepalive)
+    : keepalive_(keepalive), data_written_(true) {
   this->pollfd_ = fd;
   this->timestamp_ = std::time(NULL);
   this->timeout_ = 60.0;
@@ -17,7 +17,8 @@ Socket::Socket(pollfd fd, bool keepalive):
 
 Socket::~Socket() {
   std::cout << "closing Socket on: " << getFd() << std::endl;
-  close(this->pollfd_.fd); }
+  close(this->pollfd_.fd);
+}
 
 Socket::Socket(const Socket& obj) { *this = obj; }
 
@@ -61,9 +62,7 @@ void Socket::handleUnfinished(int bytesSent, std::string res_string) {
   this->response_ = res_string.substr(bytesSent, res_string.size());
 }
 
-void Socket::setPoll(pollfd fd) {
-  this->pollfd_ = fd;
-}
+void Socket::setPoll(pollfd fd) { this->pollfd_ = fd; }
 
 bool Socket::checkTimeout() {
   time_t current = std::time(NULL);
@@ -75,8 +74,7 @@ bool Socket::checkTimeout() {
 
 void Socket::updateTime() { this->timestamp_ = std::time(NULL); }
 
-std::map<int, Socket>::iterator getUnfinished(
-    std::map<int, Socket>& sockets) {
+std::map<int, Socket>::iterator getUnfinished(std::map<int, Socket>& sockets) {
   std::map<int, Socket>::iterator it = sockets.begin();
   while (it != sockets.end()) {
     if (!it->second.isWritten()) {

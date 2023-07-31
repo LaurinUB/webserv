@@ -6,8 +6,8 @@
 #include <unistd.h>
 
 #include <iostream>
-#include <string>
 #include <map>
+#include <string>
 
 class Socket {
  public:
@@ -43,7 +43,6 @@ class Socket {
   std::string response_;
 };
 
-std::map<int, Socket>::iterator getUnfinished(
-    std::map<int, Socket>& sockets);
+std::map<int, Socket>::iterator getUnfinished(std::map<int, Socket>& sockets);
 
 #endif  // SOCKET_HPP_

@@ -111,8 +111,8 @@ void TcpServer::run() {
       sendResponse(it);
     }
     for (size_t fd = 0; fd < this->numfds_; ++fd) {
-      std::cout << this->pollfds_[fd].fd << " revents: "
-        << this->pollfds_[fd].revents << std::endl;
+      std::cout << this->pollfds_[fd].fd
+                << " revents: " << this->pollfds_[fd].revents << std::endl;
       if (pollError(this->pollfds_[fd])) {
         log("Closing socket");
         this->sockets_.erase(this->sockets_.find(this->pollfds_[fd].fd));
