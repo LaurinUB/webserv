@@ -13,6 +13,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 #include <algorithm>
 #include <cstdio>
@@ -21,9 +22,11 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <vector>
+#include <map>
+#include <utility>
 
 #include "HTTPRequest.hpp"
+#include "Socket.hpp"
 
 class TcpServer {
  public:
@@ -42,10 +45,11 @@ class TcpServer {
   unsigned int socketAddress_len_;
   std::string serverMessage_;
   pollfd pollfds_[1024];
+  std::map<int, Socket> sockets_;
 
   int startServer();
-  bool acceptConnection(pollfd& fd);
   void sendResponse(HTTPRequest& req, int sockfd);
+  void sendResponse(std::map<int, Socket>::iterator it);
   void newConnection();
   void handleConnection(size_t fd);
 };

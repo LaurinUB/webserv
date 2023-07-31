@@ -33,9 +33,6 @@ TcpServer::TcpServer(const std::string& ip_addr, int port)
 
 TcpServer::~TcpServer() {
   close(this->listen_);
-  for (int i = 4; i < 25; ++i) {
-    close(i);
-  }
   exit(EXIT_SUCCESS);
 }
 
@@ -94,17 +91,43 @@ int pollError(pollfd fd) {
   return 0;
 }
 
-void TcpServer::newConnection() {
-  pollfd new_poll;
-  if (!acceptConnection(new_poll)) {
-    return;
-  }
-  this->pollfds_[this->numfds_] = new_poll;
-  std::cout << "New connection success on : "
+void TcpServer::run() {
+  std::cout << "\n*** Listening on ADDRESS: "
             << inet_ntoa(this->socketAddress_.sin_addr)
-            << " with socket nbr: " << this->pollfds_[this->numfds_].fd
-            << std::endl;
-  this->numfds_++;
+            << " PORT: " << ntohs(this->socketAddress_.sin_port) << " ***\n\n";
+  int pollres;
+
+  while (g_signaled == 0) {
+    std::cout << "Pollin'" << std::endl;
+    pollres = poll(this->pollfds_, this->numfds_ + 1, 100);
+    if (pollres == -1) {
+      exitWithError("Poll failed");
+    } else if (pollres > 0) {
+      log("====== Waiting for a new connection ======\n\n\n");
+    }
+    std::map<int, Socket>::iterator it = getUnfinished(this->sockets_);
+    if (it != this->sockets_.end()) {
+      std::cout << "Send to unfinished" << std::endl;
+      sendResponse(it);
+    }
+    for (size_t fd = 0; fd < this->numfds_; ++fd) {
+      // sleep(1);
+      std::cout << this->pollfds_[fd].fd << " revents: "
+        << this->pollfds_[fd].revents << std::endl;
+      if (this->pollfds_[fd].revents & POLLIN) {
+        if (this->pollfds_[fd].fd == this->listen_) {
+          newConnection();
+          break;
+        } else {
+          std::cout << "Handle exsisting Connection" << std::endl;
+          handleConnection(fd);
+        }
+      }
+      if (pollError(this->pollfds_[fd])) {
+        exit(EXIT_FAILURE);
+      }
+    }
+  }
 }
 
 void TcpServer::handleConnection(size_t fd) {
@@ -125,8 +148,10 @@ void TcpServer::handleConnection(size_t fd) {
     HTTPRequest req(stringyfied_buff);
     std::cout << req << std::endl;
     this->sendResponse(req, this->pollfds_[fd].fd);
+    std::cout << "Response send" << std::endl;
     if (req.getHeader().find("Connection")->second != "keep-alive") {
-      close(this->pollfds_[fd].fd);
+      log("Closing socket");
+      this->sockets_.erase(this->sockets_.find(this->pollfds_[fd].fd));
       this->pollfds_[fd].fd = -1;
       this->numfds_--;
     }
@@ -135,34 +160,35 @@ void TcpServer::handleConnection(size_t fd) {
   }
 }
 
-void TcpServer::run() {
-  std::cout << "\n*** Listening on ADDRESS: "
-            << inet_ntoa(this->socketAddress_.sin_addr)
-            << " PORT: " << ntohs(this->socketAddress_.sin_port) << " ***\n\n";
-  int pollres;
-
-  while (g_signaled == 0) {
-    std::cout << "Pollin'" << std::endl;
-    pollres = poll(this->pollfds_, this->numfds_ + 1, 60000);
-    if (pollres == -1) {
-      exitWithError("Poll failed");
-    } else if (pollres > 0) {
-      log("====== Waiting for a new connection ======\n\n\n");
-    }
-    for (size_t fd = 0; fd < this->numfds_; ++fd) {
-      if (this->pollfds_[fd].revents & POLLIN) {
-        if (this->pollfds_[fd].fd == this->listen_) {
-          newConnection();
-          break;
-        } else {
-          handleConnection(fd);
-        }
-      }
-    }
+void TcpServer::sendResponse(HTTPRequest& req, int sockfd) {
+  int bytesSent = 0;
+  HTTPResponse res(req);
+  std::string res_string = res.toString();
+  bytesSent = send(sockfd, res_string.data(), res_string.size(), 0);
+  if (bytesSent < 0) {
+    std::cout << "Error sending response to client" << std::endl;
+  } else if (static_cast<size_t>(bytesSent) < res_string.size()) {
+    this->sockets_[sockfd].handleUnfinished(bytesSent, res_string);
   }
 }
 
-bool TcpServer::acceptConnection(pollfd& new_poll) {
+void TcpServer::sendResponse(std::map<int, Socket>::iterator it) {
+  int bytesSent = 0;
+  bytesSent = send(it->second.getFd(), it->second.getResponse().c_str(),
+                   it->second.getResponseSize(), 0);
+  if (bytesSent < 0) {
+    std::cout << "Error sending response to client" << std::endl;
+    bytesSent = 0;
+  }
+  if (static_cast<size_t>(bytesSent) < it->second.getResponseSize()) {
+    it->second.handleUnfinished(bytesSent, it->second.getResponse());
+  } else {
+    it->second.setWritten(true);
+  }
+}
+
+void TcpServer::newConnection() {
+  pollfd new_poll;
   int new_socket =
       accept(this->listen_, (struct sockaddr*)&this->socketAddress_,
              &this->socketAddress_len_);
@@ -177,28 +203,12 @@ bool TcpServer::acceptConnection(pollfd& new_poll) {
   new_poll.fd = new_socket;
   new_poll.events = POLLIN;
   new_poll.revents = 0;
-  return true;
-}
-
-void TcpServer::sendResponse(HTTPRequest& req, int sockfd) {
-  int bytesSent = 0;
-  HTTPResponse res(req);
-  std::string res_string = res.toString();
-  size_t bytes = res_string.size();
-  size_t totalBytes = 0;
-  size_t chunk = 100000;
-  while (totalBytes < bytes) {
-    size_t remaining_size = bytes - totalBytes;
-    size_t currentChunk = std::min(chunk, remaining_size);
-    bytesSent = send(sockfd, res_string.c_str() + totalBytes, currentChunk, 0);
-    if (bytesSent < 0) {
-      // TODO(luntiet): remove errno because its forbidden by subject
-      if (errno == EAGAIN || errno == EWOULDBLOCK) {
-        continue;
-      }
-      std::cout << "Error sending response to client" << std::endl;
-      break;
-    }
-    totalBytes += bytesSent;
-  }
+  this->sockets_[new_socket].setPoll(new_poll);
+  this->pollfds_[this->numfds_] = new_poll;
+  std::cout << "New connection success on : "
+            << inet_ntoa(this->socketAddress_.sin_addr)
+            << " with socket nbr: " << this->pollfds_[this->numfds_].fd
+            << std::endl;
+  std::cout << "revents poll: " << new_poll.revents << std::endl;
+  this->numfds_++;
 }
