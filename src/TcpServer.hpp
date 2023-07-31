@@ -8,6 +8,7 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <poll.h>
+#include <stdlib.h>
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/time.h>
@@ -19,11 +20,13 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <sstream>
 #include <string>
-#include <vector>
+#include <utility>
 
 #include "HTTPRequest.hpp"
+#include "Socket.hpp"
 
 class TcpServer {
  public:
@@ -42,10 +45,11 @@ class TcpServer {
   unsigned int socketAddress_len_;
   std::string serverMessage_;
   pollfd pollfds_[1024];
+  std::map<int, Socket> sockets_;
 
   int startServer();
-  bool acceptConnection(pollfd& fd);
   void sendResponse(HTTPRequest& req, int sockfd);
+  void sendResponse(std::map<int, Socket>::iterator it);
   void newConnection();
   void handleConnection(size_t fd);
 };
