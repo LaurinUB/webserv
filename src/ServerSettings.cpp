@@ -16,7 +16,29 @@ ServerSettings& ServerSettings::operator=(const ServerSettings& obj) {
   return *this;
 }
 
+ServerSettings::token_type identifyToken(std::string& token) {
+  if (token == "{") {
+    return ServerSettings::OPEN_CBR_TOKEN;
+  } else if (token == "}") {
+    return ServerSettings::CLOSE_CBR_TOKEN;
+  } else if (token == "=") {
+    return ServerSettings::EXACT_LOCATION_TOKEN;
+  } else if (*--token.end() == ';') {
+    return ServerSettings::VALUE_TOKEN;
+  } else {
+    return ServerSettings::SETTING_TOKEN;
+  }
+}
+
 ServerSettings::ServerSettings(std::string& config_path) {
+  std::string types[6] = {
+    "END_TOKEN",
+    "SETTING_TOKEN",
+    "VALUE_TOKEN",
+    "OPEN_CBR_TOKEN",
+    "CLOSE_CBR_TOKEN",
+    "EXACT_LOCATION_TOKEN"
+  };
   std::ifstream file_stream(config_path);
   std::string line;
   std::vector<std::pair<std::string, token_type> > tokenized_file;
@@ -28,12 +50,12 @@ ServerSettings::ServerSettings(std::string& config_path) {
         break;
       }
       tokenized_file.push_back(
-          std::pair<std::string, token_type>(token, DEFAULT_TOKEN));
+          std::pair<std::string, token_type>(token, identifyToken(token)));
     }
   }
   for (std::vector<std::pair<std::string, token_type> >::iterator i =
            tokenized_file.begin();
        i != tokenized_file.end(); ++i) {
-    std::cout << i->first << "---" << i->second << std::endl;
+    std::cout << i->first << " " << types[i->second] << std::endl;
   }
 }

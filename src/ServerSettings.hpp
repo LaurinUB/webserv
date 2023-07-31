@@ -13,9 +13,11 @@ class ServerSettings {
 
   typedef enum {
     END_TOKEN,
-    DEFAULT_TOKEN,
+    SETTING_TOKEN,
+    VALUE_TOKEN,
     OPEN_CBR_TOKEN,
     CLOSE_CBR_TOKEN,
+    EXACT_LOCATION_TOKEN
   } token_type;
 
  private:
