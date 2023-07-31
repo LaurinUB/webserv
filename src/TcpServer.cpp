@@ -111,9 +111,15 @@ void TcpServer::run() {
       sendResponse(it);
     }
     for (size_t fd = 0; fd < this->numfds_; ++fd) {
-      // sleep(1);
       std::cout << this->pollfds_[fd].fd << " revents: "
         << this->pollfds_[fd].revents << std::endl;
+      if (pollError(this->pollfds_[fd])) {
+        log("Closing socket");
+        this->sockets_.erase(this->sockets_.find(this->pollfds_[fd].fd));
+        this->pollfds_[fd].fd = -1;
+        this->numfds_--;
+        continue;
+      }
       if (this->pollfds_[fd].revents & POLLIN) {
         if (this->pollfds_[fd].fd == this->listen_) {
           newConnection();
@@ -122,9 +128,6 @@ void TcpServer::run() {
           std::cout << "Handle exsisting Connection" << std::endl;
           handleConnection(fd);
         }
-      }
-      if (pollError(this->pollfds_[fd])) {
-        exit(EXIT_FAILURE);
       }
     }
   }
