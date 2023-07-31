@@ -3,9 +3,14 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include <vector>
 
-ServerSettings::ServerSettings() {}
+ServerSettings::ServerSettings()
+    : server_name_("0.0.0.0"),
+      port_(6969),
+      default_errorpage_("./data/404.html"),
+      accepted_methods_(HTTPRequest::GET, HTTPRequest::HEAD),
+      auto_index_(true)
+{}
 
 ServerSettings::~ServerSettings() {}
 
@@ -16,14 +21,14 @@ ServerSettings& ServerSettings::operator=(const ServerSettings& obj) {
   return *this;
 }
 
-ServerSettings::token_type identifyToken(std::string& token) {
+ServerSettings::token_type ServerSettings::identifyToken(std::string& token) {
   if (token == "{") {
     return ServerSettings::OPEN_CBR_TOKEN;
   } else if (token == "}") {
     return ServerSettings::CLOSE_CBR_TOKEN;
   } else if (token == "=") {
     return ServerSettings::EXACT_LOCATION_TOKEN;
-  } else if (*--token.end() == ';') {
+  } else if (*(token.end() - 1) == ';') {
     return ServerSettings::VALUE_TOKEN;
   } else {
     return ServerSettings::SETTING_TOKEN;
@@ -32,7 +37,7 @@ ServerSettings::token_type identifyToken(std::string& token) {
 
 ServerSettings::ServerSettings(std::string& config_path) {
   std::string types[6] = {
-    "END_TOKEN",
+    "UNKNOWN_TOKEN",
     "SETTING_TOKEN",
     "VALUE_TOKEN",
     "OPEN_CBR_TOKEN",
@@ -49,13 +54,16 @@ ServerSettings::ServerSettings(std::string& config_path) {
       if (*token.begin() == '#') {
         break;
       }
-      tokenized_file.push_back(
-          std::pair<std::string, token_type>(token, identifyToken(token)));
+      tokenized_file.push_back(std::pair<std::string, token_type>(
+          token, this->identifyToken(token)));
     }
   }
-  for (std::vector<std::pair<std::string, token_type> >::iterator i =
-           tokenized_file.begin();
-       i != tokenized_file.end(); ++i) {
-    std::cout << i->first << " " << types[i->second] << std::endl;
-  }
+ // std::vector<TreeNode*> ast_root;
+ // std::pair<std::string, ServerSettings::token_type> prev_token;
+ // for (std::vector<std::pair<std::string, token_type> >::iterator i =
+ //          tokenized_file.begin();
+ //      i != tokenized_file.end(); ++i) {
+ //   std::cout << i->first << " " << types[i->second] << std::endl;
+ //   prev_token = *i;
+ // }
 }
