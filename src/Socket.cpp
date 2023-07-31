@@ -1,20 +1,33 @@
 #include "Socket.hpp"
 
-Socket::Socket() {}
-
-Socket::Socket(pollfd fd, bool keepalive) : pollfd_(fd), keepalive_(keepalive) {
-  this->pollfd_.events = POLLIN;
-  this->pollfd_.revents = 0;
+Socket::Socket() {
+  std::cout << "default" << std::endl;
+  this->timestamp_ = std::time(NULL);
+  this->timeout_ = 60.0;
+  this->keepalive_ = false;
+  this->data_written_ = true;
 }
 
-Socket::~Socket() {}
+Socket::Socket(pollfd fd, bool keepalive)
+    : keepalive_(keepalive), data_written_(true) {
+  this->pollfd_ = fd;
+  this->timestamp_ = std::time(NULL);
+  this->timeout_ = 60.0;
+}
+
+Socket::~Socket() {
+  std::cout << "closing Socket on: " << getFd() << std::endl;
+  close(this->pollfd_.fd);
+}
 
 Socket::Socket(const Socket& obj) { *this = obj; }
 
 Socket& Socket::operator=(const Socket& obj) {
-  if (this != &obj) {
-    *this = obj;
-  }
+  this->pollfd_ = obj.pollfd_;
+  this->keepalive_ = obj.keepalive_;
+  this->timeout_ = obj.timeout_;
+  this->timestamp_ = obj.timestamp_;
+  this->data_written_ = obj.data_written_;
   return *this;
 }
 
@@ -32,6 +45,42 @@ int Socket::getREvent() const { return this->pollfd_.revents; }
 
 pollfd Socket::getPoll() const { return this->pollfd_; }
 
-bool Socket::getState() const { return this->keepalive_; }
+bool Socket::isKeepalive() const { return this->keepalive_; }
 
-void Socket::setState(bool state) { this->keepalive_ = state; }
+std::string Socket::getResponse() const { return this->response_; }
+
+size_t Socket::getResponseSize() const { return this->response_.size(); }
+
+bool Socket::isWritten() const { return this->data_written_; }
+
+void Socket::setKeepalive(bool state) { this->keepalive_ = state; }
+
+void Socket::setWritten(bool state) { this->data_written_ = state; }
+
+void Socket::handleUnfinished(int bytesSent, std::string res_string) {
+  this->data_written_ = false;
+  this->response_ = res_string.substr(bytesSent, res_string.size());
+}
+
+void Socket::setPoll(pollfd fd) { this->pollfd_ = fd; }
+
+bool Socket::checkTimeout() {
+  time_t current = std::time(NULL);
+  if (difftime(this->timestamp_, current) > this->timeout_) {
+    return true;
+  }
+  return false;
+}
+
+void Socket::updateTime() { this->timestamp_ = std::time(NULL); }
+
+std::map<int, Socket>::iterator getUnfinished(std::map<int, Socket>& sockets) {
+  std::map<int, Socket>::iterator it = sockets.begin();
+  while (it != sockets.end()) {
+    if (!it->second.isWritten()) {
+      return it;
+    }
+    it++;
+  }
+  return it;
+}
