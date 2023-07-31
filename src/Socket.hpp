@@ -13,7 +13,6 @@ class Socket {
  public:
   Socket();
   ~Socket();
-  Socket(pollfd fd, bool keepalive);
   Socket(const Socket& obj);
   Socket& operator=(const Socket& obj);
 

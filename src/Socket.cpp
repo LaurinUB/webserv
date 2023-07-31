@@ -3,16 +3,9 @@
 Socket::Socket() {
   std::cout << "default" << std::endl;
   this->timestamp_ = std::time(NULL);
-  this->timeout_ = 60.0;
+  this->timeout_ = 1.0;
   this->keepalive_ = false;
   this->data_written_ = true;
-}
-
-Socket::Socket(pollfd fd, bool keepalive)
-    : keepalive_(keepalive), data_written_(true) {
-  this->pollfd_ = fd;
-  this->timestamp_ = std::time(NULL);
-  this->timeout_ = 60.0;
 }
 
 Socket::~Socket() {
@@ -66,7 +59,9 @@ void Socket::setPoll(pollfd fd) { this->pollfd_ = fd; }
 
 bool Socket::checkTimeout() {
   time_t current = std::time(NULL);
-  if (difftime(this->timestamp_, current) > this->timeout_) {
+  double time = difftime(current, this->timestamp_);
+  std::cout << time << std::endl;
+  if (time >= this->timeout_) {
     return true;
   }
   return false;
