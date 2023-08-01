@@ -9,6 +9,8 @@
 #include <map>
 #include <string>
 
+#define PRINT false
+
 class Socket {
  public:
   Socket();

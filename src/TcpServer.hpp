@@ -47,7 +47,7 @@ class TcpServer {
   pollfd pollfds_[1024];
   std::map<int, Socket> sockets_;
 
-  int pollError(pollfd fd);
+  int pollError(pollfd& fd);
   int startServer();
   void sendResponse(HTTPRequest& req, int sockfd);
   void sendResponse(std::map<int, Socket>::iterator it);

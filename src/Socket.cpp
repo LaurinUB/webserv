@@ -1,15 +1,19 @@
 #include "Socket.hpp"
 
 Socket::Socket() {
-  std::cout << "default" << std::endl;
+  if (PRINT) {
+    std::cout << "default" << std::endl;
+  }
   this->timestamp_ = std::time(NULL);
-  this->timeout_ = 1.0;
+  this->timeout_ = 15.0;
   this->keepalive_ = false;
   this->data_written_ = true;
 }
 
 Socket::~Socket() {
-  std::cout << "closing Socket on: " << getFd() << std::endl;
+  if (PRINT) {
+    std::cout << "closing Socket on: " << getFd() << std::endl;
+  }
   close(this->pollfd_.fd);
 }
 
@@ -60,7 +64,6 @@ void Socket::setPoll(pollfd fd) { this->pollfd_ = fd; }
 bool Socket::checkTimeout() {
   time_t current = std::time(NULL);
   double time = difftime(current, this->timestamp_);
-  std::cout << time << std::endl;
   if (time >= this->timeout_) {
     return true;
   }
