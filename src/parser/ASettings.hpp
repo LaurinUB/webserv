@@ -8,7 +8,6 @@ class ASettings {
  public:
   ASettings() {};
   virtual ~ASettings() {};
-  //std::string toString();
   std::map<std::string, std::string> settings_;
 
  private:

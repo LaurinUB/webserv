@@ -4,12 +4,12 @@
 #include <string>
 #include <vector>
 
-#include "GlobalSettings.hpp"
 #include "../HTTPRequest.hpp"
+#include "GlobalSettings.hpp"
 #include "LocationSettings.hpp"
-#include "VServerSettings.hpp"
+#include "ServerSettings.hpp"
 
-class SettingsParser { 
+class SettingsParser {
  public:
   SettingsParser();
   ~SettingsParser();
