@@ -26,7 +26,7 @@ TcpServer::TcpServer(const std::string& ip_addr, int port)
   socketAddress_.sin_port = htons(port_);
   socketAddress_.sin_addr.s_addr = INADDR_ANY;
   if (startServer() != 0) {
-    std::cout << "Failed to start server with PORT: "
+    std::cout << "Error: failed to start server with PORT: "
               << ntohs(socketAddress_.sin_port) << std::endl;
   }
 }
@@ -50,23 +50,23 @@ int TcpServer::startServer() {
   memset(this->pollfds_, -1, 1024);
   this->listen_ = socket(AF_INET, SOCK_STREAM, 0);
   if (this->listen_ < 0) {
-    exitWithError("Cannot create socket");
+    exitWithError("Error: cannot create socket");
     return EXIT_FAILURE;
   }
   if (setsockopt(this->listen_, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) ==
       -1) {
-    exitWithError("Cannot set socket options");
+    exitWithError("Error: cannot set socket options");
   }
   if (bind(this->listen_, (struct sockaddr*)&this->socketAddress_,
            this->socketAddress_len_) < 0) {
-    exitWithError("Cannot bind to socket address");
+    exitWithError("Error: cannot bind to socket address");
     return EXIT_FAILURE;
   }
   if (listen(this->listen_, QUEUE_LEN) == -1) {
-    exitWithError("Failed to listen on connection");
+    exitWithError("Error: failed to listen on connection");
   }
   if (fcntl(this->listen_, F_SETFL, O_NONBLOCK, FD_CLOEXEC) == -1) {
-    exitWithError("fcntl");
+    exitWithError("Error: fcntl");
   }
   this->pollfds_[0].fd = this->listen_;
   this->pollfds_[0].events = POLLIN;
@@ -92,7 +92,6 @@ int TcpServer::pollError(pollfd& poll) {
   if (res != 0) {
     std::cout << "pollfd: " << poll.fd << std::endl;
     this->sockets_.erase(this->sockets_.find(poll.fd));
-    std::cout << "socket deleted" << std::endl;
     poll.fd = -1;
   }
   return res;
@@ -186,7 +185,7 @@ void TcpServer::handleConnection(Socket& socket) {
             << std::endl;
   rec = recv(socket.getFd(), buffer, BUFFER_SIZE, O_NONBLOCK);
   if (rec < 0) {
-    exitWithError("Failed to read bytes from client socket connection");
+    exitWithError("Error: Failed to read bytes from client socket connection");
   } else if (rec == 0) {
     exitWithError("Client closed connection");
   }
@@ -212,7 +211,7 @@ void TcpServer::sendResponse(HTTPRequest& req, Socket& socket) {
   std::string res_string = res.toString();
   bytesSent = send(socket.getFd(), res_string.data(), res_string.size(), 0);
   if (bytesSent < 0) {
-    std::cout << "Error sending response to client" << std::endl;
+    std::cout << "Error: sending response to client" << std::endl;
   } else if (static_cast<size_t>(bytesSent) < res_string.size()) {
     socket.handleUnfinished(bytesSent, res_string);
   }
@@ -224,7 +223,7 @@ void TcpServer::sendResponse(std::map<int, Socket>::iterator it) {
   bytesSent = send(it->second.getFd(), it->second.getResponse().c_str(),
                    it->second.getResponseSize(), 0);
   if (bytesSent < 0) {
-    std::cout << "Error sending response to client" << std::endl;
+    std::cout << "Error: sending response to client" << std::endl;
     bytesSent = 0;
   }
   it->second.updateTime();
@@ -244,6 +243,9 @@ void TcpServer::checkUnfinished(std::map<int, Socket>& sockets) {
 
 void TcpServer::newConnection() {
   pollfd new_poll;
+  if (this->numfds_ > 256) {
+    return;
+  }
   int new_socket =
       accept(this->listen_, (struct sockaddr*)&this->socketAddress_,
              &this->socketAddress_len_);

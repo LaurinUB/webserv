@@ -33,7 +33,7 @@ void Socket::setOpt() {
   int opt = 1;
   if (setsockopt(this->pollfd_.fd, SOL_SOCKET, SO_REUSEADDR, &opt,
                  sizeof(opt)) == -1) {
-    std::cout << "Cannot set socket opt" << std::endl;
+    std::cout << "Error: ccnnot set socket opt" << std::endl;
   }
 }
 
