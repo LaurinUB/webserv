@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "GlobalSettings.hpp"
-#include "HTTPRequest.hpp"
+#include "../HTTPRequest.hpp"
 #include "LocationSettings.hpp"
 #include "VServerSettings.hpp"
 
