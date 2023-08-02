@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+#include "Socket.hpp"
+
 class HTTPRequest {
  public:
   //// Constructors and Operator overloads
@@ -13,7 +15,7 @@ class HTTPRequest {
   ~HTTPRequest();
   HTTPRequest(const HTTPRequest& obj);
   HTTPRequest& operator=(const HTTPRequest& obj);
-  HTTPRequest(std::string& input);
+  HTTPRequest(std::string& input, Socket& socket);
 
   typedef enum {
     UNKNOWN,
@@ -33,6 +35,7 @@ class HTTPRequest {
   HTTPRequest::method getMethod() const;
   std::string getURI() const;
   std::string getProtocol() const;
+  bool getKeepalive() const;
 
  private:
   std::map<std::string, std::string> header_;
@@ -40,7 +43,9 @@ class HTTPRequest {
   method request_method_;
   std::string URI_;
   std::string protocol_version_;
+  bool keepalive_;
   //// Private Member Functions
+  void removeTrailingWhitespace(std::string& str);
   method parseMethodToken(std::string& token);
   std::vector<std::string> splitLine(
       std::string line, std::vector<std::string>::value_type delim);

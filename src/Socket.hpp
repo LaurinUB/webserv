@@ -46,4 +46,6 @@ class Socket {
 
 std::map<int, Socket>::iterator getUnfinished(std::map<int, Socket>& sockets);
 
+std::ostream& operator<<(std::ostream& os, const Socket& socket);
+
 #endif  // SOCKET_HPP_

@@ -1,5 +1,6 @@
 #include "HTTPRequest.hpp"
 
+#include <algorithm>
 #include <iostream>
 #include <sstream>
 
@@ -19,7 +20,18 @@ std::string HTTPRequest::getURI() const { return this->URI_; }
 
 std::string HTTPRequest::getProtocol() const { return this->protocol_version_; }
 
+bool HTTPRequest::getKeepalive() const { return this->keepalive_; }
+
 //// Private Member Functions
+
+void HTTPRequest::removeTrailingWhitespace(std::string& str) {
+  int end = str.length() - 1;
+  while (end >= 0 && std::isspace(str[end])) {
+    end--;
+  }
+
+  str.erase(end + 1);
+}
 
 HTTPRequest::method HTTPRequest::parseMethodToken(std::string& token) {
   HTTPRequest::method res;
@@ -93,7 +105,7 @@ HTTPRequest& HTTPRequest::operator=(const HTTPRequest& obj) {
   return *this;
 }
 
-HTTPRequest::HTTPRequest(std::string& input) {
+HTTPRequest::HTTPRequest(std::string& input, Socket& socket) {
   if (input.size() <= 1) {
     throw std::runtime_error("Error: tried to create request with size <= 1");
   }
@@ -109,9 +121,13 @@ HTTPRequest::HTTPRequest(std::string& input) {
   this->protocol_version_ = request_line.at(2);
   while (std::getline(header_iss, line)) {
     std::vector<std::string> temp = this->splitLine(line, ": ");
-    temp.at(2).pop_back();
+    removeTrailingWhitespace(temp.at(2));
     this->header_.insert(
         std::pair<std::string, std::string>(temp.at(0), temp.at(2)));
+  }
+  if (this->header_.find("Connection")->second.compare("keep-alive") == 0) {
+    this->keepalive_ = true;
+    socket.setKeepalive(true);
   }
   this->body_ = body;
 }

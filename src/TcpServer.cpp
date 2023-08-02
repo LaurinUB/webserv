@@ -26,7 +26,7 @@ TcpServer::TcpServer(const std::string& ip_addr, int port)
   socketAddress_.sin_port = htons(port_);
   socketAddress_.sin_addr.s_addr = INADDR_ANY;
   if (startServer() != 0) {
-    std::cout << "Failed to start server with PORT: "
+    std::cout << "Error: failed to start server with PORT: "
               << ntohs(socketAddress_.sin_port) << std::endl;
   }
 }
@@ -50,23 +50,23 @@ int TcpServer::startServer() {
   memset(this->pollfds_, -1, 1024);
   this->listen_ = socket(AF_INET, SOCK_STREAM, 0);
   if (this->listen_ < 0) {
-    exitWithError("Cannot create socket");
+    exitWithError("Error: cannot create socket");
     return EXIT_FAILURE;
   }
   if (setsockopt(this->listen_, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) ==
       -1) {
-    exitWithError("Cannot set socket options");
+    exitWithError("Error: cannot set socket options");
   }
   if (bind(this->listen_, (struct sockaddr*)&this->socketAddress_,
            this->socketAddress_len_) < 0) {
-    exitWithError("Cannot bind to socket address");
+    exitWithError("Error: cannot bind to socket address");
     return EXIT_FAILURE;
   }
   if (listen(this->listen_, QUEUE_LEN) == -1) {
-    exitWithError("Failed to listen on connection");
+    exitWithError("Error: failed to listen on connection");
   }
   if (fcntl(this->listen_, F_SETFL, O_NONBLOCK, FD_CLOEXEC) == -1) {
-    exitWithError("fcntl");
+    exitWithError("Error: fcntl");
   }
   this->pollfds_[0].fd = this->listen_;
   this->pollfds_[0].events = POLLIN;
@@ -90,6 +90,7 @@ int TcpServer::pollError(pollfd& poll) {
     res = 1;
   }
   if (res != 0) {
+    std::cout << "pollfd: " << poll.fd << std::endl;
     this->sockets_.erase(this->sockets_.find(poll.fd));
     poll.fd = -1;
   }
@@ -102,7 +103,20 @@ void TcpServer::handleRevents(int i) {
     return;
   } else {
     std::cout << "Handle exsisting Connection" << std::endl;
-    handleConnection(i);
+    handleConnection(this->sockets_.find(this->pollfds_[i].fd)->second);
+  }
+}
+
+void TcpServer::removeFd(int fd) {
+  for (size_t i = 0; i < this->numfds_; ++i) {
+    if (this->pollfds_[i].fd == fd) {
+      this->pollfds_[i].fd = -1;
+      for (size_t j = i; j < this->numfds_ - 1; ++j) {
+        this->pollfds_[j] = this->pollfds_[j + 1];
+      }
+      this->numfds_--;
+      break;
+    }
   }
 }
 
@@ -115,13 +129,10 @@ void TcpServer::checkSocketTimeout() {
       while (this->pollfds_[i].fd != it->first) {
         i++;
       }
-      this->pollfds_[i].fd = -1;
+      removeFd(it->second.getFd());
       this->sockets_.erase(it);
       break;
     }
-  }
-  if (this->pollfds_[this->numfds_ - 1].fd == -1) {
-    this->numfds_--;
   }
 }
 
@@ -130,68 +141,82 @@ void TcpServer::run() {
             << inet_ntoa(this->socketAddress_.sin_addr)
             << " PORT: " << ntohs(this->socketAddress_.sin_port) << " ***\n\n";
   while (g_signaled == 0) {
+    if (PRINT) {
+      std::cout << "Sockets open: " << this->numfds_ << std::endl;
+    }
     if (poll(this->pollfds_, this->numfds_ + 1, 100) == -1) {
+      perror("poll");
+      std::cout << this->numfds_ << std::endl;
       exitWithError("Poll failed");
     }
     checkSocketTimeout();
     log("====== Waiting for a new connection ======\n\n\n");
     checkUnfinished(this->sockets_);
     for (size_t i = 0; i < this->numfds_; ++i) {
-      if (PRINT) {
-        std::cout << this->pollfds_[i].fd
-                  << " revents: " << this->pollfds_[i].revents << std::endl;
+      if (PRINT && this->pollfds_[i].fd != 3 && this->pollfds_[i].fd != -1) {
+        std::cout << this->sockets_[this->pollfds_[i].fd] << "i: " << i
+                  << std::endl;
+        std::cout << "pollfds.fd: " << this->pollfds_[i].fd << std::endl;
+      }
+      if (this->pollfds_[i].fd <= 0) {
+        continue;
       }
       if (pollError(this->pollfds_[i])) {
         break;
       }
       if (this->pollfds_[i].revents & POLLIN) {
-        handleRevents(i);
+        if (this->pollfds_[i].fd == this->listen_) {
+          newConnection();
+          break;
+        } else {
+          std::cout << "Handle exsisting Connection" << std::endl;
+          handleConnection(this->sockets_.find(this->pollfds_[i].fd)->second);
+        }
       }
     }
   }
 }
 
-void TcpServer::handleConnection(size_t fd) {
+void TcpServer::handleConnection(Socket& socket) {
   char buffer[BUFFER_SIZE] = {0};
   ssize_t rec = 0;
 
-  std::cout << "== Connected on socket: " << this->pollfds_[fd].fd
+  std::cout << "== Connected on socket: " << socket.getFd()
             << " ==" << std::endl
             << std::endl;
-  rec = recv(this->pollfds_[fd].fd, buffer, BUFFER_SIZE, O_NONBLOCK);
+  rec = recv(socket.getFd(), buffer, BUFFER_SIZE, O_NONBLOCK);
   if (rec < 0) {
-    exitWithError("Failed to read bytes from client socket connection");
+    exitWithError("Error: Failed to read bytes from client socket connection");
   } else if (rec == 0) {
     exitWithError("Client closed connection");
   }
   std::string stringyfied_buff(buffer);
   try {
-    HTTPRequest req(stringyfied_buff);
+    HTTPRequest req(stringyfied_buff, socket);
     std::cout << req << std::endl;
-    this->sendResponse(req, this->pollfds_[fd].fd);
+    this->sendResponse(req, socket);
     std::cout << "Response send" << std::endl;
-    if (req.getHeader().find("Connection")->second != "keep-alive") {
+    if (!socket.isKeepalive()) {
       log("Closing socket");
-      this->sockets_.erase(this->sockets_.find(this->pollfds_[fd].fd));
-      this->pollfds_[fd].fd = -1;
-      this->numfds_--;
+      removeFd(socket.getFd());
+      this->sockets_.erase(this->sockets_.find(socket.getFd()));
     }
   } catch (std::exception& e) {
     std::cout << e.what() << std::endl;
   }
 }
 
-void TcpServer::sendResponse(HTTPRequest& req, int sockfd) {
+void TcpServer::sendResponse(HTTPRequest& req, Socket& socket) {
   int bytesSent = 0;
   HTTPResponse res(req);
   std::string res_string = res.toString();
-  bytesSent = send(sockfd, res_string.data(), res_string.size(), 0);
+  bytesSent = send(socket.getFd(), res_string.data(), res_string.size(), 0);
   if (bytesSent < 0) {
-    std::cout << "Error sending response to client" << std::endl;
+    std::cout << "Error: sending response to client" << std::endl;
   } else if (static_cast<size_t>(bytesSent) < res_string.size()) {
-    this->sockets_[sockfd].handleUnfinished(bytesSent, res_string);
+    socket.handleUnfinished(bytesSent, res_string);
   }
-  this->sockets_[sockfd].updateTime();
+  socket.updateTime();
 }
 
 void TcpServer::sendResponse(std::map<int, Socket>::iterator it) {
@@ -199,7 +224,7 @@ void TcpServer::sendResponse(std::map<int, Socket>::iterator it) {
   bytesSent = send(it->second.getFd(), it->second.getResponse().c_str(),
                    it->second.getResponseSize(), 0);
   if (bytesSent < 0) {
-    std::cout << "Error sending response to client" << std::endl;
+    std::cout << "Error: sending response to client" << std::endl;
     bytesSent = 0;
   }
   it->second.updateTime();
@@ -219,6 +244,9 @@ void TcpServer::checkUnfinished(std::map<int, Socket>& sockets) {
 
 void TcpServer::newConnection() {
   pollfd new_poll;
+  if (this->numfds_ > 256) {
+    return;
+  }
   int new_socket =
       accept(this->listen_, (struct sockaddr*)&this->socketAddress_,
              &this->socketAddress_len_);
@@ -234,23 +262,13 @@ void TcpServer::newConnection() {
   new_poll.events = POLLIN;
   new_poll.revents = 0;
   this->sockets_[new_socket].setPoll(new_poll);
-  size_t i = 0;
-  while (i < this->numfds_) {
-    if (this->pollfds_[i].fd == -1) {
-      this->pollfds_[i] = new_poll;
-      break;
-    }
-    i++;
-  }
   std::cout << "New connection success on : "
             << inet_ntoa(this->socketAddress_.sin_addr)
-            << " with socket nbr: " << this->pollfds_[this->numfds_].fd
+            << " with socket nbr: " << this->sockets_[new_socket].getFd()
             << std::endl;
   if (PRINT) {
     std::cout << "revents poll: " << new_poll.revents << std::endl;
   }
-  if (i == this->numfds_) {
-    this->pollfds_[this->numfds_] = new_poll;
-    this->numfds_++;
-  }
+  this->pollfds_[this->numfds_] = new_poll;
+  this->numfds_++;
 }

@@ -5,7 +5,7 @@ Socket::Socket() {
     std::cout << "default" << std::endl;
   }
   this->timestamp_ = std::time(NULL);
-  this->timeout_ = 5.0;
+  this->timeout_ = 15.0;
   this->keepalive_ = false;
   this->data_written_ = true;
 }
@@ -15,6 +15,7 @@ Socket::~Socket() {
     std::cout << "closing Socket on: " << getFd() << std::endl;
   }
   close(this->pollfd_.fd);
+  this->pollfd_.fd = -1;
 }
 
 Socket::Socket(const Socket& obj) { *this = obj; }
@@ -32,7 +33,7 @@ void Socket::setOpt() {
   int opt = 1;
   if (setsockopt(this->pollfd_.fd, SOL_SOCKET, SO_REUSEADDR, &opt,
                  sizeof(opt)) == -1) {
-    std::cout << "Cannot set socket opt" << std::endl;
+    std::cout << "Error: ccnnot set socket opt" << std::endl;
   }
 }
 
@@ -81,4 +82,10 @@ std::map<int, Socket>::iterator getUnfinished(std::map<int, Socket>& sockets) {
     it++;
   }
   return it;
+}
+
+std::ostream& operator<<(std::ostream& os, const Socket& sock) {
+  os << "Socket: " << sock.getFd() << std::endl
+     << "revent: " << sock.getREvent() << std::endl;
+  return os;
 }
