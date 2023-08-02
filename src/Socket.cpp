@@ -5,7 +5,7 @@ Socket::Socket() {
     std::cout << "default" << std::endl;
   }
   this->timestamp_ = std::time(NULL);
-  this->timeout_ = 15.0;
+  this->timeout_ = 5.0;
   this->keepalive_ = false;
   this->data_written_ = true;
 }

@@ -191,6 +191,7 @@ void TcpServer::sendResponse(HTTPRequest& req, int sockfd) {
   } else if (static_cast<size_t>(bytesSent) < res_string.size()) {
     this->sockets_[sockfd].handleUnfinished(bytesSent, res_string);
   }
+  this->sockets_[sockfd].updateTime();
 }
 
 void TcpServer::sendResponse(std::map<int, Socket>::iterator it) {
@@ -201,6 +202,7 @@ void TcpServer::sendResponse(std::map<int, Socket>::iterator it) {
     std::cout << "Error sending response to client" << std::endl;
     bytesSent = 0;
   }
+  it->second.updateTime();
   if (static_cast<size_t>(bytesSent) < it->second.getResponseSize()) {
     it->second.handleUnfinished(bytesSent, it->second.getResponse());
   } else {
