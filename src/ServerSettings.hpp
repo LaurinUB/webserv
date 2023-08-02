@@ -4,7 +4,10 @@
 #include <string>
 #include <vector>
 
+#include "GlobalSettings.hpp"
 #include "HTTPRequest.hpp"
+#include "LocationSettings.hpp"
+#include "VServerSettings.hpp"
 
 class ServerSettings { 
  public:
@@ -20,30 +23,21 @@ class ServerSettings {
     VALUE_TOKEN,
     OPEN_CBR_TOKEN,
     CLOSE_CBR_TOKEN,
-    EXACT_LOCATION_TOKEN
+    SERVER_TOKEN,
+    ROUTE_TOKEN,
+    HTTP_TOKEN
   } token_type;
-
-  std::string server_name_;
-  unsigned int port_;
-  std::string default_errorpage_;
-  std::vector<HTTPRequest::method> accepted_methods_;
-  bool auto_index_;
 
  private:
   //// private methods
-  token_type identifyToken(std::string& token);
+  token_type identifyTokenType(std::string& token);
+  std::vector<std::pair<std::string, token_type> > tokens_;
+  void parse();
+  void parseHTTP();
+  VServerSettings parseServer(
+      std::vector<std::pair<std::string, token_type> >::iterator& it);
+  LocationSettings parseRoute(
+      std::vector<std::pair<std::string, token_type> >::iterator& it);
 };
-
-//class TreeNode {
-// public:
-//  TreeNode(std::pair<std::string, ServerSettings::token_type> content);
-//  std::pair<std::string, ServerSettings::token_type> content_;
-//  TreeNode* parent_;
-//  std::vector<TreeNode*> children_;
-//  void addChild(std::pair<std::string, ServerSettings::token_type> new_content);
-//};
-//
-//TreeNode::TreeNode(std::pair<std::string, ServerSettings::token_type> content)
-//    : content_(content) {}
 
 #endif  // SERVERSETTINGS_HPP_
