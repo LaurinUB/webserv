@@ -9,11 +9,12 @@
 #include <map>
 #include <string>
 
+#define PRINT false
+
 class Socket {
  public:
   Socket();
   ~Socket();
-  Socket(pollfd fd, bool keepalive);
   Socket(const Socket& obj);
   Socket& operator=(const Socket& obj);
 
