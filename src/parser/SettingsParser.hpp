@@ -17,6 +17,8 @@ class SettingsParser {
   SettingsParser& operator=(const SettingsParser& obj);
   SettingsParser(std::string& config_path);
 
+  GlobalSettings parsed_settings_;
+
   typedef enum {
     UNKNOWN_TOKEN,
     SETTING_TOKEN,
@@ -33,11 +35,10 @@ class SettingsParser {
   token_type identifyTokenType(std::string& token);
   std::vector<std::pair<std::string, token_type> > tokens_;
   GlobalSettings parseHTTP();
-  VServerSettings parseServer(
+  ServerSettings parseServer(
       std::vector<std::pair<std::string, token_type> >::iterator& it);
   LocationSettings parseRoute(
       std::vector<std::pair<std::string, token_type> >::iterator& it);
-  GlobalSettings parsed_settings_;
 };
 
 #endif  // SETTINGS_PARSER_

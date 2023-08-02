@@ -1,18 +1,18 @@
-#ifndef VSERVERSETTINGS_HPP_
-#define VSERVERSETTINGS_HPP_
+#ifndef SERVERSETTINGS_HPP_
+#define SERVERSETTINGS_HPP_
 
 #include <vector>
 
 #include "ASettings.hpp"
 #include "LocationSettings.hpp"
 
-class VServerSettings : public ASettings {
+class ServerSettings : public ASettings {
  public:
-  VServerSettings(){};
-  virtual ~VServerSettings(){};
-  VServerSettings(const VServerSettings& obj)
+  ServerSettings(){};
+  virtual ~ServerSettings(){};
+  ServerSettings(const ServerSettings& obj)
       : location_settings_(obj.location_settings_){};
-  VServerSettings& operator=(const VServerSettings& obj) {
+  ServerSettings& operator=(const ServerSettings& obj) {
     this->settings_ = obj.settings_;
     this->location_settings_ = obj.location_settings_;
     return *this;
@@ -22,4 +22,4 @@ class VServerSettings : public ASettings {
   std::vector<LocationSettings> location_settings_;
 };
 
-#endif  // VSERVERSETTINGS_HPP_
+#endif  // SERVERSETTINGS_HPP_

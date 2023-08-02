@@ -80,9 +80,9 @@ GlobalSettings SettingsParser::parseHTTP() {
   return res;
 }
 
-VServerSettings SettingsParser::parseServer(
+ServerSettings SettingsParser::parseServer(
     std::vector<std::pair<std::string, token_type> >::iterator& it) {
-  VServerSettings res;
+  ServerSettings res;
   for (; it->second != CLOSE_CBR_TOKEN; ++it) {
     if (it->second == VALUE_TOKEN) {
       res.settings_.insert(

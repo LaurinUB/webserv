@@ -10,9 +10,13 @@ void handleSIGINT(int param) {
 
 int main() {
   signal(SIGINT, handleSIGINT);
-  std::string conf_path("./config/test.conf");
+  std::string conf_path("./config/default.conf");
   SettingsParser settings(conf_path);
-  TcpServer server = TcpServer("0.0.0.0", PORT);
+  TcpServer server = TcpServer(
+      "0.0.0.0",
+      std::strtod(
+          settings.parsed_settings_.settings_.find("port")->second.c_str(),
+          NULL));
   server.run();
   return 0;
 }

@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "ASettings.hpp"
-#include "VServerSettings.hpp"
+#include "ServerSettings.hpp"
 
 class GlobalSettings : public ASettings {
  public:
@@ -19,7 +19,7 @@ class GlobalSettings : public ASettings {
     this->server_settings_ = obj.server_settings_;
     return *this;
   }
-  std::vector<VServerSettings> server_settings_;
+  std::vector<ServerSettings> server_settings_;
 
  private:
 };
