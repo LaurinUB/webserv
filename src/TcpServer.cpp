@@ -90,9 +90,9 @@ int TcpServer::pollError(pollfd& poll) {
     res = 1;
   }
   if (res != 0) {
-    if (this->sockets_.find(poll.fd) != this->sockets_.end()) {
-      this->sockets_.erase(this->sockets_.find(poll.fd));
-    }
+    std::cout << "pollfd: " << poll.fd << std::endl;
+    this->sockets_.erase(this->sockets_.find(poll.fd));
+    std::cout << "socket deleted" << std::endl;
     poll.fd = -1;
   }
   return res;
@@ -108,6 +108,19 @@ void TcpServer::handleRevents(int i) {
   }
 }
 
+void TcpServer::removeFd(int fd) {
+  for (size_t i = 0; i < this->numfds_; ++i) {
+    if (this->pollfds_[i].fd == fd) {
+      this->pollfds_[i].fd = -1;
+      for (size_t j = i; j < this->numfds_ - 1; ++j) {
+        this->pollfds_[j] = this->pollfds_[j + 1];
+      }
+      this->numfds_--;
+      break;
+    }
+  }
+}
+
 void TcpServer::checkSocketTimeout() {
   int i = 0;
   std::map<int, Socket>::iterator end = this->sockets_.end();
@@ -117,13 +130,10 @@ void TcpServer::checkSocketTimeout() {
       while (this->pollfds_[i].fd != it->first) {
         i++;
       }
-      this->pollfds_[i].fd = -1;
+      removeFd(it->second.getFd());
       this->sockets_.erase(it);
       break;
     }
-  }
-  if (this->pollfds_[this->numfds_ - 1].fd == -1) {
-    this->numfds_--;
   }
 }
 
@@ -132,16 +142,21 @@ void TcpServer::run() {
             << inet_ntoa(this->socketAddress_.sin_addr)
             << " PORT: " << ntohs(this->socketAddress_.sin_port) << " ***\n\n";
   while (g_signaled == 0) {
+    if (PRINT) {
+      std::cout << "Sockets open: " << this->numfds_  << std::endl;
+    }
     if (poll(this->pollfds_, this->numfds_ + 1, 100) == -1) {
+      perror("poll");
+      std::cout << this->numfds_ << std::endl;
       exitWithError("Poll failed");
     }
     checkSocketTimeout();
     log("====== Waiting for a new connection ======\n\n\n");
     checkUnfinished(this->sockets_);
     for (size_t i = 0; i < this->numfds_; ++i) {
-      if (PRINT) {
-        std::cout << this->pollfds_[i].fd
-                  << " revents: " << this->pollfds_[i].revents << std::endl;
+      if (PRINT && this->pollfds_[i].fd != 3 && this->pollfds_[i].fd != -1) {
+        std::cout << this->sockets_[this->pollfds_[i].fd] << "i: " << i << std::endl;
+        std::cout << "pollfds.fd: " << this->pollfds_[i].fd << std::endl;
       }
       if (this->pollfds_[i].fd <= 0) {
         continue;
@@ -183,6 +198,7 @@ void TcpServer::handleConnection(Socket& socket) {
     std::cout << "Response send" << std::endl;
     if (!socket.isKeepalive()) {
       log("Closing socket");
+      removeFd(socket.getFd());
       this->sockets_.erase(this->sockets_.find(socket.getFd()));
     }
   } catch (std::exception& e) {
@@ -243,23 +259,13 @@ void TcpServer::newConnection() {
   new_poll.events = POLLIN;
   new_poll.revents = 0;
   this->sockets_[new_socket].setPoll(new_poll);
-  size_t i = 0;
-  while (i < this->numfds_) {
-    if (this->pollfds_[i].fd == -1) {
-      this->pollfds_[i] = new_poll;
-      break;
-    }
-    i++;
-  }
   std::cout << "New connection success on : "
             << inet_ntoa(this->socketAddress_.sin_addr)
-            << " with socket nbr: " << this->pollfds_[i].fd
+            << " with socket nbr: " << this->sockets_[new_socket].getFd()
             << std::endl;
   if (PRINT) {
     std::cout << "revents poll: " << new_poll.revents << std::endl;
   }
-  if (i == this->numfds_) {
-    this->pollfds_[this->numfds_] = new_poll;
-    this->numfds_++;
-  }
+  this->pollfds_[this->numfds_] = new_poll;
+  this->numfds_++;
 }

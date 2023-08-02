@@ -83,3 +83,9 @@ std::map<int, Socket>::iterator getUnfinished(std::map<int, Socket>& sockets) {
   }
   return it;
 }
+
+std::ostream& operator << (std::ostream& os, const Socket& sock) {
+  os << "Socket: " << sock.getFd() << std::endl <<
+    "revent: " << sock.getREvent() << std::endl;
+  return os;
+}
