@@ -1,8 +1,8 @@
 #include "HTTPRequest.hpp"
 
+#include <algorithm>
 #include <iostream>
 #include <sstream>
-#include <algorithm>
 
 //// Accessors
 
@@ -24,7 +24,7 @@ bool HTTPRequest::getKeepalive() const { return this->keepalive_; }
 
 //// Private Member Functions
 
-void  HTTPRequest::removeTrailingWhitespace(std::string& str) {
+void HTTPRequest::removeTrailingWhitespace(std::string& str) {
   int end = str.length() - 1;
   while (end >= 0 && std::isspace(str[end])) {
     end--;
@@ -32,7 +32,6 @@ void  HTTPRequest::removeTrailingWhitespace(std::string& str) {
 
   str.erase(end + 1);
 }
-
 
 HTTPRequest::method HTTPRequest::parseMethodToken(std::string& token) {
   HTTPRequest::method res;

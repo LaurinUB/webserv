@@ -142,7 +142,7 @@ void TcpServer::run() {
             << " PORT: " << ntohs(this->socketAddress_.sin_port) << " ***\n\n";
   while (g_signaled == 0) {
     if (PRINT) {
-      std::cout << "Sockets open: " << this->numfds_  << std::endl;
+      std::cout << "Sockets open: " << this->numfds_ << std::endl;
     }
     if (poll(this->pollfds_, this->numfds_ + 1, 100) == -1) {
       perror("poll");
@@ -154,7 +154,8 @@ void TcpServer::run() {
     checkUnfinished(this->sockets_);
     for (size_t i = 0; i < this->numfds_; ++i) {
       if (PRINT && this->pollfds_[i].fd != 3 && this->pollfds_[i].fd != -1) {
-        std::cout << this->sockets_[this->pollfds_[i].fd] << "i: " << i << std::endl;
+        std::cout << this->sockets_[this->pollfds_[i].fd] << "i: " << i
+                  << std::endl;
         std::cout << "pollfds.fd: " << this->pollfds_[i].fd << std::endl;
       }
       if (this->pollfds_[i].fd <= 0) {

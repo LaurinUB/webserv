@@ -7,7 +7,6 @@
 
 #include <sstream>
 
-
 //// Private Member Functions
 
 void HTTPResponse::handleGET(HTTPRequest& req) {
