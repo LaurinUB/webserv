@@ -1,5 +1,5 @@
-#ifndef SERVERSETTINGS_HPP_
-#define SERVERSETTINGS_HPP_
+#ifndef SETTINGS_PARSER_
+#define SETTINGS_PARSER_
 
 #include <string>
 #include <vector>
@@ -9,13 +9,13 @@
 #include "LocationSettings.hpp"
 #include "VServerSettings.hpp"
 
-class ServerSettings { 
+class SettingsParser { 
  public:
-  ServerSettings();
-  ~ServerSettings();
-  ServerSettings(const ServerSettings& obj);
-  ServerSettings& operator=(const ServerSettings& obj);
-  ServerSettings(std::string& config_path);
+  SettingsParser();
+  ~SettingsParser();
+  SettingsParser(const SettingsParser& obj);
+  SettingsParser& operator=(const SettingsParser& obj);
+  SettingsParser(std::string& config_path);
 
   typedef enum {
     UNKNOWN_TOKEN,
@@ -40,4 +40,4 @@ class ServerSettings {
       std::vector<std::pair<std::string, token_type> >::iterator& it);
 };
 
-#endif  // SERVERSETTINGS_HPP_
+#endif  // SETTINGS_PARSER_

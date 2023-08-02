@@ -1,40 +1,40 @@
-#include "ServerSettings.hpp"
+#include "SettingsParser.hpp"
 
 #include <fstream>
 #include <iostream>
 #include <sstream>
 
-ServerSettings::ServerSettings() {}
+SettingsParser::SettingsParser() {}
 
-ServerSettings::~ServerSettings() {}
+SettingsParser::~SettingsParser() {}
 
-ServerSettings::ServerSettings(const ServerSettings& obj)
+SettingsParser::SettingsParser(const SettingsParser& obj)
     : tokens_(obj.tokens_) {}
 
-ServerSettings& ServerSettings::operator=(const ServerSettings& obj) {
+SettingsParser& SettingsParser::operator=(const SettingsParser& obj) {
   this->tokens_ = obj.tokens_;
   return *this;
 }
 
-ServerSettings::token_type ServerSettings::identifyTokenType(std::string& token) {
+SettingsParser::token_type SettingsParser::identifyTokenType(std::string& token) {
   if (token == "{") {
-    return ServerSettings::OPEN_CBR_TOKEN;
+    return SettingsParser::OPEN_CBR_TOKEN;
   } else if (token == "}") {
-    return ServerSettings::CLOSE_CBR_TOKEN;
+    return SettingsParser::CLOSE_CBR_TOKEN;
   } else if (token == "server") {
-    return ServerSettings::SERVER_TOKEN;
+    return SettingsParser::SERVER_TOKEN;
   } else if (token == "http") {
-    return ServerSettings::HTTP_TOKEN;
+    return SettingsParser::HTTP_TOKEN;
   } else if (token == "location") {
-    return ServerSettings::ROUTE_TOKEN;
+    return SettingsParser::ROUTE_TOKEN;
   } else if (*(token.end() - 1) == ';') {
-    return ServerSettings::VALUE_TOKEN;
+    return SettingsParser::VALUE_TOKEN;
   } else {
-    return ServerSettings::SETTING_TOKEN;
+    return SettingsParser::SETTING_TOKEN;
   }
 }
 
-ServerSettings::ServerSettings(std::string& config_path) {
+SettingsParser::SettingsParser(std::string& config_path) {
   std::string types[8] = {
     "UNKNOWN_TOKEN",
     "SETTING_TOKEN",
@@ -70,7 +70,7 @@ ServerSettings::ServerSettings(std::string& config_path) {
 
 // each parsing function should take the remaining tokens and add key
 // values while removing corresponding tokens from the token vector
-void ServerSettings::parseHTTP() {
+void SettingsParser::parseHTTP() {
   GlobalSettings res;
   // iterate over tokens, if there is a server token:
   // res.settings_.push_back(parseServer())
@@ -92,7 +92,7 @@ void ServerSettings::parseHTTP() {
   // return res;
 }
 
-VServerSettings ServerSettings::parseServer(
+VServerSettings SettingsParser::parseServer(
     std::vector<std::pair<std::string, token_type> >::iterator& it) {
   VServerSettings res;
   // iterate over tokens, if there is a location token:
@@ -111,7 +111,7 @@ VServerSettings ServerSettings::parseServer(
   return res;
 }
 //
-LocationSettings ServerSettings::parseRoute(
+LocationSettings SettingsParser::parseRoute(
     std::vector<std::pair<std::string, token_type> >::iterator& it) {
   LocationSettings res;
   // iterate over tokens, add them to this->settings_;
@@ -126,38 +126,38 @@ LocationSettings ServerSettings::parseRoute(
   return res;
 }
 
-void ServerSettings::parse() {
+void SettingsParser::parse() {
   this->parseHTTP();
- // ServerSettings::token_type current = UNKNOWN_TOKEN;
+ // SettingsParser::token_type current = UNKNOWN_TOKEN;
  // for (std::vector<
- //          std::pair<std::string, ServerSettings::token_type> >::iterator it =
+ //          std::pair<std::string, SettingsParser::token_type> >::iterator it =
  //          this->tokens_.begin();
  //      it != this->tokens_.end(); ++it) {
  //   current = it->second;
  //   std::cout << it->first << std::endl;
- //   if (current == ServerSettings::HTTP_TOKEN) {
+ //   if (current == SettingsParser::HTTP_TOKEN) {
  //     it++;
  //     current = it->second;
  //     std::cout << it->first << std::endl;
- //     while (current != ServerSettings::CLOSE_CBR_TOKEN) {
+ //     while (current != SettingsParser::CLOSE_CBR_TOKEN) {
  //       std::cout << "IN HTTP LOOP" << std::endl;
  //       it++;
  //       current = it->second;
  //       std::cout << it->first << std::endl;
- //       if (current == ServerSettings::SERVER_TOKEN) {
+ //       if (current == SettingsParser::SERVER_TOKEN) {
  //         it++;
  //         current = it->second;
  //         std::cout << it->first << std::endl;
- //         while (current != ServerSettings::CLOSE_CBR_TOKEN) {
+ //         while (current != SettingsParser::CLOSE_CBR_TOKEN) {
  //           std::cout << "IN SRVER LOOP" << std::endl;
  //           it++;
  //           current = it->second;
  //           std::cout << it->first << std::endl;
- //           if (current == ServerSettings::ROUTE_TOKEN) {
+ //           if (current == SettingsParser::ROUTE_TOKEN) {
  //             it++;
  //             current = it->second;
  //             std::cout << it->first << std::endl;
- //             while (current != ServerSettings::CLOSE_CBR_TOKEN) {
+ //             while (current != SettingsParser::CLOSE_CBR_TOKEN) {
  //               std::cout << "IN ROUTe LOOP" << std::endl;
  //               it++;
  //               current = it->second;
