@@ -48,10 +48,10 @@ class TcpServer {
   std::map<int, Socket> sockets_;
 
   int startServer();
-  void sendResponse(HTTPRequest& req, int sockfd);
+  void sendResponse(HTTPRequest& req, Socket& socket);
   void sendResponse(std::map<int, Socket>::iterator it);
   void newConnection();
-  void handleConnection(size_t fd);
+  void handleConnection(Socket& socket);
 };
 
 void log(const std::string& msg);

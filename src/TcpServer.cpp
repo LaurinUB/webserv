@@ -126,21 +126,21 @@ void TcpServer::run() {
           break;
         } else {
           std::cout << "Handle exsisting Connection" << std::endl;
-          handleConnection(fd);
+          handleConnection(this->sockets_.find(this->pollfds_[fd].fd)->second);
         }
       }
     }
   }
 }
 
-void TcpServer::handleConnection(size_t fd) {
+void TcpServer::handleConnection(Socket& socket) {
   char buffer[BUFFER_SIZE] = {0};
   ssize_t rec = 0;
 
-  std::cout << "== Connected on socket: " << this->pollfds_[fd].fd
+  std::cout << "== Connected on socket: " << socket.getFd()
             << " ==" << std::endl
             << std::endl;
-  rec = recv(this->pollfds_[fd].fd, buffer, BUFFER_SIZE, O_NONBLOCK);
+  rec = recv(socket.getFd(), buffer, BUFFER_SIZE, O_NONBLOCK);
   if (rec < 0) {
     exitWithError("Failed to read bytes from client socket connection");
   } else if (rec == 0) {
@@ -148,30 +148,28 @@ void TcpServer::handleConnection(size_t fd) {
   }
   std::string stringyfied_buff(buffer);
   try {
-    HTTPRequest req(stringyfied_buff);
+    HTTPRequest req(stringyfied_buff, socket);
     std::cout << req << std::endl;
-    this->sendResponse(req, this->pollfds_[fd].fd);
+    this->sendResponse(req, socket);
     std::cout << "Response send" << std::endl;
-    if (req.getHeader().find("Connection")->second != "keep-alive") {
+    if (!socket.isKeepalive()) {
       log("Closing socket");
-      this->sockets_.erase(this->sockets_.find(this->pollfds_[fd].fd));
-      this->pollfds_[fd].fd = -1;
-      this->numfds_--;
+      this->sockets_.erase(this->sockets_.find(socket.getFd()));
     }
   } catch (std::exception& e) {
     std::cout << e.what() << std::endl;
   }
 }
 
-void TcpServer::sendResponse(HTTPRequest& req, int sockfd) {
+void TcpServer::sendResponse(HTTPRequest& req, Socket& socket) {
   int bytesSent = 0;
   HTTPResponse res(req);
   std::string res_string = res.toString();
-  bytesSent = send(sockfd, res_string.data(), res_string.size(), 0);
+  bytesSent = send(socket.getFd(), res_string.data(), res_string.size(), 0);
   if (bytesSent < 0) {
     std::cout << "Error sending response to client" << std::endl;
   } else if (static_cast<size_t>(bytesSent) < res_string.size()) {
-    this->sockets_[sockfd].handleUnfinished(bytesSent, res_string);
+    socket.handleUnfinished(bytesSent, res_string);
   }
 }
 
