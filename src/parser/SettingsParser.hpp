@@ -32,12 +32,12 @@ class SettingsParser {
   //// private methods
   token_type identifyTokenType(std::string& token);
   std::vector<std::pair<std::string, token_type> > tokens_;
-  void parse();
-  void parseHTTP();
+  GlobalSettings parseHTTP();
   VServerSettings parseServer(
       std::vector<std::pair<std::string, token_type> >::iterator& it);
   LocationSettings parseRoute(
       std::vector<std::pair<std::string, token_type> >::iterator& it);
+  GlobalSettings parsed_settings_;
 };
 
 #endif  // SETTINGS_PARSER_
