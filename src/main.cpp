@@ -1,5 +1,5 @@
-#include "parser/SettingsParser.hpp"
 #include "TcpServer.hpp"
+#include "parser/SettingsParser.hpp"
 
 sig_atomic_t g_signaled = 0;
 

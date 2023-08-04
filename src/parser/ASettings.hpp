@@ -4,10 +4,10 @@
 #include <map>
 #include <string>
 
-class ASettings { 
+class ASettings {
  public:
-  ASettings() {};
-  virtual ~ASettings() {};
+  ASettings(){};
+  virtual ~ASettings(){};
   std::map<std::string, std::string> settings_;
 
  private:
