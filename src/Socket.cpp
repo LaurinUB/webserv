@@ -80,7 +80,7 @@ Socket::~Socket() {
     std::cout << "closing Socket on: " << getFd() << std::endl;
   }
   close(this->pollfd_.fd);
-  this->pollfd_.fd = -1;
+  // this->pollfd_.fd = -1;
 }
 
 Socket::Socket(const Socket& obj) { *this = obj; }

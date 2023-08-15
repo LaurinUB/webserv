@@ -92,7 +92,7 @@ int TcpServer::pollError(pollfd& poll) {
   if (res != 0) {
     std::cout << "pollfd: " << poll.fd << std::endl;
     this->sockets_.erase(this->sockets_.find(poll.fd));
-    poll.fd = -1;
+    removeFd(poll.fd);
   }
   return res;
 }
@@ -118,21 +118,26 @@ void TcpServer::removeFd(int fd) {
       break;
     }
   }
+  if (PRINT) {
+    std::cout << "close: socket size: " << this->sockets_.size() << std::endl;
+    std::cout << "close: numfds_: " << this->numfds_ << std::endl;
+    std::cout << "close: removeFD(" << fd << ")" << std::endl;
+  }
 }
 
 void TcpServer::checkSocketTimeout() {
   int i = 0;
-  std::map<int, Socket>::iterator end = this->sockets_.end();
-  for (std::map<int, Socket>::iterator it = this->sockets_.begin(); it != end;
-       ++it) {
+  std::map<int, Socket>::iterator it = this->sockets_.begin();
+  while (it != this->sockets_.end()) {
     if (it->second.checkTimeout()) {
       while (this->pollfds_[i].fd != it->first) {
         i++;
       }
-      removeFd(it->second.getFd());
       this->sockets_.erase(it);
+      removeFd(it->second.getFd());
       break;
     }
+    it++;
   }
 }
 
@@ -150,7 +155,7 @@ void TcpServer::run() {
       exitWithError("Poll failed");
     }
     checkSocketTimeout();
-    log("====== Waiting for a new connection ======\n\n\n");
+    // log("====== Waiting for a new connection ======\n\n\n");
     checkUnfinished(this->sockets_);
     for (size_t i = 0; i < this->numfds_; ++i) {
       if (PRINT && this->pollfds_[i].fd != 3 && this->pollfds_[i].fd != -1) {
@@ -198,8 +203,9 @@ void TcpServer::handleConnection(Socket& socket) {
     std::cout << "Response send" << std::endl;
     if (socket.isWritten() && !socket.isKeepalive()) {
       log("Closing socket");
-      removeFd(socket.getFd());
-      this->sockets_.erase(this->sockets_.find(socket.getFd()));
+      int sock = socket.getFd();
+      this->sockets_.erase(this->sockets_.find(sock));
+      removeFd(sock);
     }
   } catch (std::exception& e) {
     std::cout << e.what() << std::endl;
@@ -266,10 +272,10 @@ void TcpServer::newConnection() {
             << inet_ntoa(this->socketAddress_.sin_addr)
             << " with socket nbr: " << this->sockets_[new_socket].getFd()
             << std::endl;
-  if (PRINT) {
-    // std::cout << "revents poll: " << new_poll.revents << std::endl;
-    std::cout << "numfds_ " << this->numfds_ << std::endl;
-  }
+  // if (PRINT) {
+  // std::cout << "revents poll: " << new_poll.revents << std::endl;
+  std::cout << "numfds_ " << this->numfds_ << std::endl;
+  // }
   this->pollfds_[this->numfds_] = new_poll;
   this->numfds_++;
 }
