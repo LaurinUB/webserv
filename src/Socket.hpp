@@ -30,9 +30,9 @@ class Socket {
   void setOpt();
   void setKeepalive(bool state);
   void setWritten(bool state);
-  bool checkTimeout();
   void updateTime();
 
+  bool checkTimeout();
   void handleUnfinished(int bytesSent, std::string res_string);
 
  private:
@@ -42,6 +42,7 @@ class Socket {
   double timeout_;
   bool data_written_;
   std::string response_;
+  // std::string request_;
 };
 
 std::map<int, Socket>::iterator getUnfinished(std::map<int, Socket>& sockets);

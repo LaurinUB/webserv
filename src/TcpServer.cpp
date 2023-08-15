@@ -47,7 +47,7 @@ TcpServer& TcpServer::operator=(const TcpServer& obj) {
 
 int TcpServer::startServer() {
   int opt = 1;
-  memset(this->pollfds_, -1, 1024);
+  memset(this->pollfds_, -1, 255);
   this->listen_ = socket(AF_INET, SOCK_STREAM, 0);
   if (this->listen_ < 0) {
     exitWithError("Error: cannot create socket");
@@ -144,7 +144,7 @@ void TcpServer::run() {
     if (PRINT) {
       std::cout << "Sockets open: " << this->numfds_ << std::endl;
     }
-    if (poll(this->pollfds_, this->numfds_ + 1, 100) == -1) {
+    if (poll(this->pollfds_, this->numfds_, 100) == -1) {
       perror("poll");
       std::cout << this->numfds_ << std::endl;
       exitWithError("Poll failed");
@@ -196,7 +196,7 @@ void TcpServer::handleConnection(Socket& socket) {
     std::cout << req << std::endl;
     this->sendResponse(req, socket);
     std::cout << "Response send" << std::endl;
-    if (!socket.isKeepalive()) {
+    if (socket.isWritten() && !socket.isKeepalive()) {
       log("Closing socket");
       removeFd(socket.getFd());
       this->sockets_.erase(this->sockets_.find(socket.getFd()));
@@ -244,7 +244,7 @@ void TcpServer::checkUnfinished(std::map<int, Socket>& sockets) {
 
 void TcpServer::newConnection() {
   pollfd new_poll;
-  if (this->numfds_ > 256) {
+  if (this->numfds_ > 255) {
     return;
   }
   int new_socket =
@@ -267,7 +267,8 @@ void TcpServer::newConnection() {
             << " with socket nbr: " << this->sockets_[new_socket].getFd()
             << std::endl;
   if (PRINT) {
-    std::cout << "revents poll: " << new_poll.revents << std::endl;
+    // std::cout << "revents poll: " << new_poll.revents << std::endl;
+    std::cout << "numfds_ " << this->numfds_ << std::endl;
   }
   this->pollfds_[this->numfds_] = new_poll;
   this->numfds_++;

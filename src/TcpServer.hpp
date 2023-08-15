@@ -44,7 +44,7 @@ class TcpServer {
   struct sockaddr_in socketAddress_;
   unsigned int socketAddress_len_;
   std::string serverMessage_;
-  pollfd pollfds_[256];
+  pollfd pollfds_[255];
   std::map<int, Socket> sockets_;
 
   int pollError(pollfd& fd);
