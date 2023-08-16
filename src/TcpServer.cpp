@@ -6,7 +6,7 @@
 extern sig_atomic_t g_signaled;
 
 const int BUFFER_SIZE = 30640;
-const int QUEUE_LEN = 20;
+const int QUEUE_LEN = 40;
 
 void log(const std::string& msg) { std::cout << msg << std::endl; }
 
@@ -146,23 +146,16 @@ void TcpServer::run() {
             << inet_ntoa(this->socketAddress_.sin_addr)
             << " PORT: " << ntohs(this->socketAddress_.sin_port) << " ***\n\n";
   while (g_signaled == 0) {
-    if (PRINT) {
-      std::cout << "Sockets open: " << this->numfds_ << std::endl;
-    }
     if (poll(this->pollfds_, this->numfds_, 100) == -1) {
       perror("poll");
-      std::cout << this->numfds_ << std::endl;
       exitWithError("Poll failed");
     }
     checkSocketTimeout();
     // log("====== Waiting for a new connection ======\n\n\n");
-    checkUnfinished(this->sockets_);
+    if (checkUnfinished(this->sockets_)) {
+      continue;
+    }
     for (size_t i = 0; i < this->numfds_; ++i) {
-      if (PRINT && this->pollfds_[i].fd != 3 && this->pollfds_[i].fd != -1) {
-        std::cout << this->sockets_[this->pollfds_[i].fd] << "i: " << i
-                  << std::endl;
-        std::cout << "pollfds.fd: " << this->pollfds_[i].fd << std::endl;
-      }
       if (this->pollfds_[i].fd <= 0) {
         continue;
       }
@@ -198,7 +191,7 @@ void TcpServer::handleConnection(Socket& socket) {
   std::string stringyfied_buff(buffer);
   try {
     HTTPRequest req(stringyfied_buff, socket);
-    std::cout << req << std::endl;
+    // std::cout << req << std::endl;
     this->sendResponse(req, socket);
     std::cout << "Response send" << std::endl;
     if (socket.isWritten() && !socket.isKeepalive()) {
@@ -225,7 +218,7 @@ void TcpServer::sendResponse(HTTPRequest& req, Socket& socket) {
   socket.updateTime();
 }
 
-void TcpServer::sendResponse(std::map<int, Socket>::iterator it) {
+void TcpServer::sendResponse(std::map<int, Socket>::iterator& it) {
   int bytesSent = 0;
   bytesSent = send(it->second.getFd(), it->second.getResponse().c_str(),
                    it->second.getResponseSize(), 0);
@@ -241,11 +234,17 @@ void TcpServer::sendResponse(std::map<int, Socket>::iterator it) {
   }
 }
 
-void TcpServer::checkUnfinished(std::map<int, Socket>& sockets) {
+bool TcpServer::checkUnfinished(std::map<int, Socket>& sockets) {
   std::map<int, Socket>::iterator it = getUnfinished(sockets);
   if (it != sockets.end()) {
     sendResponse(it);
+    if (!it->second.isKeepalive() && it->second.isWritten()) {
+      removeFd(it->second.getFd());
+      this->sockets_.erase(it);
+    }
+    return true;
   }
+  return false;
 }
 
 void TcpServer::newConnection() {
@@ -272,10 +271,10 @@ void TcpServer::newConnection() {
             << inet_ntoa(this->socketAddress_.sin_addr)
             << " with socket nbr: " << this->sockets_[new_socket].getFd()
             << std::endl;
-  // if (PRINT) {
-  // std::cout << "revents poll: " << new_poll.revents << std::endl;
-  std::cout << "numfds_ " << this->numfds_ << std::endl;
-  // }
+  if (PRINT) {
+    std::cout << "revents poll: " << new_poll.revents << std::endl;
+    std::cout << "numfds_ " << this->numfds_ << std::endl;
+  }
   this->pollfds_[this->numfds_] = new_poll;
   this->numfds_++;
 }
