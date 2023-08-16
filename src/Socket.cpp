@@ -4,7 +4,16 @@
 
 int Socket::getFd() const { return this->pollfd_.fd; }
 
-int Socket::getREvent() const { return this->pollfd_.revents; }
+int Socket::getREvent() const {
+  if (this->pollfd_.revents & POLLIN) {
+    std::cout << "revent: POLLIN" << std::endl;
+  } else if (this->pollfd_.revents & POLLOUT) {
+    std::cout << "revent: POLLOUT" << std::endl;
+  } else {
+    std::cout << "revent: no event" << std::endl;
+  }
+  return this->pollfd_.revents;
+}
 
 pollfd Socket::getPoll() const { return this->pollfd_; }
 
@@ -79,8 +88,8 @@ Socket::~Socket() {
   if (PRINT) {
     std::cout << "closing Socket on: " << getFd() << std::endl;
   }
+  shutdown(this->pollfd_.fd, SHUT_RDWR);
   close(this->pollfd_.fd);
-  // this->pollfd_.fd = -1;
 }
 
 Socket::Socket(const Socket& obj) { *this = obj; }

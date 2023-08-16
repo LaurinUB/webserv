@@ -267,14 +267,13 @@ void TcpServer::newConnection() {
   new_poll.events = POLLIN;
   new_poll.revents = 0;
   this->sockets_[new_socket].setPoll(new_poll);
+  if (fcntl(new_poll.fd, F_SETFL, O_NONBLOCK, FD_CLOEXEC) < 0) {
+    exitWithError("fcntl");
+  }
   std::cout << "New connection success on : "
             << inet_ntoa(this->socketAddress_.sin_addr)
             << " with socket nbr: " << this->sockets_[new_socket].getFd()
             << std::endl;
-  if (PRINT) {
-    std::cout << "revents poll: " << new_poll.revents << std::endl;
-    std::cout << "numfds_ " << this->numfds_ << std::endl;
-  }
   this->pollfds_[this->numfds_] = new_poll;
   this->numfds_++;
 }
