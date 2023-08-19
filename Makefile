@@ -12,10 +12,15 @@ WHITE =	\033[0;0m
 ###############################################################################
 
 ##   Source file handling
-SRC_DIR = src/
+PARSER = $(addprefix $(PARSER_DIR), $(PARSER_FILES))
+PARSER_DIR = src/parser/
+PARSER_FILES = SettingsParser.cpp
+
 SRC = $(addprefix $(SRC_DIR), $(SRC_FILES))
+SRC_DIR = src/
 SRC_FILES = HTTPRequest.cpp HTTPResponse.cpp TcpServer.cpp main.cpp Socket.cpp
-ALL_SRC = $(SRC)
+
+ALL_SRC = $(SRC) $(PARSER)
 
 ##   Object file handling
 OBJ_DIR = obj/
