@@ -2,7 +2,7 @@
 #define SERVER_HPP_
 
 #ifndef PORT
-#define PORT 8080
+#define PORT 4040
 #endif
 
 #include <arpa/inet.h>
