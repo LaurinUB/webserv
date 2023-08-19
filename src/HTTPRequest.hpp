@@ -6,8 +6,6 @@
 #include <string>
 #include <vector>
 
-#include "Socket.hpp"
-
 class HTTPRequest {
  public:
   //// Constructors and Operator overloads
@@ -15,7 +13,7 @@ class HTTPRequest {
   ~HTTPRequest();
   HTTPRequest(const HTTPRequest& obj);
   HTTPRequest& operator=(const HTTPRequest& obj);
-  HTTPRequest(std::string& input, Socket& socket);
+  HTTPRequest(std::string& input);
 
   typedef enum {
     UNKNOWN,

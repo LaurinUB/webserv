@@ -4,47 +4,61 @@
 #include <poll.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <arpa/inet.h>
+#include <fcntl.h>
 
 #include <iostream>
 #include <map>
 #include <string>
 
+#include "HTTPRequest.hpp"
+
 #define PRINT false
+
+enum sockState { RECIEVE, SEND, FINISHED, SERVER };
 
 class Socket {
  public:
   Socket();
+  Socket(int port);
   ~Socket();
   Socket(const Socket& obj);
   Socket& operator=(const Socket& obj);
 
   int getFd() const;
-  int getREvent() const;
   pollfd getPoll() const;
-  bool isKeepalive() const;
+  sockState getState() const;
   std::string getResponse() const;
   size_t getResponseSize() const;
-  bool isWritten() const;
+  HTTPRequest& getRequest();
+  bool isKeepalive() const;
+  void getStringState() const;
+  int getPort() const;
+  char* getAddressString() const;
+  sockaddr_in& getAddress();
 
+  void setFd(int fd);
   void setPoll(pollfd fd);
-  void setOpt();
   void setKeepalive(bool state);
-  void setWritten(bool state);
+  int setServerOpt();
+  void setPort(int port);
   bool checkTimeout();
   void updateTime();
+  void setState(sockState stat);
+  void setRequest(HTTPRequest req);
 
   void handleUnfinished(int bytesSent, std::string res_string);
 
  private:
+  struct sockaddr_in socketAddress_;
   pollfd pollfd_;
-  bool keepalive_;
   time_t timestamp_;
   double timeout_;
-  bool data_written_;
+  sockState state_;
+  bool keepalive_;
   std::string response_;
+  HTTPRequest request_;
 };
-
-std::map<int, Socket>::iterator getUnfinished(std::map<int, Socket>& sockets);
 
 std::ostream& operator<<(std::ostream& os, const Socket& socket);
 

@@ -105,7 +105,7 @@ HTTPRequest& HTTPRequest::operator=(const HTTPRequest& obj) {
   return *this;
 }
 
-HTTPRequest::HTTPRequest(std::string& input, Socket& socket) {
+HTTPRequest::HTTPRequest(std::string& input) {
   if (input.size() <= 1) {
     throw std::runtime_error("Error: tried to create request with size <= 1");
   }
@@ -127,7 +127,6 @@ HTTPRequest::HTTPRequest(std::string& input, Socket& socket) {
   }
   if (this->header_.find("Connection")->second.compare("keep-alive") == 0) {
     this->keepalive_ = true;
-    socket.setKeepalive(true);
   }
   this->body_ = body;
 }
