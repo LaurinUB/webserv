@@ -11,6 +11,8 @@
 
 #define PRINT false
 
+// TODO(luntiet-): add Request field in socket
+
 class Socket {
  public:
   Socket();
@@ -30,9 +32,9 @@ class Socket {
   void setOpt();
   void setKeepalive(bool state);
   void setWritten(bool state);
-  bool checkTimeout();
   void updateTime();
 
+  bool checkTimeout();
   void handleUnfinished(int bytesSent, std::string res_string);
 
  private:

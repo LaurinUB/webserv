@@ -44,16 +44,16 @@ class TcpServer {
   struct sockaddr_in socketAddress_;
   unsigned int socketAddress_len_;
   std::string serverMessage_;
-  pollfd pollfds_[256];
+  pollfd pollfds_[255];
   std::map<int, Socket> sockets_;
 
   int pollError(pollfd& fd);
   int startServer();
   void sendResponse(HTTPRequest& req, Socket& socket);
-  void sendResponse(std::map<int, Socket>::iterator it);
+  void sendResponse(std::map<int, Socket>::iterator& it);
   void newConnection();
   void handleConnection(Socket& socket);
-  void checkUnfinished(std::map<int, Socket>& socket);
+  bool checkUnfinished(std::map<int, Socket>& socket);
   void handleRevents(int i);
   void checkSocketTimeout();
   void removeFd(int fd);
