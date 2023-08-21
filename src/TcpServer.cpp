@@ -196,6 +196,9 @@ void TcpServer::handleConnection(Socket& socket) {
     if (PRINT) {
       std::cout << req << std::endl;
     }
+    if (!req.getURI().compare(0, 9, "/cgi_bin/")){
+      // handle CGI here!
+    }
     this->sendResponse(req, socket);
     std::cout << "Response send" << std::endl;
     if (socket.isWritten() && !socket.isKeepalive()) {
