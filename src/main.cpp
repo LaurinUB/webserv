@@ -23,3 +23,11 @@ int main() {
   server.run();
   return 0;
 }
+/*
+ * TcpServer("0.0.0.0", settings);
+ *
+ * inside TcpServer:
+ *
+ * for server in settings.servers
+ *  listen to server.port
+ */

@@ -21,6 +21,11 @@ class GlobalSettings : public ASettings {
   }
   std::vector<ServerSettings> server_settings_;
 
+  bool setValue(std::string key, std::string value) {
+    (void) key;
+    (void) value;
+    return true;
+  };
  private:
 };
 

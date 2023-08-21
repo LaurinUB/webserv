@@ -85,17 +85,20 @@ ServerSettings SettingsParser::parseServer(
   ServerSettings res;
   for (; it->second != CLOSE_CBR_TOKEN; ++it) {
     if (it->second == VALUE_TOKEN) {
-      res.settings_.insert(
-          std::pair<std::string, std::string>((it - 1)->first, it->first));
-      std::cout << "SERVER ADDED: " << (it - 1)->first << ": " << it->first
-                << std::endl;
+      /*
+       * res.settings_.insert(
+       *     std::pair<std::string, std::string>((it - 1)->first, it->first));
+       * std::cout << "SERVER ADDED: " << (it - 1)->first << ": " << it->first
+       *           << std::endl;
+       */
+      res.setValue((it - 1)->first, it->first);
     } else if (it->second == ROUTE_TOKEN) {
       parseRoute(it);
     }
   }
   return res;
 }
-//
+
 LocationSettings SettingsParser::parseRoute(
     std::vector<std::pair<std::string, token_type> >::iterator& it) {
   LocationSettings res;
