@@ -45,7 +45,7 @@ class Socket {
   bool checkTimeout();
   void updateTime();
   void setState(sockState stat);
-  void setRequest(HTTPRequest req);
+  void setRequest(HTTPRequest& req);
 
   void handleUnfinished(int bytesSent, std::string res_string);
 

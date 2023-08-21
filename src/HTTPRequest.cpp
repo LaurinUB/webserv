@@ -99,9 +99,12 @@ HTTPRequest::~HTTPRequest() {}
 HTTPRequest::HTTPRequest(const HTTPRequest& obj) { *this = obj; }
 
 HTTPRequest& HTTPRequest::operator=(const HTTPRequest& obj) {
-  if (this != &obj) {
-    *this = obj;
-  }
+  this->keepalive_ = obj.request_method_;
+  this->body_ = obj.body_;
+  this->header_ = obj.header_;
+  this->request_method_ = obj.request_method_;
+  this->URI_ = obj.URI_;
+  this->protocol_version_ = obj.protocol_version_;
   return *this;
 }
 

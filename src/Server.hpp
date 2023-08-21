@@ -42,10 +42,10 @@ class Server {
 
   int pollError(pollfd& fd);
   int startServer(int port);
-  void sendResponse(Socket& socket);
+  void sendResponse(int i);
   void newConnection();
-  void handleRecieve(Socket& socket);
-  void handleSend(Socket& socket);
+  void handleRecieve(int i);
+  void handleSend(int i);
   void checkSocketTimeout();
   void removeFd(int fd);
 };

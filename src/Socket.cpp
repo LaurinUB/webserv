@@ -32,12 +32,15 @@ Socket& Socket::operator=(const Socket& obj) {
   this->timestamp_ = obj.timestamp_;
   this->socketAddress_ = obj.socketAddress_;
   this->state_ = obj.state_;
+  if (!this->response_.empty())
+    this->response_ = obj.response_;
+  std::cout << "Assignment operator overload" << std::endl;
   return *this;
 }
 
 void Socket::setPort(int port) {
   this->socketAddress_.sin_family = AF_INET;
-  this->socketAddress_.sin_port = port;
+  this->socketAddress_.sin_port = htons(port);
   this->socketAddress_.sin_addr.s_addr = INADDR_ANY;
 }
 
@@ -50,10 +53,10 @@ sockaddr_in& Socket::getAddress() {
 }
 
 int Socket::getPort() const {
-  return this->socketAddress_.sin_port;
+  return ntohs(this->socketAddress_.sin_port);
 }
 
-void Socket::setRequest(HTTPRequest req) {
+void Socket::setRequest(HTTPRequest& req) {
   this->request_ = req;
   if (req.getKeepalive()) {
     this->keepalive_ = true;
@@ -85,6 +88,7 @@ int Socket::setServerOpt() {
   }
   std::cout << "Success: Socket fcntl." << std::endl;
   this->pollfd_.events = POLLIN;
+  this->pollfd_.revents = 0;
   this->state_ = SERVER;
   return EXIT_SUCCESS;
 }
@@ -97,12 +101,16 @@ void Socket::getStringState() const {
   switch (this->state_) {
     case RECIEVE:
       std::cout << "RECIEVE" << std::endl;
+      break;
     case SEND:
       std::cout << "SEND" << std::endl;
+      break;
     case FINISHED:
       std::cout << "FINISHED" << std::endl;
+      break;
     case SERVER:
       std::cout << "SERVER" << std::endl;
+      break;
   }
 }
 
@@ -118,6 +126,12 @@ HTTPRequest& Socket::getRequest() { return this->request_; }
 
 void Socket::setState(sockState state) {
   this->state_ = state;
+  if (state == RECIEVE) {
+    this->pollfd_.events = POLLIN;
+  } else if (state == SEND) {
+    this->pollfd_.events = POLLOUT;
+  }
+  this->pollfd_.revents = 0;
 }
 
 void Socket::setKeepalive(bool state) { this->keepalive_ = state; }
