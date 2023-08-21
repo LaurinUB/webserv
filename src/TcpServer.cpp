@@ -150,8 +150,10 @@ void TcpServer::run() {
       perror("poll");
       exitWithError("Poll failed");
     }
+    if (PRINT) {
+      log("====== Waiting for a new connection ======\n\n\n");
+    }
     checkSocketTimeout();
-    // log("====== Waiting for a new connection ======\n\n\n");
     if (checkUnfinished(this->sockets_)) {
       continue;
     }
@@ -191,7 +193,9 @@ void TcpServer::handleConnection(Socket& socket) {
   std::string stringyfied_buff(buffer);
   try {
     HTTPRequest req(stringyfied_buff, socket);
-    // std::cout << req << std::endl;
+    if (PRINT) {
+      std::cout << req << std::endl;
+    }
     this->sendResponse(req, socket);
     std::cout << "Response send" << std::endl;
     if (socket.isWritten() && !socket.isKeepalive()) {
