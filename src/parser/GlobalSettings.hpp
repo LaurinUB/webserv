@@ -26,6 +26,9 @@ class GlobalSettings : public ASettings {
     (void) value;
     return true;
   };
+  const std::vector<ServerSettings> getServers() const {
+    return this->server_settings_;
+  };
  private:
 };
 

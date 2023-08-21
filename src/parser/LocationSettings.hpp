@@ -33,6 +33,14 @@ class LocationSettings : public ASettings {
     return true;
   };
 
+  std::vector<std::string> getAllowedMethods() const {
+    return this->allowed_methods_;
+  };
+  std::string getRoot() const { return this->root_; };
+  bool getAutoIndex() const { return this->auto_index_; };
+  bool getAllowUpload() const { return this->allow_upload_; };
+  std::string getUploadDir() const { return this->upload_dir_; };
+
  private:
   std::vector<std::string> allowed_methods_;
   std::string root_;

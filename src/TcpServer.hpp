@@ -26,11 +26,13 @@
 #include <utility>
 
 #include "HTTPRequest.hpp"
+#include "./parser/SettingsParser.hpp"
 #include "Socket.hpp"
 
 class TcpServer {
  public:
   TcpServer(const std::string& ip_addr, int port);
+  TcpServer(const SettingsParser& settings);
   ~TcpServer();
   TcpServer(const TcpServer& obj);
   TcpServer& operator=(const TcpServer& obj);

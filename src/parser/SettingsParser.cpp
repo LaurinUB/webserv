@@ -104,10 +104,11 @@ LocationSettings SettingsParser::parseRoute(
   LocationSettings res;
   for (; it->second != CLOSE_CBR_TOKEN; ++it) {
     if (it->second == VALUE_TOKEN) {
-      res.settings_.insert(
-          std::pair<std::string, std::string>((it - 1)->first, it->first));
-      std::cout << "LOCATION ADDED: " << (it - 1)->first << ": " << it->first
-                << std::endl;
+     // res.settings_.insert(
+     //     std::pair<std::string, std::string>((it - 1)->first, it->first));
+     // std::cout << "LOCATION ADDED: " << (it - 1)->first << ": " << it->first
+     //           << std::endl;
+     res.setValue((it -1)->first, it->first);
     }
   }
   return res;

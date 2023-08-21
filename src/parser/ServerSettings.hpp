@@ -12,7 +12,9 @@
 class ServerSettings : public ASettings {
  public:
   ServerSettings(){};
-  virtual ~ServerSettings(){};
+  virtual ~ServerSettings(){
+    std::cout << "Decon called ServerSettings" << std::endl;
+  };
   ServerSettings(const ServerSettings& obj)
       : location_settings_(obj.location_settings_){};
   ServerSettings& operator=(const ServerSettings& obj) {
@@ -21,6 +23,7 @@ class ServerSettings : public ASettings {
     return *this;
   };
   bool setValue(std::string key, std::string value) {
+    value.erase(value.size() - 1);
     std::cout << "TRYING --- Key: " << key << " value: " << value << std::endl;
     if (key == "port") {
       this->port_ = std::atoi(value.c_str());
@@ -36,6 +39,18 @@ class ServerSettings : public ASettings {
     }
     std::cout << "SET --- Key: " << key << " value: " << value << std::endl;
     return true;
+  };
+
+  std::vector<LocationSettings> getRoutes() const {
+    return this->location_settings_;
+  }
+  unsigned int getPort() const { return this->port_; };
+  std::string getName() const { return this->server_name_; };
+  std::map<unsigned int, std::string> getErrorPages() const {
+    return this->error_pages_;
+  };
+  unsigned int getMaxClientBodySize() const {
+    return this->max_client_body_size_;
   };
 
  private:
