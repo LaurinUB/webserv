@@ -6,7 +6,7 @@
 extern sig_atomic_t g_signaled;
 
 const int BUFFER_SIZE = 30640;
-const int QUEUE_LEN = 20;
+const int QUEUE_LEN = 40;
 
 void log(const std::string& msg) { std::cout << msg << std::endl; }
 
@@ -47,7 +47,7 @@ TcpServer& TcpServer::operator=(const TcpServer& obj) {
 
 int TcpServer::startServer() {
   int opt = 1;
-  memset(this->pollfds_, -1, 1024);
+  memset(this->pollfds_, -1, 255);
   this->listen_ = socket(AF_INET, SOCK_STREAM, 0);
   if (this->listen_ < 0) {
     exitWithError("Error: cannot create socket");
@@ -92,7 +92,7 @@ int TcpServer::pollError(pollfd& poll) {
   if (res != 0) {
     std::cout << "pollfd: " << poll.fd << std::endl;
     this->sockets_.erase(this->sockets_.find(poll.fd));
-    poll.fd = -1;
+    removeFd(poll.fd);
   }
   return res;
 }
@@ -118,21 +118,26 @@ void TcpServer::removeFd(int fd) {
       break;
     }
   }
+  if (PRINT) {
+    std::cout << "close: socket size: " << this->sockets_.size() << std::endl;
+    std::cout << "close: numfds_: " << this->numfds_ << std::endl;
+    std::cout << "close: removeFD(" << fd << ")" << std::endl;
+  }
 }
 
 void TcpServer::checkSocketTimeout() {
   int i = 0;
-  std::map<int, Socket>::iterator end = this->sockets_.end();
-  for (std::map<int, Socket>::iterator it = this->sockets_.begin(); it != end;
-       ++it) {
+  std::map<int, Socket>::iterator it = this->sockets_.begin();
+  while (it != this->sockets_.end()) {
     if (it->second.checkTimeout()) {
       while (this->pollfds_[i].fd != it->first) {
         i++;
       }
-      removeFd(it->second.getFd());
       this->sockets_.erase(it);
+      removeFd(it->second.getFd());
       break;
     }
+    it++;
   }
 }
 
@@ -141,23 +146,18 @@ void TcpServer::run() {
             << inet_ntoa(this->socketAddress_.sin_addr)
             << " PORT: " << ntohs(this->socketAddress_.sin_port) << " ***\n\n";
   while (g_signaled == 0) {
-    if (PRINT) {
-      std::cout << "Sockets open: " << this->numfds_ << std::endl;
-    }
-    if (poll(this->pollfds_, this->numfds_ + 1, 100) == -1) {
+    if (poll(this->pollfds_, this->numfds_, 100) == -1) {
       perror("poll");
-      std::cout << this->numfds_ << std::endl;
       exitWithError("Poll failed");
     }
+    if (PRINT) {
+      log("====== Waiting for a new connection ======\n\n\n");
+    }
     checkSocketTimeout();
-    log("====== Waiting for a new connection ======\n\n\n");
-    checkUnfinished(this->sockets_);
+    if (checkUnfinished(this->sockets_)) {
+      continue;
+    }
     for (size_t i = 0; i < this->numfds_; ++i) {
-      if (PRINT && this->pollfds_[i].fd != 3 && this->pollfds_[i].fd != -1) {
-        std::cout << this->sockets_[this->pollfds_[i].fd] << "i: " << i
-                  << std::endl;
-        std::cout << "pollfds.fd: " << this->pollfds_[i].fd << std::endl;
-      }
       if (this->pollfds_[i].fd <= 0) {
         continue;
       }
@@ -193,13 +193,16 @@ void TcpServer::handleConnection(Socket& socket) {
   std::string stringyfied_buff(buffer);
   try {
     HTTPRequest req(stringyfied_buff, socket);
-    std::cout << req << std::endl;
+    if (PRINT) {
+      std::cout << req << std::endl;
+    }
     this->sendResponse(req, socket);
     std::cout << "Response send" << std::endl;
-    if (!socket.isKeepalive()) {
+    if (socket.isWritten() && !socket.isKeepalive()) {
       log("Closing socket");
-      removeFd(socket.getFd());
-      this->sockets_.erase(this->sockets_.find(socket.getFd()));
+      int sock = socket.getFd();
+      this->sockets_.erase(this->sockets_.find(sock));
+      removeFd(sock);
     }
   } catch (std::exception& e) {
     std::cout << e.what() << std::endl;
@@ -219,7 +222,7 @@ void TcpServer::sendResponse(HTTPRequest& req, Socket& socket) {
   socket.updateTime();
 }
 
-void TcpServer::sendResponse(std::map<int, Socket>::iterator it) {
+void TcpServer::sendResponse(std::map<int, Socket>::iterator& it) {
   int bytesSent = 0;
   bytesSent = send(it->second.getFd(), it->second.getResponse().c_str(),
                    it->second.getResponseSize(), 0);
@@ -235,16 +238,22 @@ void TcpServer::sendResponse(std::map<int, Socket>::iterator it) {
   }
 }
 
-void TcpServer::checkUnfinished(std::map<int, Socket>& sockets) {
+bool TcpServer::checkUnfinished(std::map<int, Socket>& sockets) {
   std::map<int, Socket>::iterator it = getUnfinished(sockets);
   if (it != sockets.end()) {
     sendResponse(it);
+    if (!it->second.isKeepalive() && it->second.isWritten()) {
+      removeFd(it->second.getFd());
+      this->sockets_.erase(it);
+    }
+    return true;
   }
+  return false;
 }
 
 void TcpServer::newConnection() {
   pollfd new_poll;
-  if (this->numfds_ > 256) {
+  if (this->numfds_ > 255) {
     return;
   }
   int new_socket =
@@ -262,13 +271,13 @@ void TcpServer::newConnection() {
   new_poll.events = POLLIN;
   new_poll.revents = 0;
   this->sockets_[new_socket].setPoll(new_poll);
+  if (fcntl(new_poll.fd, F_SETFL, O_NONBLOCK, FD_CLOEXEC) < 0) {
+    exitWithError("fcntl");
+  }
   std::cout << "New connection success on : "
             << inet_ntoa(this->socketAddress_.sin_addr)
             << " with socket nbr: " << this->sockets_[new_socket].getFd()
             << std::endl;
-  if (PRINT) {
-    std::cout << "revents poll: " << new_poll.revents << std::endl;
-  }
   this->pollfds_[this->numfds_] = new_poll;
   this->numfds_++;
 }
