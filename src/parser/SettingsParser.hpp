@@ -19,6 +19,9 @@ class SettingsParser {
 
   GlobalSettings global;
 
+  std::string getRouteRoot(unsigned int server_idx,
+                           unsigned int route_idx) const;
+
   typedef enum {
     UNKNOWN_TOKEN,
     SETTING_TOKEN,

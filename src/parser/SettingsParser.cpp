@@ -106,3 +106,12 @@ LocationSettings SettingsParser::parseRoute(
   }
   return res;
 }
+
+std::string SettingsParser::getRouteRoot(unsigned int server_idx,
+                                         unsigned int route_idx) const {
+  if (server_idx >= this->global.servers.size() ||
+      route_idx >= this->global.servers[server_idx].getRoutes().size()) {
+    throw std::runtime_error("invalid server or route on getRouteRoot call");
+  }
+  return this->global.servers[server_idx].getRoutes()[route_idx].getRoot();
+}

@@ -11,11 +11,8 @@
 
 void HTTPResponse::handleGET(HTTPRequest& req) {
   std::string path =
-      (req.getURI() == "/"
-           ? this->settings_.global.servers[0].getRoutes()[0].getRoot() +
-                 "/index.html"
-           : this->settings_.global.servers[0].getRoutes()[0].getRoot() +
-                 req.getURI());
+      (req.getURI() == "/" ? this->settings_.getRouteRoot(0, 0) + "/index.html"
+                           : this->settings_.getRouteRoot(0, 0) + req.getURI());
   std::string mimetype =
       path.substr(path.find_last_of('.') + 1, path.size() - 1);
   std::string content_type = this->mime_types.find(mimetype)->second;
