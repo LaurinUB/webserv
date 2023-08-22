@@ -58,7 +58,7 @@ SettingsParser::SettingsParser(std::string& config_path) {
        i != tokenized_file.end(); ++i) {
   }
   this->tokens_ = tokenized_file;
-  this->parsed_settings_ = parseHTTP();
+  this->global = parseHTTP();
 }
 
 GlobalSettings SettingsParser::parseHTTP() {
@@ -68,7 +68,7 @@ GlobalSettings SettingsParser::parseHTTP() {
            this->tokens_.begin();
        it != this->tokens_.end(); ++it) {
     if (previous == SERVER_TOKEN && it->second == OPEN_CBR_TOKEN) {
-      res.server_settings_.push_back(this->parseServer(it));
+      res.servers.push_back(this->parseServer(it));
     } else if (it->second == VALUE_TOKEN) {
       res.settings_.insert(
           std::pair<std::string, std::string>((it - 1)->first, it->first));
@@ -85,26 +85,20 @@ ServerSettings SettingsParser::parseServer(
   ServerSettings res;
   for (; it->second != CLOSE_CBR_TOKEN; ++it) {
     if (it->second == VALUE_TOKEN) {
-      res.settings_.insert(
-          std::pair<std::string, std::string>((it - 1)->first, it->first));
-      std::cout << "SERVER ADDED: " << (it - 1)->first << ": " << it->first
-                << std::endl;
+      res.setValue((it - 1)->first, it->first);
     } else if (it->second == ROUTE_TOKEN) {
       parseRoute(it);
     }
   }
   return res;
 }
-//
+
 LocationSettings SettingsParser::parseRoute(
     std::vector<std::pair<std::string, token_type> >::iterator& it) {
   LocationSettings res;
   for (; it->second != CLOSE_CBR_TOKEN; ++it) {
     if (it->second == VALUE_TOKEN) {
-      res.settings_.insert(
-          std::pair<std::string, std::string>((it - 1)->first, it->first));
-      std::cout << "LOCATION ADDED: " << (it - 1)->first << ": " << it->first
-                << std::endl;
+      res.setValue((it - 1)->first, it->first);
     }
   }
   return res;
