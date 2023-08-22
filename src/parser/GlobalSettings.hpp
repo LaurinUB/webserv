@@ -11,15 +11,15 @@ class GlobalSettings : public ASettings {
   GlobalSettings(){};
   virtual ~GlobalSettings(){};
   GlobalSettings(const GlobalSettings& obj)
-      : server_settings_(obj.server_settings_) {
+      : servers(obj.servers) {
     this->settings_ = obj.settings_;
   };
   GlobalSettings& operator=(GlobalSettings obj) {
     this->settings_ = obj.settings_;
-    this->server_settings_ = obj.server_settings_;
+    this->servers = obj.servers;
     return *this;
   }
-  std::vector<ServerSettings> server_settings_;
+  std::vector<ServerSettings> servers;
 
   bool setValue(std::string key, std::string value) {
     (void) key;
@@ -27,7 +27,7 @@ class GlobalSettings : public ASettings {
     return true;
   };
   const std::vector<ServerSettings> getServers() const {
-    return this->server_settings_;
+    return this->servers;
   };
  private:
 };
