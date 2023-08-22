@@ -14,13 +14,13 @@ class ServerSettings : public ASettings {
   ServerSettings(){};
   virtual ~ServerSettings(){};
   ServerSettings(const ServerSettings& obj)
-      : location_settings_(obj.location_settings_),
+      : locations_(obj.locations_),
         port_(obj.port_),
         server_name_(obj.server_name_),
         error_pages_(obj.error_pages_),
         max_client_body_size_(obj.max_client_body_size_){};
   ServerSettings& operator=(const ServerSettings& obj) {
-    this->location_settings_ = obj.location_settings_;
+    this->locations_ = obj.locations_;
     this->port_ = obj.port_;
     this->server_name_ = obj.server_name_;
     this->error_pages_ = obj.error_pages_;
@@ -47,7 +47,7 @@ class ServerSettings : public ASettings {
   };
 
   std::vector<LocationSettings> getRoutes() const {
-    return this->location_settings_;
+    return this->locations_;
   }
   unsigned int getPort() const { return this->port_; };
   std::string getName() const { return this->server_name_; };
@@ -59,7 +59,7 @@ class ServerSettings : public ASettings {
   };
 
  private:
-  std::vector<LocationSettings> location_settings_;
+  std::vector<LocationSettings> locations_;
   unsigned int port_;
   std::string server_name_;
   std::map<unsigned int, std::string> error_pages_;
