@@ -4,11 +4,16 @@
 #include <map>
 #include <string>
 
+#include "SettingsParser.hpp"
+
 class ASettings {
  public:
   ASettings(){};
   virtual ~ASettings(){};
   std::map<std::string, std::string> settings_;
+
+ protected:
+  virtual bool setValue(std::string key, std::string value) = 0;
 
  private:
   ASettings(const ASettings& obj);

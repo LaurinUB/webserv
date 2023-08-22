@@ -31,6 +31,22 @@ TcpServer::TcpServer(const std::string& ip_addr, int port)
   }
 }
 
+TcpServer::TcpServer(const SettingsParser& settings)
+    : ip_addr_(settings.global.servers[0].getName()),
+      port_(settings.global.servers[0].getPort()),
+      listen_(),
+      numfds_(1),
+      socketAddress_(),
+      socketAddress_len_(sizeof(socketAddress_)) {
+  socketAddress_.sin_family = AF_INET;
+  socketAddress_.sin_port = htons(port_);
+  socketAddress_.sin_addr.s_addr = INADDR_ANY;
+  if (startServer() != 0) {
+    std::cout << "Error: failed to start server with PORT: "
+              << ntohs(socketAddress_.sin_port) << std::endl;
+  }
+}
+
 TcpServer::~TcpServer() {
   close(this->listen_);
   exit(EXIT_SUCCESS);

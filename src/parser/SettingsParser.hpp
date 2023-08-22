@@ -17,7 +17,7 @@ class SettingsParser {
   SettingsParser& operator=(const SettingsParser& obj);
   SettingsParser(std::string& config_path);
 
-  GlobalSettings parsed_settings_;
+  GlobalSettings global;
 
   typedef enum {
     UNKNOWN_TOKEN,

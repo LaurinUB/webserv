@@ -12,14 +12,7 @@ int main() {
   signal(SIGINT, handleSIGINT);
   std::string conf_path("./config/default.conf");
   SettingsParser settings(conf_path);
-  // this is just an example for now - as soon as we know which settings to
-  // parse i'd suggest to switch from settings maps to proper classes with
-  // member values
-  TcpServer server = TcpServer(
-      "0.0.0.0",
-      std::strtod(
-          settings.parsed_settings_.settings_.find("port")->second.c_str(),
-          NULL));
+  TcpServer server = TcpServer(settings);
   server.run();
   return 0;
 }
