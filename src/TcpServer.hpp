@@ -25,8 +25,8 @@
 #include <string>
 #include <utility>
 
-#include "HTTPRequest.hpp"
 #include "./parser/SettingsParser.hpp"
+#include "HTTPRequest.hpp"
 #include "Socket.hpp"
 
 class TcpServer {
