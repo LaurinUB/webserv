@@ -193,6 +193,22 @@ void TcpServer::run() {
   }
 }
 
+void executeCGI(std::string uri, int fd) {
+  pid_t child = fork();
+  std::string executable = "./www" + uri;
+  std::cout << "executable: " << executable << std::endl;
+  if (child == 0) {
+    dup2(fd, STDOUT_FILENO);
+    if (execve(executable.c_str(), NULL, NULL) == -1) {
+      std::cerr << "Error: execve." << std::endl;
+      exit(EXIT_FAILURE);
+    }
+  } else {
+    int status;
+    waitpid(child, &status, 0);
+  }
+}
+
 void TcpServer::handleConnection(Socket& socket) {
   char buffer[BUFFER_SIZE] = {0};
   ssize_t rec = 0;
@@ -212,11 +228,16 @@ void TcpServer::handleConnection(Socket& socket) {
     if (PRINT) {
       std::cout << req << std::endl;
     }
-    if (!req.getURI().compare(0, 9, "/cgi_bin/")){
-      // handle CGI here!
+    if (!req.getURI().compare(0, 9, "/cgi_bin/")) {
+      executeCGI(req.getURI(), socket.getFd());
+      log("Closing socket");
+      int sock = socket.getFd();
+      this->sockets_.erase(this->sockets_.find(sock));
+      removeFd(sock);
+    } else {
+      this->sendResponse(req, socket);
+      std::cout << "Response send" << std::endl;
     }
-    this->sendResponse(req, socket);
-    std::cout << "Response send" << std::endl;
     if (socket.isWritten() && !socket.isKeepalive()) {
       log("Closing socket");
       int sock = socket.getFd();
