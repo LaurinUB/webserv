@@ -14,13 +14,20 @@ class ServerSettings : public ASettings {
   ServerSettings(){};
   virtual ~ServerSettings(){};
   ServerSettings(const ServerSettings& obj)
-      : locations_(obj.locations_),
-        port_(obj.port_),
+      : port_(obj.port_),
         server_name_(obj.server_name_),
         error_pages_(obj.error_pages_),
-        max_client_body_size_(obj.max_client_body_size_){};
+        max_client_body_size_(obj.max_client_body_size_) {
+    for (std::vector<LocationSettings>::size_type i = 0;
+         i < obj.locations.size(); ++i) {
+      this->locations.push_back(obj.locations[i]);
+    }
+  }
   ServerSettings& operator=(const ServerSettings& obj) {
-    this->locations_ = obj.locations_;
+    for (std::vector<LocationSettings>::size_type i = 0;
+         i < obj.locations.size(); ++i) {
+      this->locations.push_back(obj.locations[i]);
+    }
     this->port_ = obj.port_;
     this->server_name_ = obj.server_name_;
     this->error_pages_ = obj.error_pages_;
@@ -29,7 +36,6 @@ class ServerSettings : public ASettings {
   };
   bool setValue(std::string key, std::string value) {
     value.erase(value.size() - 1);
-    std::cout << "TRYING --- Key: " << key << " value: " << value << std::endl;
     if (key == "port") {
       this->port_ = std::atoi(value.c_str());
     } else if (key == "server_name") {
@@ -42,11 +48,10 @@ class ServerSettings : public ASettings {
     } else {
       return false;
     }
-    std::cout << "SET --- Key: " << key << " value: " << value << std::endl;
     return true;
   };
 
-  std::vector<LocationSettings> getRoutes() const { return this->locations_; }
+  std::vector<LocationSettings> getRoutes() const { return this->locations; }
   unsigned int getPort() const { return this->port_; };
   std::string getName() const { return this->server_name_; };
   std::map<unsigned int, std::string> getErrorPages() const {
@@ -55,9 +60,9 @@ class ServerSettings : public ASettings {
   unsigned int getMaxClientBodySize() const {
     return this->max_client_body_size_;
   };
+  std::vector<LocationSettings> locations;
 
  private:
-  std::vector<LocationSettings> locations_;
   unsigned int port_;
   std::string server_name_;
   std::map<unsigned int, std::string> error_pages_;

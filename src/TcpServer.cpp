@@ -37,7 +37,15 @@ TcpServer::TcpServer(const SettingsParser& settings)
       listen_(),
       numfds_(1),
       socketAddress_(),
-      socketAddress_len_(sizeof(socketAddress_)) {
+      socketAddress_len_(sizeof(socketAddress_)),
+      settings_(settings) {
+  std::cout << "testing settings deep copy" << std::endl;
+  std::cout << "server 0 route len: "
+            << this->settings_.global.servers[0].getRoutes().size()
+            << std::endl;
+  std::cout << "route1: "
+            << this->settings_.global.servers[0].getRoutes().begin()->getRoot()
+            << std::endl;
   socketAddress_.sin_family = AF_INET;
   socketAddress_.sin_port = htons(port_);
   socketAddress_.sin_addr.s_addr = INADDR_ANY;
@@ -227,7 +235,7 @@ void TcpServer::handleConnection(Socket& socket) {
 
 void TcpServer::sendResponse(HTTPRequest& req, Socket& socket) {
   int bytesSent = 0;
-  HTTPResponse res(req);
+  HTTPResponse res(req, this->settings_);
   std::string res_string = res.toString();
   bytesSent = send(socket.getFd(), res_string.data(), res_string.size(), 0);
   if (bytesSent < 0) {

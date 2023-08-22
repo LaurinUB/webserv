@@ -14,7 +14,8 @@ class LocationSettings : public ASettings {
         root_(obj.root_),
         auto_index_(obj.auto_index_),
         allow_upload_(obj.allow_upload_),
-        upload_dir_(obj.upload_dir_){};
+        upload_dir_(obj.upload_dir_){
+  };
   LocationSettings& operator=(const LocationSettings& obj) {
     this->allowed_methods_ = obj.allowed_methods_;
     this->root_ = obj.root_;
@@ -24,6 +25,8 @@ class LocationSettings : public ASettings {
     return *this;
   };
   bool setValue(std::string key, std::string value) {
+    value.erase(value.size() - 1);
+    std::cout << "TRYING --- Key: " << key << " value: " << value << std::endl;
     if (key == "root") {
       this->root_ = value;
     } else if (key == "auto-index") {
@@ -37,6 +40,7 @@ class LocationSettings : public ASettings {
     } else {
       return false;
     }
+    std::cout << "SET --- Key: " << key << " value: " << value << std::endl;
     return true;
   };
 
