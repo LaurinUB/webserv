@@ -98,7 +98,7 @@ LocationSettings SettingsParser::parseRoute(
   LocationSettings res;
   for (; it->second != CLOSE_CBR_TOKEN; ++it) {
     if (it->second == VALUE_TOKEN) {
-     res.setValue((it -1)->first, it->first);
+      res.setValue((it - 1)->first, it->first);
     }
   }
   return res;

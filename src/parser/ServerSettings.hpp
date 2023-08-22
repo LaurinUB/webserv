@@ -46,9 +46,7 @@ class ServerSettings : public ASettings {
     return true;
   };
 
-  std::vector<LocationSettings> getRoutes() const {
-    return this->locations_;
-  }
+  std::vector<LocationSettings> getRoutes() const { return this->locations_; }
   unsigned int getPort() const { return this->port_; };
   std::string getName() const { return this->server_name_; };
   std::map<unsigned int, std::string> getErrorPages() const {
