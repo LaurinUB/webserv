@@ -6,8 +6,8 @@
 #include <fstream>
 #include <string>
 
-#include "HTTPRequest.hpp"
 #include "./parser/SettingsParser.hpp"
+#include "HTTPRequest.hpp"
 
 class HTTPResponse {
  public:
