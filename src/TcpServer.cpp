@@ -39,13 +39,6 @@ TcpServer::TcpServer(const SettingsParser& settings)
       socketAddress_(),
       socketAddress_len_(sizeof(socketAddress_)),
       settings_(settings) {
-  std::cout << "testing settings deep copy" << std::endl;
-  std::cout << "server 0 route len: "
-            << this->settings_.global.servers[0].getRoutes().size()
-            << std::endl;
-  std::cout << "route1: "
-            << this->settings_.global.servers[0].getRoutes().begin()->getRoot()
-            << std::endl;
   socketAddress_.sin_family = AF_INET;
   socketAddress_.sin_port = htons(port_);
   socketAddress_.sin_addr.s_addr = INADDR_ANY;
