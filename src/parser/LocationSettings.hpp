@@ -9,11 +9,18 @@ class LocationSettings : public ASettings {
  public:
   LocationSettings(){};
   virtual ~LocationSettings(){};
-  LocationSettings(const LocationSettings& obj) {
-    this->settings_ = obj.settings_;
-  };
+  LocationSettings(const LocationSettings& obj)
+      : allowed_methods_(obj.allowed_methods_),
+        root_(obj.root_),
+        auto_index_(obj.auto_index_),
+        allow_upload_(obj.allow_upload_),
+        upload_dir_(obj.upload_dir_){};
   LocationSettings& operator=(const LocationSettings& obj) {
-    this->settings_ = obj.settings_;
+    this->allowed_methods_ = obj.allowed_methods_;
+    this->root_ = obj.root_;
+    this->auto_index_ = obj.auto_index_;
+    this->allow_upload_ = obj.allow_upload_;
+    this->upload_dir_ = obj.upload_dir_;
     return *this;
   };
   bool setValue(std::string key, std::string value) {

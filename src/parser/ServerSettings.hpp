@@ -12,14 +12,19 @@
 class ServerSettings : public ASettings {
  public:
   ServerSettings(){};
-  virtual ~ServerSettings(){
-    std::cout << "Decon called ServerSettings" << std::endl;
-  };
+  virtual ~ServerSettings(){};
   ServerSettings(const ServerSettings& obj)
-      : location_settings_(obj.location_settings_){};
+      : location_settings_(obj.location_settings_),
+        port_(obj.port_),
+        server_name_(obj.server_name_),
+        error_pages_(obj.error_pages_),
+        max_client_body_size_(obj.max_client_body_size_){};
   ServerSettings& operator=(const ServerSettings& obj) {
-    this->settings_ = obj.settings_;
     this->location_settings_ = obj.location_settings_;
+    this->port_ = obj.port_;
+    this->server_name_ = obj.server_name_;
+    this->error_pages_ = obj.error_pages_;
+    this->max_client_body_size_ = obj.max_client_body_size_;
     return *this;
   };
   bool setValue(std::string key, std::string value) {
