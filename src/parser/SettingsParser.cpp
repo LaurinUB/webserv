@@ -9,9 +9,10 @@ SettingsParser::SettingsParser() {}
 SettingsParser::~SettingsParser() {}
 
 SettingsParser::SettingsParser(const SettingsParser& obj)
-    : tokens_(obj.tokens_) {}
+    : global(obj.global), tokens_(obj.tokens_) {}
 
 SettingsParser& SettingsParser::operator=(const SettingsParser& obj) {
+  this->global = obj.global;
   this->tokens_ = obj.tokens_;
   return *this;
 }
@@ -83,12 +84,14 @@ GlobalSettings SettingsParser::parseHTTP() {
 ServerSettings SettingsParser::parseServer(
     std::vector<std::pair<std::string, token_type> >::iterator& it) {
   ServerSettings res;
+  token_type previous = UNKNOWN_TOKEN;
   for (; it->second != CLOSE_CBR_TOKEN; ++it) {
-    if (it->second == VALUE_TOKEN) {
+    if (previous == ROUTE_TOKEN && it->second == OPEN_CBR_TOKEN) {
+      res.locations.push_back(parseRoute(it));
+    } else if (it->second == VALUE_TOKEN) {
       res.setValue((it - 1)->first, it->first);
-    } else if (it->second == ROUTE_TOKEN) {
-      parseRoute(it);
     }
+    previous = it->second;
   }
   return res;
 }

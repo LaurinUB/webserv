@@ -48,6 +48,7 @@ class TcpServer {
   std::string serverMessage_;
   pollfd pollfds_[255];
   std::map<int, Socket> sockets_;
+  SettingsParser settings_;
 
   int pollError(pollfd& fd);
   int startServer();

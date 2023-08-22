@@ -11,7 +11,11 @@
 
 void HTTPResponse::handleGET(HTTPRequest& req) {
   std::string path =
-      (req.getURI() == "/" ? "./www/index.html" : "./www" + req.getURI());
+      (req.getURI() == "/"
+           ? this->settings_.global.servers[0].getRoutes()[0].getRoot() +
+                 "/index.html"
+           : this->settings_.global.servers[0].getRoutes()[0].getRoot() +
+                 req.getURI());
   std::string mimetype =
       path.substr(path.find_last_of('.') + 1, path.size() - 1);
   std::string content_type = this->mime_types.find(mimetype)->second;
@@ -26,10 +30,15 @@ void HTTPResponse::handleGET(HTTPRequest& req) {
       this->header_ += "\r\nContent-Length: " + ssize;
     }
   } catch (std::exception& e) {
-    path = "./data/404.html";
-    this->body_ = this->createResponseBody(path, req);
+    this->body_ = this->createResponseBody(
+        settings_.global.servers[0].getErrorPages()[404], req);
     this->body_.replace(this->body_.find("${URI}"), 6, req.getURI());
     this->header_ = "HTTP/1.1 404 OK\nContent-Type: text/html";
+    int size = this->body_.size();
+    std::stringstream ss;
+    ss << size;
+    std::string ssize = ss.str();
+    this->header_ += "\r\nContent-Length: " + ssize;
   }
   return;
 }
@@ -38,7 +47,8 @@ std::string HTTPResponse::createResponseBody(std::string& path,
                                              HTTPRequest& req) {
   DIR* directory_list;
   directory_list = opendir(path.c_str());
-  if (directory_list != NULL) {
+  if (directory_list != NULL &&
+      this->settings_.global.servers[0].getRoutes()[0].getAutoIndex()) {
     std::string res = this->buildDirIndexRes(directory_list, req, path);
     closedir(directory_list);
     return res;
@@ -125,7 +135,8 @@ HTTPResponse& HTTPResponse::operator=(const HTTPResponse& obj) {
 HTTPResponse::HTTPResponse(std::string header, std::string body)
     : header_(header), body_(body) {}
 
-HTTPResponse::HTTPResponse(HTTPRequest& req) {
+HTTPResponse::HTTPResponse(HTTPRequest& req, SettingsParser& settings)
+    : settings_(settings) {
   HTTPRequest::method req_method = req.getMethod();
   switch (req_method) {
     case HTTPRequest::UNKNOWN:

@@ -24,6 +24,8 @@ class LocationSettings : public ASettings {
     return *this;
   };
   bool setValue(std::string key, std::string value) {
+    value.erase(value.size() - 1);
+    std::cout << "TRYING --- Key: " << key << " value: " << value << std::endl;
     if (key == "root") {
       this->root_ = value;
     } else if (key == "auto-index") {
@@ -37,6 +39,7 @@ class LocationSettings : public ASettings {
     } else {
       return false;
     }
+    std::cout << "SET --- Key: " << key << " value: " << value << std::endl;
     return true;
   };
 
