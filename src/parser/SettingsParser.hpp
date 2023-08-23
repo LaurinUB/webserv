@@ -19,8 +19,15 @@ class SettingsParser {
 
   GlobalSettings global;
 
+  bool isMethodAllowedOnRoute(unsigned int server_idx, unsigned int route_idx,
+                              std::string method) const;
   std::string getRouteRoot(unsigned int server_idx,
                            unsigned int route_idx) const;
+  bool getRouteAutoIndex(unsigned int server_idx, unsigned int route_idx) const;
+  bool getRouteAllowUpload(unsigned int server_idx,
+                           unsigned int route_idx) const;
+  std::string getRouteUploadDir(unsigned int server_idx,
+                                unsigned int route_idx) const;
 
   typedef enum {
     UNKNOWN_TOKEN,
