@@ -1,8 +1,8 @@
 #include "LocationSettings.hpp"
 
-LocationSettings::LocationSettings() {};
+LocationSettings::LocationSettings(){};
 
-LocationSettings::~LocationSettings() {};
+LocationSettings::~LocationSettings(){};
 
 LocationSettings::LocationSettings(const LocationSettings& obj)
     : allowed_methods_(obj.allowed_methods_),

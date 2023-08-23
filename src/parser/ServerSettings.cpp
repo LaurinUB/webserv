@@ -1,8 +1,8 @@
 #include "ServerSettings.hpp"
 
-ServerSettings::ServerSettings() {};
+ServerSettings::ServerSettings(){};
 
-ServerSettings::~ServerSettings() {};
+ServerSettings::~ServerSettings(){};
 
 ServerSettings::ServerSettings(const ServerSettings& obj)
     : port_(obj.port_),

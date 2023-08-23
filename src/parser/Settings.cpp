@@ -1,8 +1,8 @@
 #include "Settings.hpp"
 
-Settings::Settings() {};
+Settings::Settings(){};
 
-Settings::~Settings() {};
+Settings::~Settings(){};
 
 Settings::Settings(const Settings& obj) : servers(obj.servers) {
   this->settings_ = obj.settings_;
