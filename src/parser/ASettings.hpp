@@ -4,8 +4,6 @@
 #include <map>
 #include <string>
 
-#include "SettingsParser.hpp"
-
 class ASettings {
  public:
   ASettings(){};

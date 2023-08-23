@@ -28,7 +28,7 @@ void HTTPResponse::handleGET(HTTPRequest& req) {
     }
   } catch (std::exception& e) {
     this->body_ = this->createResponseBody(
-        settings_.global.servers[0].getErrorPages()[404], req);
+        settings_.global.getServers()[0].getErrorPages()[404], req);
     this->body_.replace(this->body_.find("${URI}"), 6, req.getURI());
     this->header_ = "HTTP/1.1 404 OK\nContent-Type: text/html";
     int size = this->body_.size();
