@@ -44,8 +44,7 @@ std::string HTTPResponse::createResponseBody(std::string& path,
                                              HTTPRequest& req) {
   DIR* directory_list;
   directory_list = opendir(path.c_str());
-  if (directory_list != NULL &&
-      this->settings_.getRouteAutoIndex(0, 0)) {
+  if (directory_list != NULL && this->settings_.getRouteAutoIndex(0, 0)) {
     std::string res = this->buildDirIndexRes(directory_list, req, path);
     closedir(directory_list);
     return res;

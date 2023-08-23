@@ -134,7 +134,7 @@ std::string SettingsParser::getRouteRoot(unsigned int server_idx,
 }
 
 bool SettingsParser::getRouteAutoIndex(unsigned int server_idx,
-                                         unsigned int route_idx) const {
+                                       unsigned int route_idx) const {
   if (server_idx >= this->global.servers.size() ||
       route_idx >= this->global.servers[server_idx].getRoutes().size()) {
     throw std::runtime_error("invalid server or route on getRouteRoot call");
@@ -154,7 +154,7 @@ bool SettingsParser::getRouteAllowUpload(unsigned int server_idx,
 }
 
 std::string SettingsParser::getRouteUploadDir(unsigned int server_idx,
-                                         unsigned int route_idx) const {
+                                              unsigned int route_idx) const {
   if (server_idx >= this->global.servers.size() ||
       route_idx >= this->global.servers[server_idx].getRoutes().size()) {
     throw std::runtime_error("invalid server or route on getRouteRoot call");
