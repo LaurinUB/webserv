@@ -194,18 +194,17 @@ void TcpServer::run() {
 }
 
 void executeCGI(std::string uri, int fd) {
-  pid_t child = fork();
   std::string executable = "www" + uri;
   std::string interpreter = "/usr/bin/python";
-  std::cout << "executable: " << executable << std::endl;
   char* arguments[3];
+  (void)fd;
   arguments[0] = const_cast<char*>(interpreter.c_str());
   arguments[1] = const_cast<char*>(executable.c_str());
   arguments[2] = NULL;
+  pid_t child = fork();
   // env needs to be put here
   if (child == 0) {
-    dup2(fd, STDOUT_FILENO);
-    if (execve(arguments[0], arguments, NULL) == -1) {
+    if (execve(arguments[1], NULL, NULL) == -1) {
       std::cerr << "Error: execve." << std::endl;
       exit(EXIT_FAILURE);
     }
