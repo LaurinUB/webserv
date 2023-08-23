@@ -1,6 +1,6 @@
 NAME =	webserv
 CXX =	c++
-CXXFLAGS =	-std=c++98 -Wall -Wextra -Werror -g #-fsanitize=address
+CXXFLAGS =	-std=c++98 -Wall -Wextra -Werror -g -fsanitize=address
 
 GREEN =	\033[0;32m
 CYAN =	\033[0;36m
@@ -34,7 +34,7 @@ CREATE_OBJ_DIR = $(sort $(dir $(ALL_OBJ)))
 all:	$(NAME)
 
 $(NAME): $(CREATE_OBJ_DIR) $(ALL_OBJ)
-	@$(CXX) $(ALL_OBJ) -o $(NAME)
+	@$(CXX) -fsanitize=address $(ALL_OBJ) -o $(NAME)
 	@echo "$(GREEN)Compiled successfully$(WHITE)"
 
 $(OBJ_DIR)%.o:	$(SRC_DIR)%.cpp

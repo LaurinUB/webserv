@@ -1,7 +1,5 @@
 #include "Socket.hpp"
 
-const int QUEUE_LEN = 40;
-
 Socket::Socket() {
   this->timestamp_ = std::time(NULL);
   this->timeout_ = 15.0;
@@ -9,12 +7,12 @@ Socket::Socket() {
   this->state_ = RECIEVE;
 }
 
-Socket::Socket(int fd) {
+Socket::Socket(int i) {
   this->timestamp_ = std::time(NULL);
   this->timeout_ = 15.0;
   this->keepalive_ = false;
   this->state_ = RECIEVE;
-  this->pollfd_.fd = fd;
+  this->index_ = i;
 }
 
 Socket::~Socket() {
@@ -26,7 +24,7 @@ Socket::~Socket() {
 Socket::Socket(const Socket& obj) { *this = obj; }
 
 Socket& Socket::operator=(const Socket& obj) {
-  this->pollfd_ = obj.pollfd_;
+  this->index_ = obj.index_;
   this->keepalive_ = obj.keepalive_;
   this->timeout_ = obj.timeout_;
   this->timestamp_ = obj.timestamp_;
@@ -63,37 +61,7 @@ void Socket::setRequest(HTTPRequest& req) {
   }
 }
 
-int Socket::setServerOpt() {
-  int opt = 1;
-  socklen_t addrlen = sizeof(this->socketAddress_);
-  if (setsockopt(this->pollfd_.fd, SOL_SOCKET, SO_REUSEADDR, &opt,
-                 sizeof(opt)) == -1) {
-    std::cerr << "Error: cannot set socket opt." << std::endl;
-  }
-  std::cout << "Success: Socket opt set." << std::endl;
-  if (bind(this->pollfd_.fd, (struct sockaddr*)&this->socketAddress_,
-        addrlen)) {
-    std::cerr << "Error: cannot bind to address." << std::endl;
-    return EXIT_FAILURE;
-  }
-  std::cout << "Success: Socket bind." << std::endl;
-  if (listen(this->pollfd_.fd, QUEUE_LEN) == -1) {
-    std::cerr << "Error: failed to listen on connection" << std::endl;
-    return EXIT_FAILURE;
-  }
-  std::cout << "Success: Socket listen." << std::endl;
-  if (fcntl(this->pollfd_.fd, F_SETFL, O_NONBLOCK, FD_CLOEXEC) == -1) {
-    std::cerr << "Error: fcntl" <<std::endl;
-    return EXIT_FAILURE;
-  }
-  std::cout << "Success: Socket fcntl." << std::endl;
-  this->pollfd_.events = POLLIN;
-  this->pollfd_.revents = 0;
-  this->state_ = SERVER;
-  return EXIT_SUCCESS;
-}
-
-int Socket::getFd() const { return this->pollfd_.fd; }
+int Socket::getIndex() const { return this->index_; }
 
 sockState Socket::getState() const { return this->state_; }
 
@@ -114,8 +82,6 @@ void Socket::getStringState() const {
   }
 }
 
-pollfd Socket::getPoll() const { return this->pollfd_; }
-
 bool Socket::isKeepalive() const { return this->keepalive_; }
 
 std::string Socket::getResponse() const { return this->response_; }
@@ -124,27 +90,16 @@ size_t Socket::getResponseSize() const { return this->response_.size(); }
 
 HTTPRequest& Socket::getRequest() { return this->request_; }
 
-void Socket::setState(sockState state) {
-  this->state_ = state;
-  if (state == RECIEVE) {
-    this->pollfd_.events = POLLIN;
-  } else if (state == SEND) {
-    this->pollfd_.events = POLLOUT;
-  }
-  this->pollfd_.revents = 0;
-}
+void Socket::setState(sockState state) { this->state_ = state; }
 
 void Socket::setKeepalive(bool state) { this->keepalive_ = state; }
 
 void Socket::handleUnfinished(int bytesSent, std::string res_string) {
   this->state_ = SEND;
-  this->pollfd_.events = POLLOUT;
   this->response_ = res_string.substr(bytesSent, res_string.size());
 }
 
-void Socket::setFd(int fd) { this->pollfd_.fd = fd; }
-
-void Socket::setPoll(pollfd fd) { this->pollfd_ = fd; }
+void Socket::setIndex(int i) { this->index_ = i; }
 
 bool Socket::checkTimeout() {
   time_t current = std::time(NULL);
@@ -157,9 +112,9 @@ bool Socket::checkTimeout() {
 
 void Socket::updateTime() { this->timestamp_ = std::time(NULL); }
 
-std::ostream& operator<<(std::ostream& os, const Socket& sock) {
-  os << "Socket: " << sock.getFd() << std::endl
-    << "State: ";
-  sock.getStringState();
-  return os;
-}
+// std::ostream& operator<<(std::ostream& os, const Socket& sock) {
+//   os << "Socket: " << sock.getFd() << std::endl
+//     << "State: ";
+//   sock.getStringState();
+//   return os;
+// }

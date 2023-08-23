@@ -25,8 +25,7 @@ class Socket {
   Socket(const Socket& obj);
   Socket& operator=(const Socket& obj);
 
-  int getFd() const;
-  pollfd getPoll() const;
+  int getIndex() const;
   sockState getState() const;
   std::string getResponse() const;
   size_t getResponseSize() const;
@@ -37,10 +36,8 @@ class Socket {
   char* getAddressString() const;
   sockaddr_in& getAddress();
 
-  void setFd(int fd);
-  void setPoll(pollfd fd);
+  void setIndex(int i);
   void setKeepalive(bool state);
-  int setServerOpt();
   void setPort(int port);
   bool checkTimeout();
   void updateTime();
@@ -51,7 +48,7 @@ class Socket {
 
  private:
   struct sockaddr_in socketAddress_;
-  pollfd pollfd_;
+  int index_;
   time_t timestamp_;
   double timeout_;
   sockState state_;
