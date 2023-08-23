@@ -5,9 +5,9 @@
 #include <vector>
 
 #include "../HTTPRequest.hpp"
-#include "GlobalSettings.hpp"
 #include "LocationSettings.hpp"
 #include "ServerSettings.hpp"
+#include "Settings.hpp"
 
 class SettingsParser {
  public:
@@ -17,7 +17,7 @@ class SettingsParser {
   SettingsParser& operator=(const SettingsParser& obj);
   SettingsParser(std::string& config_path);
 
-  GlobalSettings global;
+  Settings global;
 
   bool isMethodAllowedOnRoute(unsigned int server_idx, unsigned int route_idx,
                               std::string method) const;
@@ -44,7 +44,7 @@ class SettingsParser {
   //// private methods
   token_type identifyTokenType(std::string& token);
   std::vector<std::pair<std::string, token_type> > tokens_;
-  GlobalSettings parseHTTP();
+  Settings parseHTTP();
   ServerSettings parseServer(
       std::vector<std::pair<std::string, token_type> >::iterator& it);
   LocationSettings parseRoute(
