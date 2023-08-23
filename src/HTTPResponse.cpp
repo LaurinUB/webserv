@@ -11,11 +11,8 @@
 
 void HTTPResponse::handleGET(HTTPRequest& req) {
   std::string path =
-      (req.getURI() == "/"
-           ? this->settings_.global.servers[0].getRoutes()[0].getRoot() +
-                 "/index.html"
-           : this->settings_.global.servers[0].getRoutes()[0].getRoot() +
-                 req.getURI());
+      (req.getURI() == "/" ? this->settings_.getRouteRoot(0, 0) + "/index.html"
+                           : this->settings_.getRouteRoot(0, 0) + req.getURI());
   std::string mimetype =
       path.substr(path.find_last_of('.') + 1, path.size() - 1);
   std::string content_type = this->mime_types.find(mimetype)->second;
@@ -47,8 +44,7 @@ std::string HTTPResponse::createResponseBody(std::string& path,
                                              HTTPRequest& req) {
   DIR* directory_list;
   directory_list = opendir(path.c_str());
-  if (directory_list != NULL &&
-      this->settings_.global.servers[0].getRoutes()[0].getAutoIndex()) {
+  if (directory_list != NULL && this->settings_.getRouteAutoIndex(0, 0)) {
     std::string res = this->buildDirIndexRes(directory_list, req, path);
     closedir(directory_list);
     return res;
