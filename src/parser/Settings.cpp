@@ -16,8 +16,13 @@ Settings& Settings::operator=(Settings obj) {
 }
 
 Settings::Settings(std::string& config_path) {
-  Parser parsed(config_path);
-  *this = parsed.global;
+  try {
+    Parser parsed(config_path);
+    *this = parsed.global;
+  } catch (std::runtime_error e) {
+    std::cout << "Parser Exception: " << e.what() << std::endl;
+    throw std::exception();
+  }
 }
 
 void Settings::addServer(ServerSettings server) {

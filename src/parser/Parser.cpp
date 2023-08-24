@@ -17,6 +17,8 @@ Parser& Parser::operator=(const Parser& obj) {
   return *this;
 }
 
+
+
 Parser::token_type Parser::identifyTokenType(
     std::string& token) {
   if (token == "{") {
@@ -89,7 +91,10 @@ ServerSettings Parser::parseServer(
     if (previous == ROUTE_TOKEN && it->second == OPEN_CBR_TOKEN) {
       res.locations.push_back(parseRoute(it));
     } else if (it->second == VALUE_TOKEN) {
-      res.setValue((it - 1)->first, it->first);
+      if (!res.setValue((it - 1)->first, it->first)) {
+        std::string error("In Server Unknown key: " + (it - 1)->first);
+        throw std::runtime_error(error.c_str());
+      }
     }
     previous = it->second;
   }
@@ -101,7 +106,10 @@ LocationSettings Parser::parseRoute(
   LocationSettings res;
   for (; it->second != CLOSE_CBR_TOKEN; ++it) {
     if (it->second == VALUE_TOKEN) {
-      res.setValue((it - 1)->first, it->first);
+      if (!res.setValue((it - 1)->first, it->first)) {
+        std::string error("In Location Unknown key: " + (it - 1)->first);
+        throw std::runtime_error(error.c_str());
+      }
     }
   }
   return res;

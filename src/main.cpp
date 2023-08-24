@@ -11,8 +11,12 @@ void handleSIGINT(int param) {
 int main() {
   signal(SIGINT, handleSIGINT);
   std::string conf_path("./config/default.conf");
-  Settings settings(conf_path);
-  TcpServer server = TcpServer(settings);
-  server.run();
+  try {
+    Settings settings(conf_path);
+    TcpServer server = TcpServer(settings);
+    server.run();
+  } catch (std::exception e) {
+    e.what();
+  }
   return 0;
 }
