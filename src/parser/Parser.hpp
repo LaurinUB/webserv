@@ -19,16 +19,6 @@ class Parser {
 
   Settings global;
 
-  bool isMethodAllowedOnRoute(unsigned int server_idx, unsigned int route_idx,
-                              std::string method) const;
-  std::string getRouteRoot(unsigned int server_idx,
-                           unsigned int route_idx) const;
-  bool getRouteAutoIndex(unsigned int server_idx, unsigned int route_idx) const;
-  bool getRouteAllowUpload(unsigned int server_idx,
-                           unsigned int route_idx) const;
-  std::string getRouteUploadDir(unsigned int server_idx,
-                                unsigned int route_idx) const;
-
   typedef enum {
     UNKNOWN_TOKEN,
     SETTING_TOKEN,
@@ -41,10 +31,10 @@ class Parser {
   } token_type;
 
  private:
-  //// private methods
   token_type identifyTokenType(std::string& token);
   std::vector<std::pair<std::string, token_type> > tokens_;
-  Settings parseHTTP();
+
+  Settings parseGlobal();
   ServerSettings parseServer(
       std::vector<std::pair<std::string, token_type> >::iterator& it);
   LocationSettings parseRoute(

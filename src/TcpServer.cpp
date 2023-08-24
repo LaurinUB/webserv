@@ -31,9 +31,9 @@ TcpServer::TcpServer(const std::string& ip_addr, int port)
   }
 }
 
-TcpServer::TcpServer(const Parser& settings)
-    : ip_addr_(settings.global.getServers()[0].getName()),
-      port_(settings.global.getServers()[0].getPort()),
+TcpServer::TcpServer(const Settings& settings)
+    : ip_addr_(settings.getServers()[0].getName()),
+      port_(settings.getServers()[0].getPort()),
       listen_(),
       numfds_(1),
       socketAddress_(),

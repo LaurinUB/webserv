@@ -59,10 +59,10 @@ Parser::Parser(std::string& config_path) {
        i != tokenized_file.end(); ++i) {
   }
   this->tokens_ = tokenized_file;
-  this->global = parseHTTP();
+  this->global = parseGlobal();
 }
 
-Settings Parser::parseHTTP() {
+Settings Parser::parseGlobal() {
   Settings res;
   token_type previous = UNKNOWN_TOKEN;
   for (std::vector<std::pair<std::string, token_type> >::iterator it =
@@ -105,64 +105,4 @@ LocationSettings Parser::parseRoute(
     }
   }
   return res;
-}
-
-bool Parser::isMethodAllowedOnRoute(unsigned int server_idx,
-                                            unsigned int route_idx,
-                                            std::string method) const {
-  if (server_idx >= this->global.getServers().size() ||
-      route_idx >= this->global.getServers()[server_idx].getRoutes().size()) {
-    throw std::runtime_error("invalid server or route on getRouteRoot call");
-  }
-  std::vector<std::string> allowed_methods =
-      this->global.getServers()[server_idx]
-          .getRoutes()[route_idx]
-          .getAllowedMethods();
-  if (std::find(allowed_methods.begin(), allowed_methods.end(), method) !=
-      allowed_methods.end()) {
-    return true;
-  }
-  return false;
-}
-
-std::string Parser::getRouteRoot(unsigned int server_idx,
-                                         unsigned int route_idx) const {
-  if (server_idx >= this->global.getServers().size() ||
-      route_idx >= this->global.getServers()[server_idx].getRoutes().size()) {
-    throw std::runtime_error("invalid server or route on getRouteRoot call");
-  }
-  return this->global.getServers()[server_idx].getRoutes()[route_idx].getRoot();
-}
-
-bool Parser::getRouteAutoIndex(unsigned int server_idx,
-                                       unsigned int route_idx) const {
-  if (server_idx >= this->global.getServers().size() ||
-      route_idx >= this->global.getServers()[server_idx].getRoutes().size()) {
-    throw std::runtime_error("invalid server or route on getRouteRoot call");
-  }
-  return this->global.getServers()[server_idx]
-      .getRoutes()[route_idx]
-      .getAutoIndex();
-}
-
-bool Parser::getRouteAllowUpload(unsigned int server_idx,
-                                         unsigned int route_idx) const {
-  if (server_idx >= this->global.getServers().size() ||
-      route_idx >= this->global.getServers()[server_idx].getRoutes().size()) {
-    throw std::runtime_error("invalid server or route on getRouteRoot call");
-  }
-  return this->global.getServers()[server_idx]
-      .getRoutes()[route_idx]
-      .getAllowUpload();
-}
-
-std::string Parser::getRouteUploadDir(unsigned int server_idx,
-                                              unsigned int route_idx) const {
-  if (server_idx >= this->global.getServers().size() ||
-      route_idx >= this->global.getServers()[server_idx].getRoutes().size()) {
-    throw std::runtime_error("invalid server or route on getRouteRoot call");
-  }
-  return this->global.getServers()[server_idx]
-      .getRoutes()[route_idx]
-      .getUploadDir();
 }

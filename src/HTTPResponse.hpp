@@ -6,7 +6,7 @@
 #include <fstream>
 #include <string>
 
-#include "./parser/Parser.hpp"
+#include "./parser/Settings.hpp"
 #include "HTTPRequest.hpp"
 
 class HTTPResponse {
@@ -17,7 +17,7 @@ class HTTPResponse {
   HTTPResponse(const HTTPResponse& obj);
   HTTPResponse& operator=(const HTTPResponse& obj);
   HTTPResponse(std::string header, std::string body);
-  HTTPResponse(HTTPRequest& req, Parser& settings);
+  HTTPResponse(HTTPRequest& req, Settings& settings);
 
   //// Member Functions
   std::string toString() const;
@@ -27,7 +27,7 @@ class HTTPResponse {
   static std::map<std::string, std::string> getMimeTypes(std::string path);
 
  private:
-  Parser settings_;
+  Settings settings_;
   std::string header_;
   std::string body_;
   //// Private Member Functions

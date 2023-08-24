@@ -28,7 +28,7 @@ void HTTPResponse::handleGET(HTTPRequest& req) {
     }
   } catch (std::exception& e) {
     this->body_ = this->createResponseBody(
-        settings_.global.getServers()[0].getErrorPages()[404], req);
+        settings_.getServers()[0].getErrorPages()[404], req);
     this->body_.replace(this->body_.find("${URI}"), 6, req.getURI());
     this->header_ = "HTTP/1.1 404 OK\nContent-Type: text/html";
     int size = this->body_.size();
@@ -131,7 +131,7 @@ HTTPResponse& HTTPResponse::operator=(const HTTPResponse& obj) {
 HTTPResponse::HTTPResponse(std::string header, std::string body)
     : header_(header), body_(body) {}
 
-HTTPResponse::HTTPResponse(HTTPRequest& req, Parser& settings)
+HTTPResponse::HTTPResponse(HTTPRequest& req, Settings& settings)
     : settings_(settings) {
   HTTPRequest::method req_method = req.getMethod();
   switch (req_method) {
