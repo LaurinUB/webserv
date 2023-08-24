@@ -25,14 +25,14 @@
 #include <string>
 #include <utility>
 
-#include "./parser/SettingsParser.hpp"
+#include "./parser/Parser.hpp"
 #include "HTTPRequest.hpp"
 #include "Socket.hpp"
 
 class TcpServer {
  public:
   TcpServer(const std::string& ip_addr, int port);
-  TcpServer(const SettingsParser& settings);
+  TcpServer(const Parser& settings);
   ~TcpServer();
   TcpServer(const TcpServer& obj);
   TcpServer& operator=(const TcpServer& obj);
@@ -48,7 +48,7 @@ class TcpServer {
   std::string serverMessage_;
   pollfd pollfds_[255];
   std::map<int, Socket> sockets_;
-  SettingsParser settings_;
+  Parser settings_;
 
   int pollError(pollfd& fd);
   int startServer();

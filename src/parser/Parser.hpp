@@ -1,5 +1,5 @@
-#ifndef SETTINGS_PARSER_
-#define SETTINGS_PARSER_
+#ifndef PARSER_HPP_
+#define PARSER_HPP_
 
 #include <string>
 #include <vector>
@@ -9,13 +9,13 @@
 #include "ServerSettings.hpp"
 #include "Settings.hpp"
 
-class SettingsParser {
+class Parser {
  public:
-  SettingsParser();
-  ~SettingsParser();
-  SettingsParser(const SettingsParser& obj);
-  SettingsParser& operator=(const SettingsParser& obj);
-  SettingsParser(std::string& config_path);
+  Parser();
+  ~Parser();
+  Parser(const Parser& obj);
+  Parser& operator=(const Parser& obj);
+  Parser(std::string& config_path);
 
   Settings global;
 
@@ -51,4 +51,4 @@ class SettingsParser {
       std::vector<std::pair<std::string, token_type> >::iterator& it);
 };
 
-#endif  // SETTINGS_PARSER_
+#endif  // PARSER_HPP_

@@ -131,7 +131,7 @@ HTTPResponse& HTTPResponse::operator=(const HTTPResponse& obj) {
 HTTPResponse::HTTPResponse(std::string header, std::string body)
     : header_(header), body_(body) {}
 
-HTTPResponse::HTTPResponse(HTTPRequest& req, SettingsParser& settings)
+HTTPResponse::HTTPResponse(HTTPRequest& req, Parser& settings)
     : settings_(settings) {
   HTTPRequest::method req_method = req.getMethod();
   switch (req_method) {

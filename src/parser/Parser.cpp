@@ -1,42 +1,42 @@
-#include "SettingsParser.hpp"
+#include "Parser.hpp"
 
 #include <fstream>
 #include <iostream>
 #include <sstream>
 
-SettingsParser::SettingsParser() {}
+Parser::Parser() {}
 
-SettingsParser::~SettingsParser() {}
+Parser::~Parser() {}
 
-SettingsParser::SettingsParser(const SettingsParser& obj)
+Parser::Parser(const Parser& obj)
     : global(obj.global), tokens_(obj.tokens_) {}
 
-SettingsParser& SettingsParser::operator=(const SettingsParser& obj) {
+Parser& Parser::operator=(const Parser& obj) {
   this->global = obj.global;
   this->tokens_ = obj.tokens_;
   return *this;
 }
 
-SettingsParser::token_type SettingsParser::identifyTokenType(
+Parser::token_type Parser::identifyTokenType(
     std::string& token) {
   if (token == "{") {
-    return SettingsParser::OPEN_CBR_TOKEN;
+    return Parser::OPEN_CBR_TOKEN;
   } else if (token == "}") {
-    return SettingsParser::CLOSE_CBR_TOKEN;
+    return Parser::CLOSE_CBR_TOKEN;
   } else if (token == "server") {
-    return SettingsParser::SERVER_TOKEN;
+    return Parser::SERVER_TOKEN;
   } else if (token == "http") {
-    return SettingsParser::HTTP_TOKEN;
+    return Parser::HTTP_TOKEN;
   } else if (token == "location") {
-    return SettingsParser::ROUTE_TOKEN;
+    return Parser::ROUTE_TOKEN;
   } else if (*(token.end() - 1) == ';') {
-    return SettingsParser::VALUE_TOKEN;
+    return Parser::VALUE_TOKEN;
   } else {
-    return SettingsParser::SETTING_TOKEN;
+    return Parser::SETTING_TOKEN;
   }
 }
 
-SettingsParser::SettingsParser(std::string& config_path) {
+Parser::Parser(std::string& config_path) {
   std::string types[8] = {"UNKNOWN_TOKEN",  "SETTING_TOKEN",   "VALUE_TOKEN",
                           "OPEN_CBR_TOKEN", "CLOSE_CBR_TOKEN", "SERVER_TOKEN",
                           "ROUTE_TOKEN",    "HTTP_TOKEN"};
@@ -62,7 +62,7 @@ SettingsParser::SettingsParser(std::string& config_path) {
   this->global = parseHTTP();
 }
 
-Settings SettingsParser::parseHTTP() {
+Settings Parser::parseHTTP() {
   Settings res;
   token_type previous = UNKNOWN_TOKEN;
   for (std::vector<std::pair<std::string, token_type> >::iterator it =
@@ -81,7 +81,7 @@ Settings SettingsParser::parseHTTP() {
   return res;
 }
 
-ServerSettings SettingsParser::parseServer(
+ServerSettings Parser::parseServer(
     std::vector<std::pair<std::string, token_type> >::iterator& it) {
   ServerSettings res;
   token_type previous = UNKNOWN_TOKEN;
@@ -96,7 +96,7 @@ ServerSettings SettingsParser::parseServer(
   return res;
 }
 
-LocationSettings SettingsParser::parseRoute(
+LocationSettings Parser::parseRoute(
     std::vector<std::pair<std::string, token_type> >::iterator& it) {
   LocationSettings res;
   for (; it->second != CLOSE_CBR_TOKEN; ++it) {
@@ -107,7 +107,7 @@ LocationSettings SettingsParser::parseRoute(
   return res;
 }
 
-bool SettingsParser::isMethodAllowedOnRoute(unsigned int server_idx,
+bool Parser::isMethodAllowedOnRoute(unsigned int server_idx,
                                             unsigned int route_idx,
                                             std::string method) const {
   if (server_idx >= this->global.getServers().size() ||
@@ -125,7 +125,7 @@ bool SettingsParser::isMethodAllowedOnRoute(unsigned int server_idx,
   return false;
 }
 
-std::string SettingsParser::getRouteRoot(unsigned int server_idx,
+std::string Parser::getRouteRoot(unsigned int server_idx,
                                          unsigned int route_idx) const {
   if (server_idx >= this->global.getServers().size() ||
       route_idx >= this->global.getServers()[server_idx].getRoutes().size()) {
@@ -134,7 +134,7 @@ std::string SettingsParser::getRouteRoot(unsigned int server_idx,
   return this->global.getServers()[server_idx].getRoutes()[route_idx].getRoot();
 }
 
-bool SettingsParser::getRouteAutoIndex(unsigned int server_idx,
+bool Parser::getRouteAutoIndex(unsigned int server_idx,
                                        unsigned int route_idx) const {
   if (server_idx >= this->global.getServers().size() ||
       route_idx >= this->global.getServers()[server_idx].getRoutes().size()) {
@@ -145,7 +145,7 @@ bool SettingsParser::getRouteAutoIndex(unsigned int server_idx,
       .getAutoIndex();
 }
 
-bool SettingsParser::getRouteAllowUpload(unsigned int server_idx,
+bool Parser::getRouteAllowUpload(unsigned int server_idx,
                                          unsigned int route_idx) const {
   if (server_idx >= this->global.getServers().size() ||
       route_idx >= this->global.getServers()[server_idx].getRoutes().size()) {
@@ -156,7 +156,7 @@ bool SettingsParser::getRouteAllowUpload(unsigned int server_idx,
       .getAllowUpload();
 }
 
-std::string SettingsParser::getRouteUploadDir(unsigned int server_idx,
+std::string Parser::getRouteUploadDir(unsigned int server_idx,
                                               unsigned int route_idx) const {
   if (server_idx >= this->global.getServers().size() ||
       route_idx >= this->global.getServers()[server_idx].getRoutes().size()) {
