@@ -8,8 +8,7 @@ Parser::Parser() {}
 
 Parser::~Parser() {}
 
-Parser::Parser(const Parser& obj)
-    : global(obj.global), tokens_(obj.tokens_) {}
+Parser::Parser(const Parser& obj) : global(obj.global), tokens_(obj.tokens_) {}
 
 Parser& Parser::operator=(const Parser& obj) {
   this->global = obj.global;
@@ -17,10 +16,7 @@ Parser& Parser::operator=(const Parser& obj) {
   return *this;
 }
 
-
-
-Parser::token_type Parser::identifyTokenType(
-    std::string& token) {
+Parser::token_type Parser::identifyTokenType(std::string& token) {
   if (token == "{") {
     return Parser::OPEN_CBR_TOKEN;
   } else if (token == "}") {

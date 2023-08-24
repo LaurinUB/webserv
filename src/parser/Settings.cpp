@@ -1,5 +1,6 @@
-#include "Parser.hpp"
 #include "Settings.hpp"
+
+#include "Parser.hpp"
 
 Settings::Settings(){};
 
@@ -40,16 +41,14 @@ const std::vector<ServerSettings> Settings::getServers() const {
 };
 
 bool Settings::isMethodAllowedOnRoute(unsigned int server_idx,
-                                            unsigned int route_idx,
-                                            std::string method) const {
+                                      unsigned int route_idx,
+                                      std::string method) const {
   if (server_idx >= this->getServers().size() ||
       route_idx >= this->getServers()[server_idx].getRoutes().size()) {
     throw std::runtime_error("invalid server or route on getRouteRoot call");
   }
   std::vector<std::string> allowed_methods =
-      this->getServers()[server_idx]
-          .getRoutes()[route_idx]
-          .getAllowedMethods();
+      this->getServers()[server_idx].getRoutes()[route_idx].getAllowedMethods();
   if (std::find(allowed_methods.begin(), allowed_methods.end(), method) !=
       allowed_methods.end()) {
     return true;
@@ -58,7 +57,7 @@ bool Settings::isMethodAllowedOnRoute(unsigned int server_idx,
 }
 
 std::string Settings::getRouteRoot(unsigned int server_idx,
-                                         unsigned int route_idx) const {
+                                   unsigned int route_idx) const {
   if (server_idx >= this->getServers().size() ||
       route_idx >= this->getServers()[server_idx].getRoutes().size()) {
     throw std::runtime_error("invalid server or route on getRouteRoot call");
@@ -67,34 +66,28 @@ std::string Settings::getRouteRoot(unsigned int server_idx,
 }
 
 bool Settings::getRouteAutoIndex(unsigned int server_idx,
-                                       unsigned int route_idx) const {
+                                 unsigned int route_idx) const {
   if (server_idx >= this->getServers().size() ||
       route_idx >= this->getServers()[server_idx].getRoutes().size()) {
     throw std::runtime_error("invalid server or route on getRouteRoot call");
   }
-  return this->getServers()[server_idx]
-      .getRoutes()[route_idx]
-      .getAutoIndex();
+  return this->getServers()[server_idx].getRoutes()[route_idx].getAutoIndex();
 }
 
 bool Settings::getRouteAllowUpload(unsigned int server_idx,
-                                         unsigned int route_idx) const {
+                                   unsigned int route_idx) const {
   if (server_idx >= this->getServers().size() ||
       route_idx >= this->getServers()[server_idx].getRoutes().size()) {
     throw std::runtime_error("invalid server or route on getRouteRoot call");
   }
-  return this->getServers()[server_idx]
-      .getRoutes()[route_idx]
-      .getAllowUpload();
+  return this->getServers()[server_idx].getRoutes()[route_idx].getAllowUpload();
 }
 
 std::string Settings::getRouteUploadDir(unsigned int server_idx,
-                                              unsigned int route_idx) const {
+                                        unsigned int route_idx) const {
   if (server_idx >= this->getServers().size() ||
       route_idx >= this->getServers()[server_idx].getRoutes().size()) {
     throw std::runtime_error("invalid server or route on getRouteRoot call");
   }
-  return this->getServers()[server_idx]
-      .getRoutes()[route_idx]
-      .getUploadDir();
+  return this->getServers()[server_idx].getRoutes()[route_idx].getUploadDir();
 }
