@@ -20,7 +20,7 @@ enum sockState { RECEIVE, SEND, FINISHED, SERVER, UNFINISHED };
 class Socket {
  public:
   Socket();
-  Socket(int port);
+  Socket(int index);
   ~Socket();
   Socket(const Socket& obj);
   Socket& operator=(const Socket& obj);

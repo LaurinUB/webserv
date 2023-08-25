@@ -90,15 +90,19 @@ Socket::Socket() {
   this->state_ = RECEIVE;
 }
 
-Socket::Socket(int i) {
+Socket::Socket(int index) {
   this->timestamp_ = std::time(NULL);
   this->timeout_ = 15.0;
   this->keepalive_ = false;
   this->state_ = RECEIVE;
-  this->index_ = i;
+  this->index_ = index;
 }
 
-Socket::~Socket() { std::cout << "Socket: Destrucor called" << std::endl; }
+Socket::~Socket() {
+  if (PRINT) {
+    std::cout << "Socket: Destrucor called" << std::endl;
+  }
+}
 
 Socket::Socket(const Socket& obj) { *this = obj; }
 
@@ -110,6 +114,5 @@ Socket& Socket::operator=(const Socket& obj) {
   this->socketAddress_ = obj.socketAddress_;
   this->state_ = obj.state_;
   if (!this->response_.empty()) this->response_ = obj.response_;
-  std::cout << "Assignment operator overload" << std::endl;
   return *this;
 }

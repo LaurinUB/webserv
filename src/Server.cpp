@@ -63,22 +63,18 @@ int Server::startServer(int port) {
       -1) {
     std::cerr << "Error: cannot set socket opt." << std::endl;
   }
-  std::cout << "Success: Socket opt set." << std::endl;
   if (bind(new_poll.fd, (struct sockaddr*)&serv.getAddress(), addrlen)) {
     std::cerr << "Error: cannot bind to address." << std::endl;
     return EXIT_FAILURE;
   }
-  std::cout << "Success: Socket bind." << std::endl;
   if (listen(new_poll.fd, QUEUE_LEN) == -1) {
     std::cerr << "Error: failed to serv on connection" << std::endl;
     return EXIT_FAILURE;
   }
-  std::cout << "Success: Socket serv." << std::endl;
   if (fcntl(new_poll.fd, F_SETFL, O_NONBLOCK, FD_CLOEXEC) == -1) {
     std::cerr << "Error: fcntl" << std::endl;
     return EXIT_FAILURE;
   }
-  std::cout << "Success: Socket fcntl." << std::endl;
   new_poll.events = POLLIN;
   new_poll.revents = 0;
   this->sockets_[0] = serv;
