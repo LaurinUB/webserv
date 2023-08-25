@@ -19,7 +19,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
-#include <vector>
+#include <map>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -37,11 +37,13 @@ class Server {
 
  private:
   std::string ip_addr_;
-  std::vector<pollfd> pollfds_;
-  std::vector<Socket> sockets_;
+  pollfd pollfds_[250];
+  std::map<int, Socket> sockets_;
+  size_t numfds_;
 
   int pollError(pollfd& fd);
   int startServer(int port);
+  size_t searchFreePoll();
   void sendResponse(int i);
   void newConnection();
   void handleRecieve(int i);
