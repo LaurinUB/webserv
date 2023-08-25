@@ -47,12 +47,10 @@ void Server::run() {
           break;
         } else {
           handleRecieve(i);
-          std::cout << "Recieving from Socket" << std::endl;
           break;
         }
       } else if (this->pollfds_[i].revents & POLLOUT) {
         handleSend(i);
-        std::cout << "Sending to Socket" << std::endl;
       } else {
         pollError(this->pollfds_[i]);
       }
@@ -157,7 +155,6 @@ void Server::checkSocketTimeout() {
 
 void Server::handleSend(int i) {
   sendResponse(i);
-  std::cout << "Response send" << std::endl;
   if (!this->sockets_[i].isKeepalive()) {
     log("Closing socket");
     removeFd(this->pollfds_[i].fd);
@@ -185,6 +182,7 @@ void Server::handleRecieve(int i) {
     this->pollfds_[i].events = POLLOUT;
     this->sockets_[i].setRequest(req);
     this->sockets_[i].setState(SEND);
+    std::cout << "Recieved from socket: " << pollfds_[i].fd << std::endl;
   } catch (std::exception& e) {
     std::cout << e.what() << std::endl;
   }
@@ -192,19 +190,27 @@ void Server::handleRecieve(int i) {
 
 void Server::sendResponse(int i) {
   int bytes_sent = 0;
-  HTTPResponse res(this->sockets_[i].getRequest());
-  std::string res_string = res.toString();
+  std::string res_string;
+  if (this->sockets_[i].getState() == UNFINISHED) {
+    res_string = this->sockets_[i].getResponse();
+  } else {
+    HTTPResponse res(this->sockets_[i].getRequest());
+    res_string = res.toString();
+  }
   bytes_sent =
       send(this->pollfds_[i].fd, res_string.data(), res_string.size(), 0);
   if (bytes_sent < 0) {
     std::cout << "Error: sending response to client" << std::endl;
   } else if (static_cast<size_t>(bytes_sent) < res_string.size()) {
     this->sockets_[i].handleUnfinished(bytes_sent, res_string);
+    this->pollfds_[i].events = POLLOUT;
   } else {
     this->sockets_[i].setState(RECIEVE);
     this->pollfds_[i].events = POLLIN;
   }
   this->sockets_[i].updateTime();
+  std::cout << "Sending to Socket: " << pollfds_[i].fd
+      << " of size " << bytes_sent << std::endl;
 }
 
 size_t Server::searchFreePoll() {

@@ -79,6 +79,9 @@ void Socket::getStringState() const {
     case SERVER:
       std::cout << "SERVER" << std::endl;
       break;
+    case UNFINISHED:
+      std::cout << "UNFINISHED" << std::endl;
+      break;
   }
 }
 
@@ -95,7 +98,7 @@ void Socket::setState(sockState state) { this->state_ = state; }
 void Socket::setKeepalive(bool state) { this->keepalive_ = state; }
 
 void Socket::handleUnfinished(int bytesSent, std::string res_string) {
-  this->state_ = SEND;
+  this->state_ = UNFINISHED;
   this->response_ = res_string.substr(bytesSent, res_string.size());
 }
 
