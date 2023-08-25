@@ -1,11 +1,11 @@
 #ifndef SOCKET_HPP_
 #define SOCKET_HPP_
 
+#include <arpa/inet.h>
+#include <fcntl.h>
 #include <poll.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include <arpa/inet.h>
-#include <fcntl.h>
 
 #include <iostream>
 #include <map>
@@ -15,7 +15,7 @@
 
 #define PRINT false
 
-enum sockState { RECEIVE, SEND, FINISHED, SERVER, UNFINISHED};
+enum sockState { RECEIVE, SEND, FINISHED, SERVER, UNFINISHED };
 
 class Socket {
  public:
@@ -30,18 +30,18 @@ class Socket {
   std::string getResponse() const;
   size_t getResponseSize() const;
   HTTPRequest& getRequest();
-  bool isKeepalive() const;
   void getStringState() const;
   int getPort() const;
   char* getAddressString() const;
   sockaddr_in& getAddress();
+  bool isKeepalive() const;
 
   void setIndex(int i);
   void setKeepalive(bool state);
   void setPort(int port);
-  void updateTime();
   void setState(sockState stat);
   void setRequest(HTTPRequest& req);
+  void updateTime();
 
   bool checkTimeout();
   void handleUnfinished(int bytesSent, std::string res_string);
@@ -56,7 +56,5 @@ class Socket {
   std::string response_;
   HTTPRequest request_;
 };
-
-std::ostream& operator<<(std::ostream& os, const Socket& socket);
 
 #endif  // SOCKET_HPP_

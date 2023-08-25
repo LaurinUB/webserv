@@ -5,6 +5,10 @@
 #define PORT 4040
 #endif
 
+#define MAX_PORTS 250
+#define BUFFER_SIZE 30640
+#define QUEUE_LEN 40
+
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <poll.h>
@@ -40,22 +44,19 @@ class Server {
  private:
   std::string ip_addr_;
   size_t numfds_;
-  pollfd pollfds_[250];
+  pollfd pollfds_[MAX_PORTS];
   std::map<int, Socket> sockets_;
   Settings settings_;
 
-  int pollError(int i);
   int startServer(int port);
+  int pollError(int i);
+  void removeFd(int i);
   size_t searchFreePoll();
   void sendResponse(int i);
   void newConnection();
   void handleRecieve(int i);
   void handleSend(int i);
   void checkSocketTimeout();
-  void removeFd(int i);
 };
-
-void log(const std::string& msg);
-void exitWithError(const std::string& errorMsg);
 
 #endif  // TCPSERVER_HPP_
