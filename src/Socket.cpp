@@ -2,51 +2,73 @@
 
 // getter Functions
 
-int Socket::getFd() const { return this->pollfd_.fd; }
+int Socket::getIndex() const { return this->index_; }
 
-int Socket::getREvent() const {
-  if (this->pollfd_.revents & POLLIN) {
-    std::cout << "revent: POLLIN" << std::endl;
-  } else if (this->pollfd_.revents & POLLOUT) {
-    std::cout << "revent: POLLOUT" << std::endl;
-  } else {
-    std::cout << "revent: no event" << std::endl;
-  }
-  return this->pollfd_.revents;
-}
-
-pollfd Socket::getPoll() const { return this->pollfd_; }
-
-bool Socket::isKeepalive() const { return this->keepalive_; }
+sockState Socket::getState() const { return this->state_; }
 
 std::string Socket::getResponse() const { return this->response_; }
 
 size_t Socket::getResponseSize() const { return this->response_.size(); }
 
-bool Socket::isWritten() const { return this->data_written_; }
+HTTPRequest& Socket::getRequest() { return this->request_; }
 
-// setter Functions
-
-void Socket::setKeepalive(bool state) { this->keepalive_ = state; }
-
-void Socket::setWritten(bool state) { this->data_written_ = state; }
-
-void Socket::setPoll(pollfd fd) { this->pollfd_ = fd; }
-
-void Socket::updateTime() { this->timestamp_ = std::time(NULL); }
-
-void Socket::setOpt() {
-  int opt = 1;
-  if (setsockopt(this->pollfd_.fd, SOL_SOCKET, SO_REUSEADDR, &opt,
-                 sizeof(opt)) == -1) {
-    std::cout << "Error: ccnnot set socket opt" << std::endl;
+void Socket::getStringState() const {
+  switch (this->state_) {
+    case RECEIVE:
+      std::cout << "RECEIVE" << std::endl;
+      break;
+    case SEND:
+      std::cout << "SEND" << std::endl;
+      break;
+    case FINISHED:
+      std::cout << "FINISHED" << std::endl;
+      break;
+    case SERVER:
+      std::cout << "SERVER" << std::endl;
+      break;
+    case UNFINISHED:
+      std::cout << "UNFINISHED" << std::endl;
+      break;
   }
 }
 
-// member Functions
+char* Socket::getAddressString() const {
+  return inet_ntoa(this->socketAddress_.sin_addr);
+}
+
+sockaddr_in& Socket::getAddress() { return this->socketAddress_; }
+
+int Socket::getPort() const { return ntohs(this->socketAddress_.sin_port); }
+
+bool Socket::isKeepalive() const { return this->keepalive_; }
+
+// setter Functions
+
+void Socket::setIndex(int i) { this->index_ = i; }
+
+void Socket::setKeepalive(bool state) { this->keepalive_ = state; }
+
+void Socket::setPort(int port) {
+  this->socketAddress_.sin_family = AF_INET;
+  this->socketAddress_.sin_port = htons(port);
+  this->socketAddress_.sin_addr.s_addr = INADDR_ANY;
+}
+
+void Socket::setState(sockState state) { this->state_ = state; }
+
+void Socket::setRequest(HTTPRequest& req) {
+  this->request_ = req;
+  if (req.getKeepalive()) {
+    this->keepalive_ = true;
+  }
+}
+
+void Socket::updateTime() { this->timestamp_ = std::time(NULL); }
+
+// public member Functions
 
 void Socket::handleUnfinished(int bytesSent, std::string res_string) {
-  this->data_written_ = false;
+  this->state_ = UNFINISHED;
   this->response_ = res_string.substr(bytesSent, res_string.size());
 }
 
@@ -59,52 +81,38 @@ bool Socket::checkTimeout() {
   return false;
 }
 
-// public Functions
-
-std::map<int, Socket>::iterator getUnfinished(std::map<int, Socket>& sockets) {
-  std::map<int, Socket>::iterator it = sockets.begin();
-  while (it != sockets.end()) {
-    if (!it->second.isWritten()) {
-      return it;
-    }
-    it++;
-  }
-  return it;
-}
-
-// Con- Destructor and operator overloads
+// Destructor and operator overload
 
 Socket::Socket() {
-  if (PRINT) {
-    std::cout << "default" << std::endl;
-  }
   this->timestamp_ = std::time(NULL);
   this->timeout_ = 15.0;
   this->keepalive_ = false;
-  this->data_written_ = true;
+  this->state_ = RECEIVE;
+}
+
+Socket::Socket(int index) {
+  this->timestamp_ = std::time(NULL);
+  this->timeout_ = 15.0;
+  this->keepalive_ = false;
+  this->state_ = RECEIVE;
+  this->index_ = index;
 }
 
 Socket::~Socket() {
   if (PRINT) {
-    std::cout << "closing Socket on: " << getFd() << std::endl;
+    std::cout << "Socket: Destrucor called" << std::endl;
   }
-  shutdown(this->pollfd_.fd, SHUT_RDWR);
-  close(this->pollfd_.fd);
 }
 
 Socket::Socket(const Socket& obj) { *this = obj; }
 
 Socket& Socket::operator=(const Socket& obj) {
-  this->pollfd_ = obj.pollfd_;
+  this->index_ = obj.index_;
   this->keepalive_ = obj.keepalive_;
   this->timeout_ = obj.timeout_;
   this->timestamp_ = obj.timestamp_;
-  this->data_written_ = obj.data_written_;
+  this->socketAddress_ = obj.socketAddress_;
+  this->state_ = obj.state_;
+  if (!this->response_.empty()) this->response_ = obj.response_;
   return *this;
-}
-
-std::ostream& operator<<(std::ostream& os, const Socket& sock) {
-  os << "Socket: " << sock.getFd() << std::endl
-     << "revent: " << sock.getREvent() << std::endl;
-  return os;
 }

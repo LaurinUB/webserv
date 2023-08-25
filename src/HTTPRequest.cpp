@@ -99,13 +99,16 @@ HTTPRequest::~HTTPRequest() {}
 HTTPRequest::HTTPRequest(const HTTPRequest& obj) { *this = obj; }
 
 HTTPRequest& HTTPRequest::operator=(const HTTPRequest& obj) {
-  if (this != &obj) {
-    *this = obj;
-  }
+  this->keepalive_ = obj.request_method_;
+  this->body_ = obj.body_;
+  this->header_ = obj.header_;
+  this->request_method_ = obj.request_method_;
+  this->URI_ = obj.URI_;
+  this->protocol_version_ = obj.protocol_version_;
   return *this;
 }
 
-HTTPRequest::HTTPRequest(std::string& input, Socket& socket) {
+HTTPRequest::HTTPRequest(std::string& input) {
   if (input.size() <= 1) {
     throw std::runtime_error("Error: tried to create request with size <= 1");
   }
@@ -127,7 +130,6 @@ HTTPRequest::HTTPRequest(std::string& input, Socket& socket) {
   }
   if (this->header_.find("Connection")->second.compare("keep-alive") == 0) {
     this->keepalive_ = true;
-    socket.setKeepalive(true);
   }
   this->body_ = body;
 }

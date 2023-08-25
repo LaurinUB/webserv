@@ -1,4 +1,4 @@
-#include "TcpServer.hpp"
+#include "Server.hpp"
 #include "parser/Settings.hpp"
 
 sig_atomic_t g_signaled = 0;
@@ -13,7 +13,7 @@ int main() {
   std::string conf_path("./config/default.conf");
   try {
     Settings settings(conf_path);
-    TcpServer server = TcpServer(settings);
+    Server server = Server(settings);
     server.run();
   } catch (std::exception e) {
     e.what();

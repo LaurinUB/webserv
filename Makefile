@@ -18,7 +18,7 @@ PARSER_FILES = Settings.cpp ServerSettings.cpp LocationSettings.cpp Parser.cpp
 
 SRC = $(addprefix $(SRC_DIR), $(SRC_FILES))
 SRC_DIR = src/
-SRC_FILES = HTTPRequest.cpp HTTPResponse.cpp TcpServer.cpp main.cpp Socket.cpp
+SRC_FILES = HTTPRequest.cpp HTTPResponse.cpp Server.cpp main.cpp Socket.cpp
 
 ALL_SRC = $(SRC) $(PARSER)
 
