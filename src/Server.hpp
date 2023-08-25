@@ -57,6 +57,7 @@ class Server {
   void handleRecieve(int i);
   void handleSend(int i);
   void checkSocketTimeout();
+  void executeCGI(std::string uri, int i);
 };
 
 #endif  // TCPSERVER_HPP_

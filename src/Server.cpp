@@ -93,6 +93,25 @@ void Server::handleSend(int i) {
   }
 }
 
+void Server::executeCGI(std::string uri, int i) {
+  std::string executable = "www" + uri;
+  std::string interpreter = "/usr/bin/python";
+  char* arguments[3];
+  (void)i;
+  std::cout << executable << std::endl;
+  arguments[0] = const_cast<char*>(interpreter.c_str());
+  arguments[1] = const_cast<char*>(executable.c_str());
+  arguments[2] = NULL;
+  pid_t child = fork();
+  if (child == 0) {
+    if (execve(arguments[1], NULL, NULL) == -1) {
+      std::cerr << "Error: execve." << std::endl;
+    }
+  }
+  int status;
+  waitpid(child, &status, 0);
+}
+
 void Server::handleRecieve(int i) {
   char buffer[BUFFER_SIZE] = {0};
   ssize_t rec = 0;
@@ -114,10 +133,14 @@ void Server::handleRecieve(int i) {
   std::string stringyfied_buff(buffer);
   try {
     HTTPRequest req(stringyfied_buff);
-    this->pollfds_[i].events = POLLOUT;
-    this->sockets_[i].setRequest(req);
-    this->sockets_[i].setState(SEND);
-    std::cout << "Recieved from socket: " << pollfds_[i].fd << std::endl;
+    if (!req.getURI().compare(0, 9, "/cgi_bin/")) {
+      executeCGI(req.getURI(), i);
+    } else {
+      this->pollfds_[i].events = POLLOUT;
+      this->sockets_[i].setRequest(req);
+      this->sockets_[i].setState(SEND);
+      std::cout << "Recieved from socket: " << pollfds_[i].fd << std::endl;
+    }
   } catch (std::exception& e) {
     std::cout << e.what() << std::endl;
   }
