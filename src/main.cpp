@@ -1,5 +1,5 @@
-#include "TcpServer.hpp"
-#include "parser/SettingsParser.hpp"
+#include "Server.hpp"
+#include "parser/Settings.hpp"
 
 sig_atomic_t g_signaled = 0;
 
@@ -11,8 +11,12 @@ void handleSIGINT(int param) {
 int main() {
   signal(SIGINT, handleSIGINT);
   std::string conf_path("./config/default.conf");
-  SettingsParser settings(conf_path);
-  TcpServer server = TcpServer(settings);
-  server.run();
+  try {
+    Settings settings(conf_path);
+    Server server = Server(settings);
+    server.run();
+  } catch (std::exception e) {
+    e.what();
+  }
   return 0;
 }

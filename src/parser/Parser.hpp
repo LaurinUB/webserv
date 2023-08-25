@@ -1,23 +1,23 @@
-#ifndef SETTINGS_PARSER_
-#define SETTINGS_PARSER_
+#ifndef PARSER_HPP_
+#define PARSER_HPP_
 
 #include <string>
 #include <vector>
 
 #include "../HTTPRequest.hpp"
-#include "GlobalSettings.hpp"
 #include "LocationSettings.hpp"
 #include "ServerSettings.hpp"
+#include "Settings.hpp"
 
-class SettingsParser {
+class Parser {
  public:
-  SettingsParser();
-  ~SettingsParser();
-  SettingsParser(const SettingsParser& obj);
-  SettingsParser& operator=(const SettingsParser& obj);
-  SettingsParser(std::string& config_path);
+  Parser();
+  ~Parser();
+  Parser(const Parser& obj);
+  Parser& operator=(const Parser& obj);
+  Parser(std::string& config_path);
 
-  GlobalSettings global;
+  Settings global;
 
   typedef enum {
     UNKNOWN_TOKEN,
@@ -31,14 +31,14 @@ class SettingsParser {
   } token_type;
 
  private:
-  //// private methods
   token_type identifyTokenType(std::string& token);
   std::vector<std::pair<std::string, token_type> > tokens_;
-  GlobalSettings parseHTTP();
+
+  Settings parseGlobal();
   ServerSettings parseServer(
       std::vector<std::pair<std::string, token_type> >::iterator& it);
   LocationSettings parseRoute(
       std::vector<std::pair<std::string, token_type> >::iterator& it);
 };
 
-#endif  // SETTINGS_PARSER_
+#endif  // PARSER_HPP_
