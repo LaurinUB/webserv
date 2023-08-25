@@ -15,7 +15,7 @@
 
 #define PRINT false
 
-enum sockState { RECIEVE, SEND, FINISHED, SERVER, UNFINISHED};
+enum sockState { RECEIVE, SEND, FINISHED, SERVER, UNFINISHED};
 
 class Socket {
  public:

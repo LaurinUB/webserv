@@ -41,7 +41,7 @@ class Server {
   std::map<int, Socket> sockets_;
   size_t numfds_;
 
-  int pollError(pollfd& fd);
+  int pollError(int i);
   int startServer(int port);
   size_t searchFreePoll();
   void sendResponse(int i);
@@ -49,7 +49,7 @@ class Server {
   void handleRecieve(int i);
   void handleSend(int i);
   void checkSocketTimeout();
-  void removeFd(int fd);
+  void removeFd(int i);
 };
 
 void log(const std::string& msg);

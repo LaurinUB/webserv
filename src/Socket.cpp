@@ -4,14 +4,14 @@ Socket::Socket() {
   this->timestamp_ = std::time(NULL);
   this->timeout_ = 15.0;
   this->keepalive_ = false;
-  this->state_ = RECIEVE;
+  this->state_ = RECEIVE;
 }
 
 Socket::Socket(int i) {
   this->timestamp_ = std::time(NULL);
   this->timeout_ = 15.0;
   this->keepalive_ = false;
-  this->state_ = RECIEVE;
+  this->state_ = RECEIVE;
   this->index_ = i;
 }
 
@@ -67,8 +67,8 @@ sockState Socket::getState() const { return this->state_; }
 
 void Socket::getStringState() const {
   switch (this->state_) {
-    case RECIEVE:
-      std::cout << "RECIEVE" << std::endl;
+    case RECEIVE:
+      std::cout << "RECEIVE" << std::endl;
       break;
     case SEND:
       std::cout << "SEND" << std::endl;

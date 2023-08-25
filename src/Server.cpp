@@ -17,30 +17,12 @@ void Server::run() {
       perror("poll");
       exitWithError("Poll failed");
     }
-    // checkSocketTimeout();
-    // if (this->pollfds_[0].revents & POLLIN) {
-    //   std::cout << "POLLIN" << std::endl;
-    // }
-    // this->sockets_[0].getStringState();
-    // std::cout << this->sockets_.size() << std::endl;
-    // std::cout << this->sockets_[0].getPoll().events << std::endl;
-    // std::cout << this->sockets_[0].getPoll().revents << std::endl;
-    // std::cout << this->sockets_[0].getPort() << std::endl;
+    checkSocketTimeout();
     // log("====== Waiting for a new connection ======\n\n\n");
     for (size_t i = 0; i < this->numfds_; ++i) {
-      // std::cout << this->sockets_[i].getPoll().events << std::endl;
-      // std::cout << "revents: "<< this->sockets_[i].getPoll().revents << std::endl;
-      // std::cout << "revents: "<< this->pollfds_[i].revents << std::endl;
-      // if (PRINT && this->pollfds_[i].fd != 3 && this->pollfds_[i].fd != -1) {
-        // std::cout << this->sockets_[i]<< "i: " << i
-        //           << std::endl;
-        // std::cout << "pollfds_.size(): " << this->pollfds_.size() << std::endl;
-        // std::cout << "pollfds_.fd: " << this->pollfds_[i].fd << std::endl;
-      //   std::cout << "pollfds.fd: " << this->pollfds_[i].fd << std::endl;
-      // }
-      // if (this->pollfds_[i].fd <= 0) {
-      //   continue;
-      // }
+      if (this->pollfds_[i].fd <= 0) {
+        continue;
+      }
       if (this->pollfds_[i].revents & POLLIN) {
         if (this->sockets_[i].getState() == SERVER) {
           newConnection();
@@ -52,8 +34,14 @@ void Server::run() {
       } else if (this->pollfds_[i].revents & POLLOUT) {
         handleSend(i);
       } else {
-        pollError(this->pollfds_[i]);
+        pollError(i);
       }
+    }
+    if (PRINT) {
+      std::cout << this->numfds_ << std::endl;
+    }
+    while (this->pollfds_[this->numfds_ - 1].fd == -1) {
+      this->numfds_--;
     }
   }
 }
@@ -108,38 +96,35 @@ int Server::startServer(int port) {
   return EXIT_SUCCESS;
 }
 
-int Server::pollError(pollfd& poll) {
+int Server::pollError(int i) {
   int res = 0;
-  if (poll.revents & POLLERR) {
+  if (this->pollfds_[i].revents & POLLERR) {
     std::cout << "Error: POLLERR" << std::endl;
     res = 1;
-  } else if (poll.revents & POLLPRI) {
+  } else if (this->pollfds_[i].revents & POLLPRI) {
     std::cout << "Error: POLLPRI" << std::endl;
     res = 1;
-  } else if (poll.revents & POLLNVAL) {
+  } else if (this->pollfds_[i].revents & POLLNVAL) {
     std::cout << "Error: POLLNVAL" << std::endl;
     res = 1;
-  } else if (poll.revents & POLLHUP) {
+  } else if (this->pollfds_[i].revents & POLLHUP) {
     std::cout << "Error: POLLHUP" << std::endl;
     res = 1;
   }
   if (res != 0) {
-    std::cout << "pollfd: " << poll.fd << std::endl;
-    removeFd(poll.fd);
+    std::cout << "pollfd: " << this->pollfds_[i].fd << std::endl;
+    removeFd(i);
   }
   return res;
 }
 
-void Server::removeFd(int fd) {
-  for (size_t i = 0; i < this->numfds_; ++i) {
-    if (this->pollfds_[i].fd == fd) {
-      this->pollfds_[i].fd = -1;
-      this->sockets_.erase(i);
-      shutdown(fd, SHUT_RDWR);
-      close(fd);
-      break;
-    }
-  }
+void Server::removeFd(int i) {
+  std::cout << "removing fd: " << this->pollfds_[i].fd << std::endl;
+  shutdown(this->pollfds_[i].fd, SHUT_RDWR);
+  close(this->pollfds_[i].fd);
+  this->pollfds_[i].fd = -1;
+  this->pollfds_[i].events = POLLERR;
+  this->sockets_.erase(i);
 }
 
 void Server::checkSocketTimeout() {
@@ -155,9 +140,9 @@ void Server::checkSocketTimeout() {
 
 void Server::handleSend(int i) {
   sendResponse(i);
-  if (!this->sockets_[i].isKeepalive()) {
+  if (!this->sockets_[i].isKeepalive() && this->sockets_[i].getState() != UNFINISHED) {
     log("Closing socket");
-    removeFd(this->pollfds_[i].fd);
+    removeFd(i);
   }
 }
 
@@ -170,7 +155,9 @@ void Server::handleRecieve(int i) {
             << std::endl;
   rec = recv(this->pollfds_[i].fd, buffer, BUFFER_SIZE, O_NONBLOCK);
   if (rec < 0) {
-    exitWithError("Error: Failed to read bytes from client socket connection");
+    log("Error: Failed to read bytes from client socket connection");
+    removeFd(i);
+    return;
   } else if (rec == 0) {
     std::cout << "Error: Client closed connection." << std::endl;
     removeFd(i);
@@ -205,7 +192,7 @@ void Server::sendResponse(int i) {
     this->sockets_[i].handleUnfinished(bytes_sent, res_string);
     this->pollfds_[i].events = POLLOUT;
   } else {
-    this->sockets_[i].setState(RECIEVE);
+    this->sockets_[i].setState(RECEIVE);
     this->pollfds_[i].events = POLLIN;
   }
   this->sockets_[i].updateTime();
@@ -240,7 +227,7 @@ void Server::newConnection() {
   }
   new_poll.events = POLLIN;
   new_poll.revents = POLLOUT;
-  new_client.setState(RECIEVE);
+  new_client.setState(RECEIVE);
   new_client.setIndex(index);
   this->sockets_[index] = new_client;
   this->pollfds_[index] = new_poll;
