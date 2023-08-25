@@ -181,7 +181,7 @@ void Server::sendResponse(int i) {
   if (this->sockets_[i].getState() == UNFINISHED) {
     res_string = this->sockets_[i].getResponse();
   } else {
-    HTTPResponse res(this->sockets_[i].getRequest());
+    HTTPResponse res(this->sockets_[i].getRequest(), this->settings_);
     res_string = res.toString();
   }
   bytes_sent =
@@ -256,4 +256,12 @@ Server& Server::operator=(const Server& obj) {
     *this = obj;
   }
   return *this;
+}
+
+Server::Server(const Settings& settings)
+    : settings_(settings) {
+  if (startServer(this->settings_.getServers()[0].getPort()) != 0) {
+    std::cout << "Error: failed to start server with port: "
+      << this->settings_.getServers()[0].getPort() << std::endl;
+  }
 }

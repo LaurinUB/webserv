@@ -39,11 +39,11 @@ class Socket {
   void setIndex(int i);
   void setKeepalive(bool state);
   void setPort(int port);
-  bool checkTimeout();
   void updateTime();
   void setState(sockState stat);
   void setRequest(HTTPRequest& req);
 
+  bool checkTimeout();
   void handleUnfinished(int bytesSent, std::string res_string);
 
  private:

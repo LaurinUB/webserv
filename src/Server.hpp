@@ -24,12 +24,14 @@
 #include <string>
 #include <utility>
 
+#include "./parser/Settings.hpp"
 #include "HTTPRequest.hpp"
 #include "Socket.hpp"
 
 class Server {
  public:
   Server(const std::string& ip_addr, int port);
+  Server(const Settings& settings);
   ~Server();
   Server(const Server& obj);
   Server& operator=(const Server& obj);
@@ -37,9 +39,10 @@ class Server {
 
  private:
   std::string ip_addr_;
+  size_t numfds_;
   pollfd pollfds_[250];
   std::map<int, Socket> sockets_;
-  size_t numfds_;
+  Settings settings_;
 
   int pollError(int i);
   int startServer(int port);

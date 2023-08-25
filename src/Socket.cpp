@@ -94,8 +94,13 @@ size_t Socket::getResponseSize() const { return this->response_.size(); }
 HTTPRequest& Socket::getRequest() { return this->request_; }
 
 void Socket::setState(sockState state) { this->state_ = state; }
+// setter Functions
 
 void Socket::setKeepalive(bool state) { this->keepalive_ = state; }
+
+void Socket::updateTime() { this->timestamp_ = std::time(NULL); }
+
+// member Functions
 
 void Socket::handleUnfinished(int bytesSent, std::string res_string) {
   this->state_ = UNFINISHED;
@@ -113,7 +118,7 @@ bool Socket::checkTimeout() {
   return false;
 }
 
-void Socket::updateTime() { this->timestamp_ = std::time(NULL); }
+// public Functions
 
 // std::ostream& operator<<(std::ostream& os, const Socket& sock) {
 //   os << "Socket: " << sock.getFd() << std::endl

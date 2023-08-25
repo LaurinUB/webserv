@@ -1,6 +1,8 @@
 #ifndef SERVERSETTINGS_HPP_
 #define SERVERSETTINGS_HPP_
 
+#include <map>
+#include <string>
 #include <vector>
 
 #include "ASettings.hpp"
@@ -8,18 +10,28 @@
 
 class ServerSettings : public ASettings {
  public:
-  ServerSettings(){};
-  virtual ~ServerSettings(){};
-  ServerSettings(const ServerSettings& obj)
-      : location_settings_(obj.location_settings_){};
-  ServerSettings& operator=(const ServerSettings& obj) {
-    this->settings_ = obj.settings_;
-    this->location_settings_ = obj.location_settings_;
-    return *this;
-  };
+  ServerSettings();
+  virtual ~ServerSettings();
+  ServerSettings(const ServerSettings& obj);
+  ServerSettings& operator=(const ServerSettings& obj);
+
+  bool setValue(std::string key, std::string value);
+
+  std::vector<LocationSettings> getRoutes() const;
+  unsigned int getPort() const;
+  std::string getName() const;
+  std::map<unsigned int, std::string> getErrorPages() const;
+  unsigned int getMaxClientBodySize() const;
+
+  // TODO: this should be made private in the future but for now conflicts with
+  // parser
+  std::vector<LocationSettings> locations;
 
  private:
-  std::vector<LocationSettings> location_settings_;
+  unsigned int port_;
+  std::string server_name_;
+  std::map<unsigned int, std::string> error_pages_;
+  unsigned int max_client_body_size_;
 };
 
 #endif  // SERVERSETTINGS_HPP_

@@ -14,7 +14,7 @@ WHITE =	\033[0;0m
 ##   Source file handling
 PARSER = $(addprefix $(PARSER_DIR), $(PARSER_FILES))
 PARSER_DIR = src/parser/
-PARSER_FILES = SettingsParser.cpp
+PARSER_FILES = Settings.cpp ServerSettings.cpp LocationSettings.cpp Parser.cpp
 
 SRC = $(addprefix $(SRC_DIR), $(SRC_FILES))
 SRC_DIR = src/
