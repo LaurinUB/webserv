@@ -32,6 +32,7 @@ class HTTPResponse {
   std::string body_;
   //// Private Member Functions
   void handleGET(HTTPRequest& req);
+  void handlePOST(HTTPRequest& req);
   std::string createResponseBody(std::string& path, HTTPRequest& req);
   std::string buildDirIndexRes(DIR* directory, HTTPRequest& req,
                                std::string path);

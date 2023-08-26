@@ -40,6 +40,19 @@ void HTTPResponse::handleGET(HTTPRequest& req) {
   return;
 }
 
+void HTTPResponse::handlePOST(HTTPRequest& req) {
+  std::ofstream req_file;
+  std::string destination = req.getURI();
+  std::string filename = destination.substr(destination.find_last_of('/') + 1,
+                                            destination.size() - 1);
+  req_file.open(this->settings_.getServers()[0].locations[0].getRoot() + "/" +
+                filename);
+  req_file << req.getBody();
+  req_file.close();
+  this->header_ = "HTTP/1.1 201 OK\r\n";
+  this->body_ = "";
+}
+
 std::string HTTPResponse::createResponseBody(std::string& path,
                                              HTTPRequest& req) {
   DIR* directory_list;
@@ -151,6 +164,7 @@ HTTPResponse::HTTPResponse(HTTPRequest& req, Settings& settings)
       break;
     case HTTPRequest::POST:
       std::cout << "POST method" << std::endl;
+      this->handlePOST(req);
       break;
     case HTTPRequest::PUT:
       std::cout << "PUT method" << std::endl;
