@@ -104,6 +104,8 @@ void Server::executeCGI(std::string uri, int i) {
   arguments[2] = NULL;
   pid_t child = fork();
   if (child == 0) {
+    dup2(this->pollfds_[i].fd, STDOUT_FILENO);
+    close(this->pollfds_[i].fd);
     if (execve(arguments[1], NULL, NULL) == -1) {
       std::cerr << "Error: execve." << std::endl;
     }
@@ -134,7 +136,9 @@ void Server::handleRecieve(int i) {
   try {
     HTTPRequest req(stringyfied_buff);
     if (!req.getURI().compare(0, 9, "/cgi_bin/")) {
+      std::cout << "Execute CGI" << std::endl;
       executeCGI(req.getURI(), i);
+      removeFd(i);
     } else {
       this->pollfds_[i].events = POLLOUT;
       this->sockets_[i].setRequest(req);
@@ -154,6 +158,7 @@ void Server::sendResponse(int i) {
   } else {
     HTTPResponse res(this->sockets_[i].getRequest(), this->settings_);
     res_string = res.toString();
+    std::cout << res_string << std::endl;
   }
   bytes_sent =
       send(this->pollfds_[i].fd, res_string.data(), res_string.size(), 0);
