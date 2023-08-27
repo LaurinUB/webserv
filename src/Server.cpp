@@ -97,13 +97,15 @@ void Server::executeCGI(std::string uri, int i) {
   std::string executable = "www" + uri;
   std::string interpreter = "/usr/bin/python";
   char* arguments[3];
-  (void)i;
+
   std::cout << executable << std::endl;
   arguments[0] = const_cast<char*>(interpreter.c_str());
   arguments[1] = const_cast<char*>(executable.c_str());
   arguments[2] = NULL;
   pid_t child = fork();
-  if (child == 0) {
+  if (child < 0) {
+    std::cerr << "Error: fork." << std::endl;
+  } else if (child == 0) {
     dup2(this->pollfds_[i].fd, STDOUT_FILENO);
     close(this->pollfds_[i].fd);
     if (execve(arguments[1], NULL, NULL) == -1) {
@@ -158,7 +160,6 @@ void Server::sendResponse(int i) {
   } else {
     HTTPResponse res(this->sockets_[i].getRequest(), this->settings_);
     res_string = res.toString();
-    std::cout << res_string << std::endl;
   }
   bytes_sent =
       send(this->pollfds_[i].fd, res_string.data(), res_string.size(), 0);
