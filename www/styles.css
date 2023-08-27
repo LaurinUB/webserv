@@ -40,6 +40,14 @@ img {
   aspect-ratio: auto;
 }
 
+form {
+  margin: 2ch;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 40ch;
+}
+
 span::after {
   content: "1";
   color: #33FF33;
