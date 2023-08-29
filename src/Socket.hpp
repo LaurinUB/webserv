@@ -41,6 +41,8 @@ class Socket {
   void setPort(int port);
   void setState(sockState stat);
   void setRequest(HTTPRequest& req);
+  bool hasUnfinishedRequest() const;
+  void setUnfinishedRequest(bool value);
   void updateTime();
 
   bool checkTimeout();
@@ -55,6 +57,7 @@ class Socket {
   bool keepalive_;
   std::string response_;
   HTTPRequest request_;
+  bool has_unfinished_req_;
 };
 
 #endif  // SOCKET_HPP_

@@ -42,6 +42,8 @@ int Socket::getPort() const { return ntohs(this->socketAddress_.sin_port); }
 
 bool Socket::isKeepalive() const { return this->keepalive_; }
 
+bool Socket::hasUnfinishedRequest() const { return this->has_unfinished_req_; }
+
 // setter Functions
 
 void Socket::setIndex(int i) { this->index_ = i; }
@@ -61,6 +63,10 @@ void Socket::setRequest(HTTPRequest& req) {
   if (req.getKeepalive()) {
     this->keepalive_ = true;
   }
+}
+
+void Socket::setUnfinishedRequest(bool value) {
+  this->has_unfinished_req_ = value;
 }
 
 void Socket::updateTime() { this->timestamp_ = std::time(NULL); }
