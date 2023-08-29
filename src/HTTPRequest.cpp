@@ -32,9 +32,7 @@ unsigned int HTTPRequest::getContentLength() const {
   return res;
 }
 
-void HTTPRequest::appendBody(std::string input) {
-  this->body_ += input;
-}
+void HTTPRequest::appendBody(std::string input) { this->body_ += input; }
 
 //// Private Member Functions
 
