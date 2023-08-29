@@ -18,7 +18,8 @@ void HTTPResponse::handleGET(HTTPRequest& req) {
   std::string content_type = this->mime_types.find(mimetype)->second;
   try {
     this->body_ = this->createResponseBody(path, req);
-    this->header_ = "HTTP/1.1 200 OK\nContent-Type: " + content_type;
+    this->header_ = "HTTP/1.1 " + std::string(STATUS_200) +
+                    "\nContent-Type: " + content_type;
     if (req.getKeepalive()) {
       int size = this->body_.size();
       std::stringstream ss;
@@ -30,7 +31,8 @@ void HTTPResponse::handleGET(HTTPRequest& req) {
     this->body_ = this->createResponseBody(
         settings_.getServers()[0].getErrorPages()[404], req);
     this->body_.replace(this->body_.find("${URI}"), 6, req.getURI());
-    this->header_ = "HTTP/1.1 404 OK\nContent-Type: text/html";
+    this->header_ =
+        "HTTP/1.1 " + std::string(STATUS_404) + "\nContent-Type: text/html";
     int size = this->body_.size();
     std::stringstream ss;
     ss << size;
@@ -49,7 +51,8 @@ void HTTPResponse::handlePOST(HTTPRequest& req) {
                 filename);
   req_file << req.getBody();
   req_file.close();
-  this->header_ = "HTTP/1.1 201 OK\r\nContent-Length: 0\n";
+  this->header_ =
+      "HTTP/1.1 " + std::string(STATUS_201) + "\r\nContent-Length: 0\n";
   this->body_ = "";
 }
 
@@ -158,12 +161,10 @@ HTTPResponse::HTTPResponse(HTTPRequest& req, Settings& settings)
       this->handleGET(req);
       break;
     case HTTPRequest::HEAD:
-      std::cout << "HEAD method" << std::endl;
       this->handleGET(req);
       this->body_ = "";
       break;
     case HTTPRequest::POST:
-      std::cout << "POST method" << std::endl;
       this->handlePOST(req);
       break;
     case HTTPRequest::PUT:
