@@ -49,7 +49,7 @@ void HTTPResponse::handlePOST(HTTPRequest& req) {
                 filename);
   req_file << req.getBody();
   req_file.close();
-  this->header_ = "HTTP/1.1 201 OK\r\n";
+  this->header_ = "HTTP/1.1 201 OK\r\nContent-Length: 0\n";
   this->body_ = "";
 }
 

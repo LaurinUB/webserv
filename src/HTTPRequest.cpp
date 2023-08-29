@@ -22,6 +22,20 @@ std::string HTTPRequest::getProtocol() const { return this->protocol_version_; }
 
 bool HTTPRequest::getKeepalive() const { return this->keepalive_; }
 
+unsigned int HTTPRequest::getContentLength() const {
+  unsigned int res = 0;
+  std::map<std::string, std::string>::const_iterator cl =
+      this->header_.find("Content-Length");
+  if (cl != this->header_.end()) {
+    res = std::atoi(cl->second.c_str());
+  }
+  return res;
+}
+
+void HTTPRequest::appendBody(std::string input) {
+  this->body_ += input;
+}
+
 //// Private Member Functions
 
 void HTTPRequest::removeTrailingWhitespace(std::string& str) {

@@ -34,6 +34,8 @@ class HTTPRequest {
   std::string getURI() const;
   std::string getProtocol() const;
   bool getKeepalive() const;
+  unsigned int getContentLength() const;
+  void appendBody(std::string input);
 
  private:
   std::map<std::string, std::string> header_;

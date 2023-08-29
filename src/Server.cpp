@@ -111,15 +111,31 @@ void Server::handleRecieve(int i) {
     removeFd(i);
     return;
   }
-  std::string stringyfied_buff(buffer);
-  try {
-    HTTPRequest req(stringyfied_buff);
-    this->pollfds_[i].events = POLLOUT;
-    this->sockets_[i].setRequest(req);
-    this->sockets_[i].setState(SEND);
-    std::cout << "Recieved from socket: " << pollfds_[i].fd << std::endl;
-  } catch (std::exception& e) {
-    std::cout << e.what() << std::endl;
+  std::string stringyfied_buff(buffer, rec);
+  std::cout << "rec: " << rec << std::endl;
+  std::cout << "buffer.size(): " << stringyfied_buff.size() << std::endl;
+  if (this->sockets_[i].getRequest().getContentLength() >
+      this->sockets_[i].getRequest().getBody().size()) {
+    std::cout << "APPENDING" << std::endl;
+    this->sockets_[i].getRequest().appendBody(stringyfied_buff);
+    std::cout << "CL: " << this->sockets_[i].getRequest().getContentLength() << std::endl;
+    std::cout << "BL: " << this->sockets_[i].getRequest().getBody().size() << std::endl;
+    this->pollfds_[i].events = POLLIN;
+    if (this->sockets_[i].getRequest().getContentLength() <=
+        this->sockets_[i].getRequest().getBody().size()) {
+      std::cout << "Done Appending" << std::endl;
+      this->sockets_[i].setState(SEND);
+      this->pollfds_[i].events = POLLOUT;
+    }
+    return;
+  } else {
+    try {
+      HTTPRequest req(stringyfied_buff);
+      this->sockets_[i].setRequest(req);
+      std::cout << "Recieved from socket: " << pollfds_[i].fd << std::endl;
+    } catch (std::exception& e) {
+      std::cout << e.what() << std::endl;
+    }
   }
 }
 
@@ -164,7 +180,7 @@ void Server::newConnection() {
     std::cout << "Error: Failed to accept connection." << std::endl;
   }
   new_poll.events = POLLIN;
-  new_poll.revents = POLLOUT;
+  new_poll.revents = 0;
   new_client.setState(RECEIVE);
   new_client.setIndex(index);
   this->sockets_[index] = new_client;
