@@ -98,12 +98,10 @@ void Server::handleRecieve(int i) {
   ssize_t rec = 0;
 
   std::cout << "== Connected on socket: " << this->pollfds_[i].fd
-            << " ==" << std::endl
-            << std::endl;
+            << " ==" << std::endl;
   rec = recv(this->pollfds_[i].fd, buffer, BUFFER_SIZE, O_NONBLOCK);
   if (rec < 0) {
-    std::cerr << "Error: Failed to read bytes from client socket connection"
-              << std::endl;
+    std::cerr << "Error: Failed reading from client socket" << std::endl;
     removeFd(i);
     return;
   } else if (rec == 0) {
@@ -112,22 +110,8 @@ void Server::handleRecieve(int i) {
     return;
   }
   std::string stringyfied_buff(buffer, rec);
-  std::cout << "rec: " << rec << std::endl;
-  std::cout << "buffer.size(): " << stringyfied_buff.size() << std::endl;
-  if (this->sockets_[i].getRequest().getContentLength() >
-      this->sockets_[i].getRequest().getBody().size()) {
-    std::cout << "APPENDING" << std::endl;
+  if (this->sockets_[i].hasUnfinishedRequest()) {
     this->sockets_[i].getRequest().appendBody(stringyfied_buff);
-    std::cout << "CL: " << this->sockets_[i].getRequest().getContentLength() << std::endl;
-    std::cout << "BL: " << this->sockets_[i].getRequest().getBody().size() << std::endl;
-    this->pollfds_[i].events = POLLIN;
-    if (this->sockets_[i].getRequest().getContentLength() <=
-        this->sockets_[i].getRequest().getBody().size()) {
-      std::cout << "Done Appending" << std::endl;
-      this->sockets_[i].setState(SEND);
-      this->pollfds_[i].events = POLLOUT;
-    }
-    return;
   } else {
     try {
       HTTPRequest req(stringyfied_buff);
@@ -136,6 +120,15 @@ void Server::handleRecieve(int i) {
     } catch (std::exception& e) {
       std::cout << e.what() << std::endl;
     }
+  }
+  if (this->sockets_[i].getRequest().getBody().size() <
+      this->sockets_[i].getRequest().getContentLength()) {
+    this->sockets_[i].setUnfinishedRequest(true);
+    this->pollfds_[i].events = POLLIN;
+  } else {
+    this->sockets_[i].setUnfinishedRequest(false);
+    this->sockets_[i].setState(SEND);
+    this->pollfds_[i].events = POLLOUT;
   }
 }
 
