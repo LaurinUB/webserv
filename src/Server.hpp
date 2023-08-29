@@ -8,6 +8,7 @@
 #define MAX_PORTS 250
 #define BUFFER_SIZE 30640
 #define QUEUE_LEN 40
+#define TIMEOUT 5000
 
 #include <arpa/inet.h>
 #include <fcntl.h>

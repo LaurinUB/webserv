@@ -12,7 +12,7 @@ void Server::run() {
             << this->sockets_[0].getAddressString()
             << " PORT: " << this->sockets_[0].getPort() << " ***\n\n";
   while (g_signaled == 0) {
-    if (poll(this->pollfds_, this->numfds_, MAX_PORTS) == -1) {
+    if (poll(this->pollfds_, this->numfds_, TIMEOUT) == -1) {
       perror("poll");
       exit(EXIT_FAILURE);
     }
@@ -31,6 +31,7 @@ void Server::run() {
         }
       } else if (this->pollfds_[i].revents & POLLOUT) {
         handleSend(i);
+        break;
       } else {
         pollError(i);
       }
@@ -192,8 +193,11 @@ void Server::newConnection() {
   if (new_poll.fd < 0) {
     std::cout << "Error: Failed to accept connection." << std::endl;
   }
+  if (fcntl(new_poll.fd, F_SETFL, O_NONBLOCK, FD_CLOEXEC) == -1) {
+    std::cerr << "Error: fcntl." << std::endl;
+  }
   new_poll.events = POLLIN;
-  new_poll.revents = POLLOUT;
+  new_poll.revents = 0;
   new_client.setState(RECEIVE);
   new_client.setIndex(index);
   this->sockets_[index] = new_client;
