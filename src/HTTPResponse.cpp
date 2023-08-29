@@ -17,27 +17,25 @@ void HTTPResponse::handleGET(HTTPRequest& req) {
       path.substr(path.find_last_of('.') + 1, path.size() - 1);
   std::string content_type = this->mime_types.find(mimetype)->second;
   try {
+    this->setRequestLine(STATUS_200);
+    this->addToHeader("Content-Type", content_type);
     this->body_ = this->createResponseBody(path, req);
-    this->header_ = "HTTP/1.1 " + std::string(STATUS_200) +
-                    "\nContent-Type: " + content_type;
-    if (req.getKeepalive()) {
-      int size = this->body_.size();
-      std::stringstream ss;
-      ss << size;
-      std::string ssize = ss.str();
-      this->header_ += "\r\nContent-Length: " + ssize;
-    }
-  } catch (std::exception& e) {
-    this->body_ = this->createResponseBody(
-        settings_.getServers()[0].getErrorPages()[404], req);
-    this->body_.replace(this->body_.find("${URI}"), 6, req.getURI());
-    this->header_ =
-        "HTTP/1.1 " + std::string(STATUS_404) + "\nContent-Type: text/html";
     int size = this->body_.size();
     std::stringstream ss;
     ss << size;
     std::string ssize = ss.str();
-    this->header_ += "\r\nContent-Length: " + ssize;
+    this->addToHeader("Content-Length", ssize);
+  } catch (std::exception& e) {
+    this->setRequestLine(STATUS_404);
+    this->addToHeader("Content-Type", "text/html");
+    this->body_ = this->createResponseBody(
+        settings_.getServers()[0].getErrorPages()[404], req);
+    this->body_.replace(this->body_.find("${URI}"), 6, req.getURI());
+    int size = this->body_.size();
+    std::stringstream ss;
+    ss << size;
+    std::string ssize = ss.str();
+    this->addToHeader("Content-Length", ssize);
   }
   return;
 }
@@ -51,8 +49,8 @@ void HTTPResponse::handlePOST(HTTPRequest& req) {
                 filename);
   req_file << req.getBody();
   req_file.close();
-  this->header_ =
-      "HTTP/1.1 " + std::string(STATUS_201) + "\r\nContent-Length: 0\n";
+  this->setRequestLine(STATUS_201);
+  this->addToHeader("Content-Length", "0");
   this->body_ = "";
 }
 
@@ -133,19 +131,19 @@ HTTPResponse::HTTPResponse() {}
 HTTPResponse::~HTTPResponse() {}
 
 HTTPResponse::HTTPResponse(const HTTPResponse& obj)
-    : header_(obj.header_), body_(obj.body_) {}
+    : request_line_(obj.request_line_),
+      headers_(obj.headers_),
+      body_(obj.body_) {}
 
 HTTPResponse& HTTPResponse::operator=(const HTTPResponse& obj) {
   if (this != &obj) {
     *this = obj;
   }
-  this->header_ = obj.header_;
+  this->request_line_ = obj.request_line_;
+  this->headers_ = obj.headers_;
   this->body_ = obj.body_;
   return *this;
 }
-
-HTTPResponse::HTTPResponse(std::string header, std::string body)
-    : header_(header), body_(body) {}
 
 HTTPResponse::HTTPResponse(HTTPRequest& req, Settings& settings)
     : settings_(settings) {
@@ -186,6 +184,21 @@ HTTPResponse::HTTPResponse(HTTPRequest& req, Settings& settings)
 
 std::string HTTPResponse::toString() const {
   std::ostringstream oss;
-  oss << this->header_ << "\r\n\r\n" << this->body_;
+  oss << this->request_line_;
+  for (std::map<std::string, std::string>::const_iterator it =
+           this->headers_.begin();
+       it != this->headers_.end(); ++it) {
+    oss << it->first << ": " << it->second << "\r\n";
+  }
+  oss << "\r\n" << this->body_;
   return oss.str();
+}
+
+void HTTPResponse::setRequestLine(const std::string& status_code) {
+  this->request_line_ = "HTTP/1.1 " + status_code + "\r\n";
+}
+
+void HTTPResponse::addToHeader(const std::string& key,
+                               const std::string& value) {
+  this->headers_.insert(std::pair<std::string, std::string>(key, value));
 }

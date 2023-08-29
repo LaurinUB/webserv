@@ -16,11 +16,12 @@ class HTTPResponse {
   ~HTTPResponse();
   HTTPResponse(const HTTPResponse& obj);
   HTTPResponse& operator=(const HTTPResponse& obj);
-  HTTPResponse(std::string header, std::string body);
   HTTPResponse(HTTPRequest& req, Settings& settings);
 
   //// Member Functions
   std::string toString() const;
+  void setRequestLine(const std::string& status_code);
+  void addToHeader(const std::string& key, const std::string& value);
 
   //// Static Members
   static std::map<std::string, std::string> mime_types;
@@ -28,7 +29,8 @@ class HTTPResponse {
 
  private:
   Settings settings_;
-  std::string header_;
+  std::string request_line_;
+  std::map<std::string, std::string> headers_;
   std::string body_;
   //// Private Member Functions
   void handleGET(HTTPRequest& req);
