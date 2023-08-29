@@ -4,6 +4,9 @@ webserv
 # Nvim
 .ccls-cache/
 
+# macOS
+.DS_Store
+
 # Prerequisites
 *.d
 

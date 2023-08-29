@@ -122,12 +122,10 @@ void Server::handleRecieve(int i) {
   ssize_t rec = 0;
 
   std::cout << "== Connected on socket: " << this->pollfds_[i].fd
-            << " ==" << std::endl
-            << std::endl;
+            << " ==" << std::endl;
   rec = recv(this->pollfds_[i].fd, buffer, BUFFER_SIZE, O_NONBLOCK);
   if (rec < 0) {
-    std::cerr << "Error: Failed to read bytes from client socket connection"
-              << std::endl;
+    std::cerr << "Error: Failed reading from client socket" << std::endl;
     removeFd(i);
     return;
   } else if (rec == 0) {
@@ -135,21 +133,34 @@ void Server::handleRecieve(int i) {
     removeFd(i);
     return;
   }
-  std::string stringyfied_buff(buffer);
-  try {
-    HTTPRequest req(stringyfied_buff);
-    if (!req.getURI().compare(0, 9, "/cgi_bin/")) {
-      std::cout << "Execute CGI" << std::endl;
-      executeCGI(req.getURI(), i);
-      removeFd(i);
-    } else {
-      this->pollfds_[i].events = POLLOUT;
-      this->sockets_[i].setRequest(req);
-      this->sockets_[i].setState(SEND);
-      std::cout << "Recieved from socket: " << pollfds_[i].fd << std::endl;
+  std::string stringyfied_buff(buffer, rec);
+  if (this->sockets_[i].hasUnfinishedRequest()) {
+    this->sockets_[i].getRequest().appendBody(stringyfied_buff);
+  } else {
+    try {
+      HTTPRequest req(stringyfied_buff);
+      if (!req.getURI().compare(0, 9, "/cgi_bin/")) {
+        std::cout << "Execute CGI" << std::endl;
+        executeCGI(req.getURI(), i);
+        removeFd(i);
+      } else {
+        this->pollfds_[i].events = POLLOUT;
+        this->sockets_[i].setRequest(req);
+        this->sockets_[i].setState(SEND);
+        std::cout << "Recieved from socket: " << pollfds_[i].fd << std::endl;
+      }
+    } catch (std::exception& e) {
+      std::cout << e.what() << std::endl;
     }
-  } catch (std::exception& e) {
-    std::cout << e.what() << std::endl;
+  }
+  if (this->sockets_[i].getRequest().getBody().size() <
+      this->sockets_[i].getRequest().getContentLength()) {
+    this->sockets_[i].setUnfinishedRequest(true);
+    this->pollfds_[i].events = POLLIN;
+  } else {
+    this->sockets_[i].setUnfinishedRequest(false);
+    this->sockets_[i].setState(SEND);
+    this->pollfds_[i].events = POLLOUT;
   }
 }
 
