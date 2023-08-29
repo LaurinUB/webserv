@@ -20,7 +20,7 @@ class HTTPResponse {
 
   //// Member Functions
   std::string toString() const;
-  void setRequestLine(const std::string& status_code);
+  void setResponseLine(const std::string& status_code);
   void addToHeader(const std::string& key, const std::string& value);
 
   //// Static Members

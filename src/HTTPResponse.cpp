@@ -17,7 +17,7 @@ void HTTPResponse::handleGET(HTTPRequest& req) {
       path.substr(path.find_last_of('.') + 1, path.size() - 1);
   std::string content_type = this->mime_types.find(mimetype)->second;
   try {
-    this->setRequestLine(STATUS_200);
+    this->setResponseLine(STATUS_200);
     this->addToHeader("Content-Type", content_type);
     this->body_ = this->createResponseBody(path, req);
     int size = this->body_.size();
@@ -26,7 +26,7 @@ void HTTPResponse::handleGET(HTTPRequest& req) {
     std::string ssize = ss.str();
     this->addToHeader("Content-Length", ssize);
   } catch (std::exception& e) {
-    this->setRequestLine(STATUS_404);
+    this->setResponseLine(STATUS_404);
     this->addToHeader("Content-Type", "text/html");
     this->body_ = this->createResponseBody(
         settings_.getServers()[0].getErrorPages()[404], req);
@@ -49,7 +49,7 @@ void HTTPResponse::handlePOST(HTTPRequest& req) {
                 filename);
   req_file << req.getBody();
   req_file.close();
-  this->setRequestLine(STATUS_201);
+  this->setResponseLine(STATUS_201);
   this->addToHeader("Content-Length", "0");
   this->body_ = "";
 }
@@ -150,10 +150,14 @@ HTTPResponse::HTTPResponse(HTTPRequest& req, Settings& settings)
   HTTPRequest::method req_method = req.getMethod();
   switch (req_method) {
     case HTTPRequest::UNKNOWN:
-      std::cout << "UNKNOWN method" << std::endl;
+      this->setResponseLine(STATUS_405);
+      this->addToHeader("Content-Length", "0");
+      this->body_ = "";
       break;
     case HTTPRequest::OPTIONS:
-      std::cout << "OPTIONS method" << std::endl;
+      this->setResponseLine(STATUS_501);
+      this->addToHeader("Content-Length", "0");
+      this->body_ = "";
       break;
     case HTTPRequest::GET:
       this->handleGET(req);
@@ -166,16 +170,24 @@ HTTPResponse::HTTPResponse(HTTPRequest& req, Settings& settings)
       this->handlePOST(req);
       break;
     case HTTPRequest::PUT:
-      std::cout << "PUT method" << std::endl;
+      this->setResponseLine(STATUS_501);
+      this->addToHeader("Content-Length", "0");
+      this->body_ = "";
       break;
     case HTTPRequest::DELETE:
-      std::cout << "DELETE method" << std::endl;
+      this->setResponseLine(STATUS_501);
+      this->addToHeader("Content-Length", "0");
+      this->body_ = "";
       break;
     case HTTPRequest::TRACE:
-      std::cout << "TRACE method" << std::endl;
+      this->setResponseLine(STATUS_501);
+      this->addToHeader("Content-Length", "0");
+      this->body_ = "";
       break;
     case HTTPRequest::CONNECT:
-      std::cout << "CONNECT method" << std::endl;
+      this->setResponseLine(STATUS_501);
+      this->addToHeader("Content-Length", "0");
+      this->body_ = "";
       break;
   }
 }
@@ -194,7 +206,7 @@ std::string HTTPResponse::toString() const {
   return oss.str();
 }
 
-void HTTPResponse::setRequestLine(const std::string& status_code) {
+void HTTPResponse::setResponseLine(const std::string& status_code) {
   this->request_line_ = "HTTP/1.1 " + status_code + "\r\n";
 }
 
