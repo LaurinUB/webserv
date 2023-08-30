@@ -9,6 +9,7 @@
 #define BUFFER_SIZE 30640
 #define QUEUE_LEN 40
 #define TIMEOUT 5000
+#define INTERPRETER "usr/bin/pyhton"
 
 #include <arpa/inet.h>
 #include <fcntl.h>
@@ -59,6 +60,7 @@ class Server {
   void handleSend(int i);
   void checkSocketTimeout();
   void executeCGI(std::string uri, int i);
+  bool isCGI(std::string uri);
 };
 
 #endif  // TCPSERVER_HPP_

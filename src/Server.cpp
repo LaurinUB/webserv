@@ -96,11 +96,9 @@ void Server::handleSend(int i) {
 
 void Server::executeCGI(std::string uri, int i) {
   std::string executable = "www" + uri;
-  std::string interpreter = "/usr/bin/python";
   char* arguments[3];
 
-  std::cout << executable << std::endl;
-  arguments[0] = const_cast<char*>(interpreter.c_str());
+  arguments[0] = const_cast<char*>(INTERPRETER);
   arguments[1] = const_cast<char*>(executable.c_str());
   arguments[2] = NULL;
   pid_t child = fork();
@@ -109,12 +107,19 @@ void Server::executeCGI(std::string uri, int i) {
   } else if (child == 0) {
     dup2(this->pollfds_[i].fd, STDOUT_FILENO);
     close(this->pollfds_[i].fd);
+    std::cout << "HTTP/1.1 200 OK\n";
     if (execve(arguments[1], NULL, NULL) == -1) {
       std::cerr << "Error: execve." << std::endl;
     }
+    std::cout << "Script execution failed" << std::endl;
+    exit(EXIT_FAILURE);
   }
   int status;
   waitpid(child, &status, 0);
+}
+
+bool Server::isCGI(std::string uri) {
+  return !uri.compare(uri.size() - 3, uri.size(), ".py");
 }
 
 void Server::handleRecieve(int i) {
@@ -139,10 +144,9 @@ void Server::handleRecieve(int i) {
   } else {
     try {
       HTTPRequest req(stringyfied_buff);
-      if (!req.getURI().compare(0, 9, "/cgi_bin/")) {
+      if (isCGI(req.getURI())) {
         std::cout << "Execute CGI" << std::endl;
         executeCGI(req.getURI(), i);
-        removeFd(i);
       } else {
         this->pollfds_[i].events = POLLOUT;
         this->sockets_[i].setRequest(req);
