@@ -94,7 +94,7 @@ void Server::handleSend(int i) {
   }
 }
 
-void  Server::generateEnv(HTTPRequest req) {
+void Server::generateEnv(HTTPRequest req) {
   int i = 0;
   std::string env[5];
   if (req.getMethod() == HTTPRequest::GET) {
@@ -133,15 +133,22 @@ void Server::executeCGI(std::string uri, int i) {
     if (execve(arguments[1], arguments, this->cgi_env_) == -1) {
       std::cerr << "Error: execve." << std::endl;
     }
-    std::cout << "Script execution failed" << std::endl;
+    std::cout << "\nScript execution failed!" << std::endl;
     exit(EXIT_FAILURE);
   }
   int status;
   waitpid(child, &status, 0);
 }
 
-bool Server::isCGI(std::string uri) {
-  return !uri.compare(uri.size() - 3, uri.size(), ".py");
+bool Server::isCGI(HTTPRequest req) {
+  if (req.getURI().empty() || req.getURI().size() < 4) {
+    return false;
+  }
+  if (!req.getURI().compare(req.getURI().size() - 3, req.getURI().size(),
+                            ".py")) {
+    return true;
+  }
+  return false;
 }
 
 void Server::handleReceive(int i) {
@@ -166,7 +173,7 @@ void Server::handleReceive(int i) {
   } else {
     try {
       HTTPRequest req(stringyfied_buff);
-      if (isCGI(req.getURI())) {
+      if (isCGI(req)) {
         std::cout << "Execute CGI" << std::endl;
         generateEnv(req);
         executeCGI(req.getURI(), i);
@@ -225,7 +232,6 @@ void Server::newConnection() {
   socklen_t addrlen = sizeof(struct sockaddr);
   pollfd new_poll;
   size_t index = searchFreePoll();
-  std::cout << index << std::endl;
   new_poll.fd = accept(this->pollfds_[0].fd,
                        (struct sockaddr*)&new_client.getAddress(), &addrlen);
   if (new_poll.fd < 0) {
