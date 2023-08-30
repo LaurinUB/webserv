@@ -141,11 +141,11 @@ void Server::executeCGI(std::string uri, int i) {
 }
 
 bool Server::isCGI(HTTPRequest req) {
-  if (req.getURI().empty() || req.getURI().size() < 4) {
+  if (req.getURI().empty() || req.getURI().size() < PYSIZE + 1) {
     return false;
   }
-  if (!req.getURI().compare(req.getURI().size() - 3, req.getURI().size(),
-                            ".py")) {
+  if (!req.getURI().compare(req.getURI().size() - PYSIZE, req.getURI().size(),
+                            PYTHON)) {
     return true;
   }
   return false;

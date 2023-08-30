@@ -10,6 +10,8 @@
 #define QUEUE_LEN 40
 #define TIMEOUT 5000
 #define INTERPRETER "/usr/bin/pyhton"
+#define PYTHON ".py"
+#define PYSIZE 3
 
 #include <arpa/inet.h>
 #include <fcntl.h>
