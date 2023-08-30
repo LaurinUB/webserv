@@ -26,7 +26,7 @@ void Server::run() {
           newConnection();
           break;
         } else {
-          handleRecieve(i);
+          handleReceive(i);
           break;
         }
       } else if (this->pollfds_[i].revents & POLLOUT) {
@@ -94,6 +94,28 @@ void Server::handleSend(int i) {
   }
 }
 
+void  Server::generateEnv(HTTPRequest req) {
+  int i = 0;
+  std::string env[5];
+  if (req.getMethod() == HTTPRequest::GET) {
+    env[i] = "REQUEST_METHOD=GET";
+    i++;
+  } else {
+    env[i] = "REQUEST_METHOD=POST";
+    i++;
+    env[i] = "CONTENT_LENGTH=" + std::to_string(req.getBody().size());
+    i++;
+  }
+  env[i] = "CONTENT_TYPE=text/html";
+  env[i] = "SCRIPT_NAME=" + req.getURI();
+  int j = 0;
+  while (j < i) {
+    this->cgi_env_[j] = const_cast<char*>(env[j].c_str());
+    j++;
+  }
+  this->cgi_env_[j] = NULL;
+}
+
 void Server::executeCGI(std::string uri, int i) {
   std::string executable = "www" + uri;
   char* arguments[3];
@@ -108,7 +130,7 @@ void Server::executeCGI(std::string uri, int i) {
     dup2(this->pollfds_[i].fd, STDOUT_FILENO);
     close(this->pollfds_[i].fd);
     std::cout << "HTTP/1.1 200 OK\n";
-    if (execve(arguments[1], NULL, NULL) == -1) {
+    if (execve(arguments[1], arguments, this->cgi_env_) == -1) {
       std::cerr << "Error: execve." << std::endl;
     }
     std::cout << "Script execution failed" << std::endl;
@@ -122,7 +144,7 @@ bool Server::isCGI(std::string uri) {
   return !uri.compare(uri.size() - 3, uri.size(), ".py");
 }
 
-void Server::handleRecieve(int i) {
+void Server::handleReceive(int i) {
   char buffer[BUFFER_SIZE] = {0};
   ssize_t rec = 0;
 
@@ -146,12 +168,13 @@ void Server::handleRecieve(int i) {
       HTTPRequest req(stringyfied_buff);
       if (isCGI(req.getURI())) {
         std::cout << "Execute CGI" << std::endl;
+        generateEnv(req);
         executeCGI(req.getURI(), i);
       } else {
         this->pollfds_[i].events = POLLOUT;
         this->sockets_[i].setRequest(req);
         this->sockets_[i].setState(SEND);
-        std::cout << "Recieved from socket: " << pollfds_[i].fd << std::endl;
+        std::cout << "Received from socket: " << pollfds_[i].fd << std::endl;
       }
     } catch (std::exception& e) {
       std::cout << e.what() << std::endl;

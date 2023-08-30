@@ -9,7 +9,7 @@
 #define BUFFER_SIZE 30640
 #define QUEUE_LEN 40
 #define TIMEOUT 5000
-#define INTERPRETER "usr/bin/pyhton"
+#define INTERPRETER "/usr/bin/pyhton"
 
 #include <arpa/inet.h>
 #include <fcntl.h>
@@ -49,6 +49,7 @@ class Server {
   pollfd pollfds_[MAX_PORTS];
   std::map<int, Socket> sockets_;
   Settings settings_;
+  char* cgi_env_[8];
 
   int startServer(int port);
   int pollError(int i);
@@ -56,11 +57,12 @@ class Server {
   size_t searchFreePoll();
   void sendResponse(int i);
   void newConnection();
-  void handleRecieve(int i);
+  void handleReceive(int i);
   void handleSend(int i);
   void checkSocketTimeout();
   void executeCGI(std::string uri, int i);
   bool isCGI(std::string uri);
+  void generateEnv(HTTPRequest req);
 };
 
 #endif  // TCPSERVER_HPP_
