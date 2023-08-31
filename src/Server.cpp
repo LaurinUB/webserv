@@ -8,9 +8,6 @@ extern sig_atomic_t g_signaled;
 // Core Functions
 
 void Server::run() {
-  std::cout << "\n*** Listening on ADDRESS: "
-            << this->sockets_[0].getAddressString()
-            << " PORT: " << this->sockets_[0].getPort() << " ***\n\n";
   while (g_signaled == 0) {
     if (poll(this->pollfds_, this->numfds_, TIMEOUT) == -1) {
       perror("poll");
@@ -23,7 +20,7 @@ void Server::run() {
       }
       if (this->pollfds_[i].revents & POLLIN) {
         if (this->sockets_[i].getState() == SERVER) {
-          newConnection();
+          newConnection(i);
           break;
         } else {
           handleReceive(i);
@@ -45,21 +42,19 @@ void Server::run() {
   }
 }
 
-int Server::startServer(int port) {
+int Server::startServer(std::string ip, int port) {
   pollfd new_poll;
-  Socket serv(0);
+  Socket serv(this->numfds_);
   int opt = 1;
   socklen_t addrlen = sizeof(serv.getAddress());
 
-  this->numfds_ = 1;
-  memset(pollfds_, -1, MAX_PORTS);
   new_poll.fd = socket(AF_INET, SOCK_STREAM, 0);
   serv.setState(SERVER);
   if (new_poll.fd < 0) {
     std::cout << "Error: can not start Socket." << std::endl;
     return EXIT_FAILURE;
   }
-  serv.setPort(port);
+  serv.setPort(ip, port);
   if (setsockopt(new_poll.fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) ==
       -1) {
     std::cerr << "Error: cannot set socket opt." << std::endl;
@@ -78,8 +73,9 @@ int Server::startServer(int port) {
   }
   new_poll.events = POLLIN;
   new_poll.revents = 0;
-  this->sockets_[0] = serv;
-  this->pollfds_[0] = new_poll;
+  this->sockets_[this->numfds_] = serv;
+  this->pollfds_[this->numfds_] = new_poll;
+  this->numfds_++;
   return EXIT_SUCCESS;
 }
 
@@ -225,7 +221,7 @@ void Server::sendResponse(int i) {
             << bytes_sent << std::endl;
 }
 
-void Server::newConnection() {
+void Server::newConnection(int i) {
   if (this->numfds_ > MAX_PORTS) {
     std::cout << "Error: no new Connection possible." << std::endl;
     return;
@@ -234,13 +230,15 @@ void Server::newConnection() {
   socklen_t addrlen = sizeof(struct sockaddr);
   pollfd new_poll;
   size_t index = searchFreePoll();
-  new_poll.fd = accept(this->pollfds_[0].fd,
+  new_poll.fd = accept(this->pollfds_[i].fd,
                        (struct sockaddr*)&new_client.getAddress(), &addrlen);
   if (new_poll.fd < 0) {
     std::cout << "Error: Failed to accept connection." << std::endl;
+    return;
   }
   if (fcntl(new_poll.fd, F_SETFL, O_NONBLOCK, FD_CLOEXEC) == -1) {
     std::cerr << "Error: fcntl." << std::endl;
+    return;
   }
   new_poll.events = POLLIN;
   new_poll.revents = 0;
@@ -249,7 +247,7 @@ void Server::newConnection() {
   this->sockets_[index] = new_client;
   this->pollfds_[index] = new_poll;
   if (index == this->numfds_) {
-    numfds_++;
+    this->numfds_++;
   }
   std::cout << "New connection success on : " << new_client.getAddressString()
             << " with socket nbr: " << new_poll.fd << std::endl;
@@ -308,13 +306,6 @@ void Server::checkSocketTimeout() {
 
 //// Constructors and Operator overloads
 
-Server::Server(const std::string& ip_addr, int port) : ip_addr_(ip_addr) {
-  if (startServer(port) == EXIT_FAILURE) {
-    std::cerr << "Error: Failed to start Server." << std::endl;
-    exit(EXIT_FAILURE);
-  }
-}
-
 Server::~Server() { exit(EXIT_SUCCESS); }
 
 Server::Server(const Server& obj) { *this = obj; }
@@ -327,8 +318,16 @@ Server& Server::operator=(const Server& obj) {
 }
 
 Server::Server(const Settings& settings) : settings_(settings) {
-  if (startServer(this->settings_.getServers()[0].getPort()) != 0) {
-    std::cout << "Error: failed to start server with port: "
-              << this->settings_.getServers()[0].getPort() << std::endl;
+  memset(this->pollfds_, -1, MAX_PORTS);
+  for (size_t i = 0; i < this->settings_.getServers().size(); ++i) {
+    if (startServer(this->settings_.getServers()[i].getName(),
+                    this->settings_.getServers()[i].getPort())) {
+      std::cout << "Error: failed to start Server with port "
+                << this->settings_.getServers()[i].getPort() << std::endl;
+    } else {
+      std::cout << "Startet server on "
+                << this->settings_.getServers()[i].getName() << " with Port "
+                << this->settings_.getServers()[i].getPort() << std::endl;
+    }
   }
 }
