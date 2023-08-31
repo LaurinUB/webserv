@@ -38,7 +38,7 @@ class Socket {
 
   void setIndex(int i);
   void setKeepalive(bool state);
-  void setPort(int port);
+  void setPort(std::string ip, int port);
   void setState(sockState stat);
   void setRequest(HTTPRequest& req);
   bool hasUnfinishedRequest() const;
