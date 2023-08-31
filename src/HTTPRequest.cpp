@@ -18,6 +18,8 @@ HTTPRequest::method HTTPRequest::getMethod() const {
 
 std::string HTTPRequest::getURI() const { return this->URI_; }
 
+std::string HTTPRequest::getQueryParam() const { return this->query_param_; }
+
 std::string HTTPRequest::getProtocol() const { return this->protocol_version_; }
 
 bool HTTPRequest::getKeepalive() const { return this->keepalive_; }
@@ -119,6 +121,7 @@ HTTPRequest::HTTPRequest(const HTTPRequest& obj)
       body_(obj.body_),
       request_method_(obj.request_method_),
       URI_(obj.URI_),
+      query_param_(obj.query_param_),
       protocol_version_(obj.protocol_version_),
       keepalive_(obj.keepalive_),
       has_request_error_(obj.has_request_error_),
@@ -131,6 +134,7 @@ HTTPRequest& HTTPRequest::operator=(const HTTPRequest& obj) {
   this->header_ = obj.header_;
   this->request_method_ = obj.request_method_;
   this->URI_ = obj.URI_;
+  this->query_param_ = obj.query_param_;
   this->protocol_version_ = obj.protocol_version_;
   this->keepalive_ = obj.keepalive_;
   this->has_request_error_ = obj.has_request_error_;
@@ -151,6 +155,12 @@ HTTPRequest::HTTPRequest(std::string& input) {
   std::vector<std::string> request_line = this->splitLine(line, " ");
   this->request_method_ = this->parseMethodToken(*request_line.begin());
   this->URI_ = this->cleanURI(request_line[1]);
+  size_t query_param_start = this->URI_.find_first_of('?');
+  if (query_param_start != std::string::npos) {
+    this->query_param_ =
+        this->URI_.substr(query_param_start, this->URI_.size());
+    this->URI_.erase(query_param_start, this->URI_.size());
+  }
   this->protocol_version_ = request_line.at(2);
   this->removeTrailingWhitespace(this->protocol_version_);
   this->has_request_error_ = false;
@@ -179,6 +189,11 @@ void HTTPRequest::checkForErrors() {
     // here
     this->has_request_error_ = true;
     this->request_error_ = STATUS_413;
+  } else if (this->getURI().size() + this->getQueryParam().size() >
+             MAX_CLIENT_HEADER_BUFFER) {
+    this->has_request_error_ = true;
+    this->request_error_ = STATUS_414;
+    std::cout << "set error 414" << std::endl;
   }
 }
 

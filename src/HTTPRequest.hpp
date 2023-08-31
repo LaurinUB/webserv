@@ -7,6 +7,8 @@
 #include <vector>
 #include "HTTPResponseStatus.hpp"
 
+#define MAX_CLIENT_HEADER_BUFFER 8000
+
 class HTTPRequest {
  public:
   //// Constructors and Operator overloads
@@ -33,6 +35,7 @@ class HTTPRequest {
   std::string getBody() const;
   HTTPRequest::method getMethod() const;
   std::string getURI() const;
+  std::string getQueryParam() const;
   std::string getProtocol() const;
   bool getKeepalive() const;
   bool hasRequestError() const;
@@ -45,6 +48,7 @@ class HTTPRequest {
   std::string body_;
   method request_method_;
   std::string URI_;
+  std::string query_param_;
   std::string protocol_version_;
   bool keepalive_;
   bool has_request_error_;
