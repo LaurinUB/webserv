@@ -39,7 +39,7 @@
 #define STATUS_410 "410 Gone"
 #define STATUS_411 "411 Length Required"
 #define STATUS_412 "412 Precondition Failed"
-#define STATUS_413 "413 Payload Too Large"
+#define STATUS_413 "413 Content Too Large"
 #define STATUS_414 "414 URI Too Long"
 #define STATUS_415 "415 Unsupported Media Type"
 #define STATUS_416 "416 Range Not Satisfiable"

@@ -193,8 +193,9 @@ void HTTPRequest::checkForErrors() {
              MAX_CLIENT_HEADER_BUFFER) {
     this->has_request_error_ = true;
     this->request_error_ = STATUS_414;
-    std::cout << "set error 414" << std::endl;
   }
+  // since max body size needs the config, error 413 is checked in response
+  // class
 }
 
 std::ostream& operator<<(std::ostream& os, HTTPRequest& obj) {

@@ -153,6 +153,12 @@ HTTPResponse::HTTPResponse(HTTPRequest& req, Settings& settings)
     this->addToHeader("Content-Length", "0");
     this->body_ = "";
     return;
+  } else if (req.getBody().size() >
+             settings.getServers()[0].getMaxClientBodySize()) {
+    this->setResponseLine(STATUS_413);
+    this->addToHeader("Content-Length", "0");
+    this->body_ = "";
+    return;
   }
   switch (req_method) {
     case HTTPRequest::UNKNOWN:
