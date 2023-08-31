@@ -50,10 +50,10 @@ void Socket::setIndex(int i) { this->index_ = i; }
 
 void Socket::setKeepalive(bool state) { this->keepalive_ = state; }
 
-void Socket::setPort(int port) {
+void Socket::setPort(std::string ip, int port) {
   this->socketAddress_.sin_family = AF_INET;
   this->socketAddress_.sin_port = htons(port);
-  this->socketAddress_.sin_addr.s_addr = INADDR_ANY;
+  this->socketAddress_.sin_addr.s_addr = inet_addr(ip.c_str());
 }
 
 void Socket::setState(sockState state) { this->state_ = state; }

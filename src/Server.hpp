@@ -38,7 +38,6 @@
 
 class Server {
  public:
-  Server(const std::string& ip_addr, int port);
   Server(const Settings& settings);
   ~Server();
   Server(const Server& obj);
@@ -53,12 +52,12 @@ class Server {
   Settings settings_;
   char* cgi_env_[8];
 
-  int startServer(int port);
+  int startServer(std::string ip, int port);
   int pollError(int i);
   void removeFd(int i);
   size_t searchFreePoll();
   void sendResponse(int i);
-  void newConnection();
+  void newConnection(int i);
   void handleReceive(int i);
   void handleSend(int i);
   void checkSocketTimeout();
