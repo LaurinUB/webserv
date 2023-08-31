@@ -145,17 +145,11 @@ HTTPResponse& HTTPResponse::operator=(const HTTPResponse& obj) {
   return *this;
 }
 
-HTTPResponse::HTTPResponse(HTTPRequest& req, Settings& settings)
+HTTPResponse::HTTPResponse(HTTPRequest& req, const Settings& settings)
     : settings_(settings) {
   HTTPRequest::method req_method = req.getMethod();
   if (req.hasRequestError()) {
     this->setResponseLine(req.getRequestError());
-    this->addToHeader("Content-Length", "0");
-    this->body_ = "";
-    return;
-  } else if (req.getBody().size() >
-             settings.getServers()[0].getMaxClientBodySize()) {
-    this->setResponseLine(STATUS_413);
     this->addToHeader("Content-Length", "0");
     this->body_ = "";
     return;

@@ -125,7 +125,8 @@ HTTPRequest::HTTPRequest(const HTTPRequest& obj)
       protocol_version_(obj.protocol_version_),
       keepalive_(obj.keepalive_),
       has_request_error_(obj.has_request_error_),
-      request_error_(obj.request_error_) {
+      request_error_(obj.request_error_),
+      settings_(obj.settings_) {
   *this = obj;
 }
 
@@ -139,13 +140,15 @@ HTTPRequest& HTTPRequest::operator=(const HTTPRequest& obj) {
   this->keepalive_ = obj.keepalive_;
   this->has_request_error_ = obj.has_request_error_;
   this->request_error_ = obj.request_error_;
+  this->settings_ = obj.settings_;
   return *this;
 }
 
-HTTPRequest::HTTPRequest(std::string& input) {
+HTTPRequest::HTTPRequest(std::string& input, const Settings& settings) {
   if (input.size() <= 1) {
     throw std::runtime_error("Error: tried to create request with size <= 1");
   }
+  this->settings_ = settings;
   std::size_t header_end = input.find("\r\n\r\n");
   std::string header(input.begin(), input.begin() + header_end);
   std::string body(input.begin() + header_end + 4, input.end());
@@ -193,13 +196,18 @@ void HTTPRequest::checkForErrors() {
              MAX_CLIENT_HEADER_BUFFER) {
     this->has_request_error_ = true;
     this->request_error_ = STATUS_414;
+  } else if (this->getBody().size() >
+             settings_.getServers()[0].getMaxClientBodySize()) {
+    this->has_request_error_ = true;
+    this->request_error_ = STATUS_413;
   } else if (this->getMethod() == HTTPRequest::POST &&
              this->header_.find("Content-Length") == this->header_.end()) {
     this->has_request_error_ = true;
     this->request_error_ = STATUS_411;
+  } else if (this->URI_.size() < 1 || this->protocol_version_.size() < 1) {
+    this->has_request_error_ = true;
+    this->request_error_ = STATUS_400;
   }
-  // since max body size needs the config, error 413 is checked in response
-  // class
 }
 
 std::ostream& operator<<(std::ostream& os, HTTPRequest& obj) {

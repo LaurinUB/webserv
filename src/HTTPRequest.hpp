@@ -5,6 +5,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "./parser/Settings.hpp"
 #include "HTTPResponseStatus.hpp"
 
 #define MAX_CLIENT_HEADER_BUFFER 8000
@@ -16,7 +17,7 @@ class HTTPRequest {
   ~HTTPRequest();
   HTTPRequest(const HTTPRequest& obj);
   HTTPRequest& operator=(const HTTPRequest& obj);
-  HTTPRequest(std::string& input);
+  HTTPRequest(std::string& input, const Settings& settings);
 
   typedef enum {
     UNKNOWN,
@@ -53,6 +54,7 @@ class HTTPRequest {
   bool keepalive_;
   bool has_request_error_;
   std::string request_error_;
+  Settings settings_;
   //// Private Member Functions
   void removeTrailingWhitespace(std::string& str);
   method parseMethodToken(std::string& token);

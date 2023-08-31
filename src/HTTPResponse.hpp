@@ -17,7 +17,7 @@ class HTTPResponse {
   ~HTTPResponse();
   HTTPResponse(const HTTPResponse& obj);
   HTTPResponse& operator=(const HTTPResponse& obj);
-  HTTPResponse(HTTPRequest& req, Settings& settings);
+  HTTPResponse(HTTPRequest& req, const Settings& settings);
 
   //// Member Functions
   std::string toString() const;
