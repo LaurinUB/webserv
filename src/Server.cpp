@@ -8,9 +8,6 @@ extern sig_atomic_t g_signaled;
 // Core Functions
 
 void Server::run() {
-  std::cout << "\n*** Listening on ADDRESS: "
-            << this->sockets_[0].getAddressString()
-            << " PORT: " << this->sockets_[0].getPort() << " ***\n\n";
   while (g_signaled == 0) {
     if (poll(this->pollfds_, this->numfds_, TIMEOUT) == -1) {
       perror("poll");
@@ -23,7 +20,7 @@ void Server::run() {
       }
       if (this->pollfds_[i].revents & POLLIN) {
         if (this->sockets_[i].getState() == SERVER) {
-          newConnection();
+          newConnection(i);
           break;
         } else {
           handleReceive(i);
@@ -224,7 +221,7 @@ void Server::sendResponse(int i) {
             << bytes_sent << std::endl;
 }
 
-void Server::newConnection() {
+void Server::newConnection(int i) {
   if (this->numfds_ > MAX_PORTS) {
     std::cout << "Error: no new Connection possible." << std::endl;
     return;
@@ -233,13 +230,15 @@ void Server::newConnection() {
   socklen_t addrlen = sizeof(struct sockaddr);
   pollfd new_poll;
   size_t index = searchFreePoll();
-  new_poll.fd = accept(this->pollfds_[0].fd,
+  new_poll.fd = accept(this->pollfds_[i].fd,
                        (struct sockaddr*)&new_client.getAddress(), &addrlen);
   if (new_poll.fd < 0) {
     std::cout << "Error: Failed to accept connection." << std::endl;
+    return;
   }
   if (fcntl(new_poll.fd, F_SETFL, O_NONBLOCK, FD_CLOEXEC) == -1) {
     std::cerr << "Error: fcntl." << std::endl;
+    return;
   }
   new_poll.events = POLLIN;
   new_poll.revents = 0;
@@ -248,7 +247,7 @@ void Server::newConnection() {
   this->sockets_[index] = new_client;
   this->pollfds_[index] = new_poll;
   if (index == this->numfds_) {
-    numfds_++;
+    this->numfds_++;
   }
   std::cout << "New connection success on : " << new_client.getAddressString()
             << " with socket nbr: " << new_poll.fd << std::endl;
@@ -320,18 +319,15 @@ Server& Server::operator=(const Server& obj) {
 
 Server::Server(const Settings& settings) : settings_(settings) {
   memset(this->pollfds_, -1, MAX_PORTS);
-  // if (startServer(this->settings_.getServers()[0].getPort()) != 0) {
-  //   std::cout << "Error: failed to start server with port: "
-  //             << this->settings_.getServers()[0].getPort() << std::endl;
-  // }
-  std::cout << "severs: " << this->settings_.getServers().size() << std::endl;
   for (size_t i = 0; i < this->settings_.getServers().size(); ++i) {
     if (startServer(this->settings_.getServers()[i].getName(),
                     this->settings_.getServers()[i].getPort())) {
       std::cout << "Error: failed to start Server with port "
                 << this->settings_.getServers()[i].getPort() << std::endl;
     } else {
-      std::cout << "Startet server on " << this->settings_.getServers()[i].getName() << std::endl;
+      std::cout << "Startet server on "
+                << this->settings_.getServers()[i].getName() << " with Port "
+                << this->settings_.getServers()[i].getPort() << std::endl;
     }
   }
 }

@@ -57,7 +57,7 @@ class Server {
   void removeFd(int i);
   size_t searchFreePoll();
   void sendResponse(int i);
-  void newConnection();
+  void newConnection(int i);
   void handleReceive(int i);
   void handleSend(int i);
   void checkSocketTimeout();

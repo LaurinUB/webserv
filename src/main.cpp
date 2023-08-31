@@ -8,9 +8,17 @@ void handleSIGINT(int param) {
   _exit(SIGINT);
 }
 
-int main() {
+int main(int argc, char* argv[]) {
   signal(SIGINT, handleSIGINT);
-  std::string conf_path("./config/default.conf");
+  std::string conf_path;
+  if (argc == 1) {
+    conf_path = "./config/default.conf";
+  } else if (argc == 2) {
+    conf_path = argv[1];
+  } else {
+    std::cerr << "Error: wrong amount of arguments" << std::endl;
+    return EXIT_FAILURE;
+  }
   try {
     Settings settings(conf_path);
     Server server = Server(settings);
