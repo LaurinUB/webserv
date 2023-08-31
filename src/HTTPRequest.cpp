@@ -152,10 +152,11 @@ HTTPRequest::HTTPRequest(std::string& input) {
   this->request_method_ = this->parseMethodToken(*request_line.begin());
   this->URI_ = this->cleanURI(request_line[1]);
   this->protocol_version_ = request_line.at(2);
+  this->removeTrailingWhitespace(this->protocol_version_);
   this->has_request_error_ = false;
   while (std::getline(header_iss, line)) {
     std::vector<std::string> temp = this->splitLine(line, ": ");
-    removeTrailingWhitespace(temp.at(2));
+    this->removeTrailingWhitespace(temp.at(2));
     this->header_.insert(
         std::pair<std::string, std::string>(temp.at(0), temp.at(2)));
   }
@@ -163,10 +164,21 @@ HTTPRequest::HTTPRequest(std::string& input) {
     this->keepalive_ = true;
   }
   this->body_ = body;
-  if (!this->has_request_error_ &&
-      this->protocol_version_.compare("HTTP/1.1\r")) {
+  this->checkForErrors();
+}
+
+void HTTPRequest::checkForErrors() {
+  if (this->hasRequestError()) {
+    return;
+  }
+  if (this->protocol_version_.compare("HTTP/1.1")) {
     this->has_request_error_ = true;
     this->request_error_ = STATUS_505;
+  } else if (this->getContentLength() < this->body_.size()) {
+    // TODO: this case leads to timeout in the servers main loop, we never get
+    // here
+    this->has_request_error_ = true;
+    this->request_error_ = STATUS_413;
   }
 }
 

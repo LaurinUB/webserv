@@ -55,6 +55,7 @@ class HTTPRequest {
   std::vector<std::string> splitLine(
       std::string line, std::vector<std::string>::value_type delim);
   std::string cleanURI(std::string& uri_str);
+  void checkForErrors();
 };
 
 std::ostream& operator<<(std::ostream& os, HTTPRequest& obj);
