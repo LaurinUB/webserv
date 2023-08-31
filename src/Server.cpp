@@ -117,7 +117,7 @@ void Server::generateEnv(HTTPRequest req) {
 }
 
 void Server::executeCGI(std::string uri, int i) {
-  std::string executable = "www" + uri;
+  std::string executable = this->settings_.getRouteRoot(0, 0) + uri;
   char* arguments[3];
 
   arguments[0] = const_cast<char*>(INTERPRETER);
@@ -177,6 +177,8 @@ void Server::handleReceive(int i) {
         std::cout << "Execute CGI" << std::endl;
         generateEnv(req);
         executeCGI(req.getURI(), i);
+        removeFd(i);
+        return;
       } else {
         this->pollfds_[i].events = POLLOUT;
         this->sockets_[i].setRequest(req);
