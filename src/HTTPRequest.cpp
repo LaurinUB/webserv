@@ -193,6 +193,10 @@ void HTTPRequest::checkForErrors() {
              MAX_CLIENT_HEADER_BUFFER) {
     this->has_request_error_ = true;
     this->request_error_ = STATUS_414;
+  } else if (this->getMethod() == HTTPRequest::POST &&
+             this->header_.find("Content-Length") == this->header_.end()) {
+    this->has_request_error_ = true;
+    this->request_error_ = STATUS_411;
   }
   // since max body size needs the config, error 413 is checked in response
   // class
