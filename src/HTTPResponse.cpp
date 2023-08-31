@@ -148,6 +148,12 @@ HTTPResponse& HTTPResponse::operator=(const HTTPResponse& obj) {
 HTTPResponse::HTTPResponse(HTTPRequest& req, Settings& settings)
     : settings_(settings) {
   HTTPRequest::method req_method = req.getMethod();
+  if (req.hasRequestError()) {
+    this->setResponseLine(req.getRequestError());
+    this->addToHeader("Content-Length", "0");
+    this->body_ = "";
+    return;
+  }
   switch (req_method) {
     case HTTPRequest::UNKNOWN:
       this->setResponseLine(STATUS_405);

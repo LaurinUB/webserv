@@ -22,6 +22,12 @@ std::string HTTPRequest::getProtocol() const { return this->protocol_version_; }
 
 bool HTTPRequest::getKeepalive() const { return this->keepalive_; }
 
+bool HTTPRequest::hasRequestError() const { return this->has_request_error_; }
+
+std::string HTTPRequest::getRequestError() const {
+  return this->request_error_;
+}
+
 unsigned int HTTPRequest::getContentLength() const {
   unsigned int res = 0;
   std::map<std::string, std::string>::const_iterator cl =
@@ -108,15 +114,27 @@ HTTPRequest::HTTPRequest() {}
 
 HTTPRequest::~HTTPRequest() {}
 
-HTTPRequest::HTTPRequest(const HTTPRequest& obj) { *this = obj; }
+HTTPRequest::HTTPRequest(const HTTPRequest& obj)
+    : header_(obj.header_),
+      body_(obj.body_),
+      request_method_(obj.request_method_),
+      URI_(obj.URI_),
+      protocol_version_(obj.protocol_version_),
+      keepalive_(obj.keepalive_),
+      has_request_error_(obj.has_request_error_),
+      request_error_(obj.request_error_) {
+  *this = obj;
+}
 
 HTTPRequest& HTTPRequest::operator=(const HTTPRequest& obj) {
-  this->keepalive_ = obj.request_method_;
   this->body_ = obj.body_;
   this->header_ = obj.header_;
   this->request_method_ = obj.request_method_;
   this->URI_ = obj.URI_;
   this->protocol_version_ = obj.protocol_version_;
+  this->keepalive_ = obj.keepalive_;
+  this->has_request_error_ = obj.has_request_error_;
+  this->request_error_ = obj.request_error_;
   return *this;
 }
 
@@ -134,6 +152,7 @@ HTTPRequest::HTTPRequest(std::string& input) {
   this->request_method_ = this->parseMethodToken(*request_line.begin());
   this->URI_ = this->cleanURI(request_line[1]);
   this->protocol_version_ = request_line.at(2);
+  this->has_request_error_ = false;
   while (std::getline(header_iss, line)) {
     std::vector<std::string> temp = this->splitLine(line, ": ");
     removeTrailingWhitespace(temp.at(2));
@@ -144,6 +163,11 @@ HTTPRequest::HTTPRequest(std::string& input) {
     this->keepalive_ = true;
   }
   this->body_ = body;
+  if (!this->has_request_error_ &&
+      this->protocol_version_.compare("HTTP/1.1\r")) {
+    this->has_request_error_ = true;
+    this->request_error_ = STATUS_505;
+  }
 }
 
 std::ostream& operator<<(std::ostream& os, HTTPRequest& obj) {

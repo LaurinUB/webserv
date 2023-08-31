@@ -5,6 +5,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "HTTPResponseStatus.hpp"
 
 class HTTPRequest {
  public:
@@ -34,6 +35,8 @@ class HTTPRequest {
   std::string getURI() const;
   std::string getProtocol() const;
   bool getKeepalive() const;
+  bool hasRequestError() const;
+  std::string getRequestError() const;
   unsigned int getContentLength() const;
   void appendBody(std::string input);
 
@@ -44,6 +47,8 @@ class HTTPRequest {
   std::string URI_;
   std::string protocol_version_;
   bool keepalive_;
+  bool has_request_error_;
+  std::string request_error_;
   //// Private Member Functions
   void removeTrailingWhitespace(std::string& str);
   method parseMethodToken(std::string& token);
