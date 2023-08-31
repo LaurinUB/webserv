@@ -12,7 +12,7 @@ void Server::run() {
             << this->sockets_[0].getAddressString()
             << " PORT: " << this->sockets_[0].getPort() << " ***\n\n";
   while (g_signaled == 0) {
-    if (poll(this->pollfds_, this->numfds_, MAX_PORTS) == -1) {
+    if (poll(this->pollfds_, this->numfds_, TIMEOUT) == -1) {
       perror("poll");
       exit(EXIT_FAILURE);
     }
@@ -26,11 +26,12 @@ void Server::run() {
           newConnection();
           break;
         } else {
-          handleRecieve(i);
+          handleReceive(i);
           break;
         }
       } else if (this->pollfds_[i].revents & POLLOUT) {
         handleSend(i);
+        break;
       } else {
         pollError(i);
       }
@@ -93,7 +94,64 @@ void Server::handleSend(int i) {
   }
 }
 
-void Server::handleRecieve(int i) {
+void Server::generateEnv(HTTPRequest req) {
+  int i = 0;
+  std::string env[5];
+  if (req.getMethod() == HTTPRequest::GET) {
+    env[i] = "REQUEST_METHOD=GET";
+    i++;
+  } else {
+    env[i] = "REQUEST_METHOD=POST";
+    i++;
+    env[i] = "CONTENT_LENGTH=" + std::to_string(req.getBody().size());
+    i++;
+  }
+  env[i] = "CONTENT_TYPE=text/html";
+  env[i] = "SCRIPT_NAME=" + req.getURI();
+  int j = 0;
+  while (j < i) {
+    this->cgi_env_[j] = const_cast<char*>(env[j].c_str());
+    j++;
+  }
+  this->cgi_env_[j] = NULL;
+}
+
+void Server::executeCGI(std::string uri, int i) {
+  std::string executable = this->settings_.getRouteRoot(0, 0) + uri;
+  char* arguments[3];
+
+  arguments[0] = const_cast<char*>(INTERPRETER);
+  arguments[1] = const_cast<char*>(executable.c_str());
+  arguments[2] = NULL;
+  pid_t child = fork();
+  if (child < 0) {
+    std::cerr << "Error: fork." << std::endl;
+  } else if (child == 0) {
+    dup2(this->pollfds_[i].fd, STDOUT_FILENO);
+    close(this->pollfds_[i].fd);
+    std::cout << "HTTP/1.1 200 OK\n";
+    if (execve(arguments[1], arguments, this->cgi_env_) == -1) {
+      std::cerr << "Error: execve." << std::endl;
+    }
+    std::cout << "\nScript execution failed!" << std::endl;
+    exit(EXIT_FAILURE);
+  }
+  int status;
+  waitpid(child, &status, 0);
+}
+
+bool Server::isCGI(HTTPRequest req) {
+  if (req.getURI().empty() || req.getURI().size() < PYSIZE + 1) {
+    return false;
+  }
+  if (!req.getURI().compare(req.getURI().size() - PYSIZE, req.getURI().size(),
+                            PYTHON)) {
+    return true;
+  }
+  return false;
+}
+
+void Server::handleReceive(int i) {
   char buffer[BUFFER_SIZE] = {0};
   ssize_t rec = 0;
 
@@ -115,8 +173,18 @@ void Server::handleRecieve(int i) {
   } else {
     try {
       HTTPRequest req(stringyfied_buff);
-      this->sockets_[i].setRequest(req);
-      std::cout << "Recieved from socket: " << pollfds_[i].fd << std::endl;
+      if (isCGI(req)) {
+        std::cout << "Execute CGI" << std::endl;
+        generateEnv(req);
+        executeCGI(req.getURI(), i);
+        removeFd(i);
+        return;
+      } else {
+        this->pollfds_[i].events = POLLOUT;
+        this->sockets_[i].setRequest(req);
+        this->sockets_[i].setState(SEND);
+        std::cout << "Received from socket: " << pollfds_[i].fd << std::endl;
+      }
     } catch (std::exception& e) {
       std::cout << e.what() << std::endl;
     }
@@ -166,11 +234,13 @@ void Server::newConnection() {
   socklen_t addrlen = sizeof(struct sockaddr);
   pollfd new_poll;
   size_t index = searchFreePoll();
-  std::cout << index << std::endl;
   new_poll.fd = accept(this->pollfds_[0].fd,
                        (struct sockaddr*)&new_client.getAddress(), &addrlen);
   if (new_poll.fd < 0) {
     std::cout << "Error: Failed to accept connection." << std::endl;
+  }
+  if (fcntl(new_poll.fd, F_SETFL, O_NONBLOCK, FD_CLOEXEC) == -1) {
+    std::cerr << "Error: fcntl." << std::endl;
   }
   new_poll.events = POLLIN;
   new_poll.revents = 0;
