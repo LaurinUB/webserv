@@ -18,7 +18,7 @@ class HTTPRequest {
   ~HTTPRequest();
   HTTPRequest(const HTTPRequest& obj);
   HTTPRequest& operator=(const HTTPRequest& obj);
-  HTTPRequest(std::string& input, const Settings& settings);
+  HTTPRequest(std::string& input, int port, const Settings& settings);
 
   typedef enum {
     UNKNOWN,
@@ -56,6 +56,8 @@ class HTTPRequest {
   bool has_request_error_;
   std::string request_error_;
   Settings settings_;
+  unsigned int server_index_;
+  unsigned int location_index_;
   //// Private Member Functions
   void removeTrailingWhitespace(std::string& str);
   method parseMethodToken(std::string& token);

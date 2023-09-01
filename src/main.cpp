@@ -12,7 +12,7 @@ int main(int argc, char* argv[]) {
   signal(SIGINT, handleSIGINT);
   std::string conf_path;
   if (argc == 1) {
-    conf_path = "./config/default.conf";
+    conf_path = "./config/test.conf";
   } else if (argc == 2) {
     conf_path = argv[1];
   } else {

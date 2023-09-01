@@ -126,7 +126,9 @@ HTTPRequest::HTTPRequest(const HTTPRequest& obj)
       keepalive_(obj.keepalive_),
       has_request_error_(obj.has_request_error_),
       request_error_(obj.request_error_),
-      settings_(obj.settings_) {
+      settings_(obj.settings_),
+      server_index_(obj.server_index_),
+      location_index_(obj.location_index_) {
   *this = obj;
 }
 
@@ -141,10 +143,13 @@ HTTPRequest& HTTPRequest::operator=(const HTTPRequest& obj) {
   this->has_request_error_ = obj.has_request_error_;
   this->request_error_ = obj.request_error_;
   this->settings_ = obj.settings_;
+  this->server_index_ = obj.server_index_;
+  this->location_index_ = obj.location_index_;
   return *this;
 }
 
-HTTPRequest::HTTPRequest(std::string& input, const Settings& settings) {
+HTTPRequest::HTTPRequest(std::string& input, int port,
+                         const Settings& settings) {
   if (input.size() <= 1) {
     throw std::runtime_error("Error: tried to create request with size <= 1");
   }
@@ -176,6 +181,11 @@ HTTPRequest::HTTPRequest(std::string& input, const Settings& settings) {
   if (this->header_.find("Connection")->second.compare("keep-alive") == 0) {
     this->keepalive_ = true;
   }
+  this->server_index_ = settings.matchServer(port);
+  this->location_index_ =
+      settings.matchLocationOfServer(this->server_index_, this->getURI());
+  std::cout << "Server index: " << this->server_index_ << std::endl;
+  std::cout << "Location index: " << this->location_index_ << std::endl;
   this->body_ = body;
   this->checkForErrors();
 }

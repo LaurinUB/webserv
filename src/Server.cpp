@@ -168,7 +168,8 @@ void Server::handleReceive(int i) {
     this->sockets_[i].getRequest().appendBody(stringyfied_buff);
   } else {
     try {
-      HTTPRequest req(stringyfied_buff);
+      HTTPRequest req(stringyfied_buff, this->sockets_[i].getListenSocket(),
+                      this->settings_);
       if (isCGI(req)) {
         std::cout << "Execute CGI" << std::endl;
         generateEnv(req);
@@ -245,6 +246,7 @@ void Server::newConnection(int i) {
   new_poll.revents = 0;
   new_client.setState(RECEIVE);
   new_client.setIndex(index);
+  new_client.setListenSocket(this->sockets_[i].getPort());
   this->sockets_[index] = new_client;
   this->pollfds_[index] = new_poll;
   if (index == this->numfds_) {

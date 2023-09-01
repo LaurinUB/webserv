@@ -91,3 +91,32 @@ std::string Settings::getRouteUploadDir(unsigned int server_idx,
   }
   return this->getServers()[server_idx].getRoutes()[route_idx].getUploadDir();
 }
+
+unsigned int Settings::matchServer(int port) const {
+  unsigned int res = 0;
+  unsigned int i = 0;
+  for (std::vector<ServerSettings>::const_iterator it = this->servers.begin();
+       it != this->servers.end(); ++it) {
+    if ((int) it->getPort() == port) {
+      res = i;
+      break;
+    }
+    i++;
+  }
+  return res;
+}
+
+unsigned int Settings::matchLocationOfServer(
+    unsigned int server_idx, const std::string& endpoint) const {
+  unsigned int res = 0;
+  for (std::vector<LocationSettings>::const_iterator it =
+           this->getServers()[server_idx].locations.begin();
+       it != this->getServers()[server_idx].locations.end(); ++it) {
+    size_t found_at = endpoint.find(it->getEndpoint());
+    if (found_at == 0) {
+      break;
+    }
+    res++;
+  }
+  return res;
+}
