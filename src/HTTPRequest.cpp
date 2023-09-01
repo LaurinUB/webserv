@@ -18,9 +18,17 @@ HTTPRequest::method HTTPRequest::getMethod() const {
 
 std::string HTTPRequest::getURI() const { return this->URI_; }
 
+std::string HTTPRequest::getQueryParam() const { return this->query_param_; }
+
 std::string HTTPRequest::getProtocol() const { return this->protocol_version_; }
 
 bool HTTPRequest::getKeepalive() const { return this->keepalive_; }
+
+bool HTTPRequest::hasRequestError() const { return this->has_request_error_; }
+
+std::string HTTPRequest::getRequestError() const {
+  return this->request_error_;
+}
 
 unsigned int HTTPRequest::getContentLength() const {
   unsigned int res = 0;
@@ -108,22 +116,39 @@ HTTPRequest::HTTPRequest() {}
 
 HTTPRequest::~HTTPRequest() {}
 
-HTTPRequest::HTTPRequest(const HTTPRequest& obj) { *this = obj; }
+HTTPRequest::HTTPRequest(const HTTPRequest& obj)
+    : header_(obj.header_),
+      body_(obj.body_),
+      request_method_(obj.request_method_),
+      URI_(obj.URI_),
+      query_param_(obj.query_param_),
+      protocol_version_(obj.protocol_version_),
+      keepalive_(obj.keepalive_),
+      has_request_error_(obj.has_request_error_),
+      request_error_(obj.request_error_),
+      settings_(obj.settings_) {
+  *this = obj;
+}
 
 HTTPRequest& HTTPRequest::operator=(const HTTPRequest& obj) {
-  this->keepalive_ = obj.request_method_;
   this->body_ = obj.body_;
   this->header_ = obj.header_;
   this->request_method_ = obj.request_method_;
   this->URI_ = obj.URI_;
+  this->query_param_ = obj.query_param_;
   this->protocol_version_ = obj.protocol_version_;
+  this->keepalive_ = obj.keepalive_;
+  this->has_request_error_ = obj.has_request_error_;
+  this->request_error_ = obj.request_error_;
+  this->settings_ = obj.settings_;
   return *this;
 }
 
-HTTPRequest::HTTPRequest(std::string& input) {
+HTTPRequest::HTTPRequest(std::string& input, const Settings& settings) {
   if (input.size() <= 1) {
     throw std::runtime_error("Error: tried to create request with size <= 1");
   }
+  this->settings_ = settings;
   std::size_t header_end = input.find("\r\n\r\n");
   std::string header(input.begin(), input.begin() + header_end);
   std::string body(input.begin() + header_end + 4, input.end());
@@ -133,10 +158,18 @@ HTTPRequest::HTTPRequest(std::string& input) {
   std::vector<std::string> request_line = this->splitLine(line, " ");
   this->request_method_ = this->parseMethodToken(*request_line.begin());
   this->URI_ = this->cleanURI(request_line[1]);
+  size_t query_param_start = this->URI_.find_first_of('?');
+  if (query_param_start != std::string::npos) {
+    this->query_param_ =
+        this->URI_.substr(query_param_start, this->URI_.size());
+    this->URI_.erase(query_param_start, this->URI_.size());
+  }
   this->protocol_version_ = request_line.at(2);
+  this->removeTrailingWhitespace(this->protocol_version_);
+  this->has_request_error_ = false;
   while (std::getline(header_iss, line)) {
     std::vector<std::string> temp = this->splitLine(line, ": ");
-    removeTrailingWhitespace(temp.at(2));
+    this->removeTrailingWhitespace(temp.at(2));
     this->header_.insert(
         std::pair<std::string, std::string>(temp.at(0), temp.at(2)));
   }
@@ -144,6 +177,37 @@ HTTPRequest::HTTPRequest(std::string& input) {
     this->keepalive_ = true;
   }
   this->body_ = body;
+  this->checkForErrors();
+}
+
+void HTTPRequest::checkForErrors() {
+  if (this->hasRequestError()) {
+    return;
+  }
+  if (this->protocol_version_.compare("HTTP/1.1")) {
+    this->has_request_error_ = true;
+    this->request_error_ = STATUS_505;
+  } else if (this->getContentLength() < this->body_.size()) {
+    // TODO: this case leads to timeout in the servers main loop, we never get
+    // here
+    this->has_request_error_ = true;
+    this->request_error_ = STATUS_413;
+  } else if (this->getURI().size() + this->getQueryParam().size() >
+             MAX_CLIENT_HEADER_BUFFER) {
+    this->has_request_error_ = true;
+    this->request_error_ = STATUS_414;
+  } else if (this->getBody().size() >
+             settings_.getServers()[0].getMaxClientBodySize()) {
+    this->has_request_error_ = true;
+    this->request_error_ = STATUS_413;
+  } else if (this->getMethod() == HTTPRequest::POST &&
+             this->header_.find("Content-Length") == this->header_.end()) {
+    this->has_request_error_ = true;
+    this->request_error_ = STATUS_411;
+  } else if (this->URI_.size() < 1 || this->protocol_version_.size() < 1) {
+    this->has_request_error_ = true;
+    this->request_error_ = STATUS_400;
+  }
 }
 
 std::ostream& operator<<(std::ostream& os, HTTPRequest& obj) {
