@@ -322,6 +322,7 @@ Server& Server::operator=(const Server& obj) {
 
 Server::Server(const Settings& settings) : settings_(settings) {
   memset(this->pollfds_, -1, MAX_PORTS);
+  this->numfds_ = 0;
   for (size_t i = 0; i < this->settings_.getServers().size(); ++i) {
     if (startServer(this->settings_.getServers()[i].getName(),
                     this->settings_.getServers()[i].getPort())) {

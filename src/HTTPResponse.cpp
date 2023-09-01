@@ -10,9 +10,26 @@
 //// Private Member Functions
 
 void HTTPResponse::handleGET(HTTPRequest& req) {
-  std::string path =
-      (req.getURI() == "/" ? this->settings_.getRouteRoot(0, 0) + "/index.html"
-                           : this->settings_.getRouteRoot(0, 0) + req.getURI());
+  std::string location_path = this->settings_.getRouteRoot(
+      req.getServerIndex(), req.getLocationIndex());
+  std::string route_endpoint =
+      this->settings_.getRouteEndpoint(req.getServerIndex(),
+                                       req.getLocationIndex());
+  std::cout << "URI: " << req.getURI() << std::endl;
+  std::cout << "Location root: " << location_path << std::endl;
+  std::cout << "Endpoint: " << route_endpoint << std::endl;
+  std::string path;
+  if (route_endpoint.compare(0, std::string::npos, "/") == 0) {
+    path = location_path + req.getURI();
+    std::cout << "i am in /" << std::endl;
+  } else {
+    path = req.getURI().replace(0, route_endpoint.size(), location_path);
+    std::cout << "i am in replace" << std::endl;
+  }
+  //if (req.getURI() == "/") {
+  //  path += "/index.html";
+  //}
+  std::cout << "path: " << path << std::endl;
   std::string mimetype =
       path.substr(path.find_last_of('.') + 1, path.size() - 1);
   std::string content_type = this->mime_types.find(mimetype)->second;
@@ -45,8 +62,10 @@ void HTTPResponse::handlePOST(HTTPRequest& req) {
   std::string destination = req.getURI();
   std::string filename = destination.substr(destination.find_last_of('/') + 1,
                                             destination.size() - 1);
-  req_file.open(this->settings_.getServers()[0].locations[0].getRoot() + "/" +
-                filename);
+  req_file.open(this->settings_.getServers()[req.getServerIndex()]
+                    .locations[req.getLocationIndex()]
+                    .getRoot() +
+                "/" + filename);
   req_file << req.getBody();
   req_file.close();
   this->setResponseLine(STATUS_201);

@@ -6,7 +6,7 @@
 
 //// Accessors
 
-std::map<std::string, std::string> HTTPRequest::getHeader() const {
+std::map<std::string, std::string>& HTTPRequest::getHeader() {
   return this->header_;
 }
 
@@ -23,6 +23,12 @@ std::string HTTPRequest::getQueryParam() const { return this->query_param_; }
 std::string HTTPRequest::getProtocol() const { return this->protocol_version_; }
 
 bool HTTPRequest::getKeepalive() const { return this->keepalive_; }
+
+unsigned int HTTPRequest::getServerIndex() const { return this->server_index_; }
+
+unsigned int HTTPRequest::getLocationIndex() const {
+  return this->location_index_;
+}
 
 bool HTTPRequest::hasRequestError() const { return this->has_request_error_; }
 
@@ -184,8 +190,6 @@ HTTPRequest::HTTPRequest(std::string& input, int port,
   this->server_index_ = settings.matchServer(port);
   this->location_index_ =
       settings.matchLocationOfServer(this->server_index_, this->getURI());
-  std::cout << "Server index: " << this->server_index_ << std::endl;
-  std::cout << "Location index: " << this->location_index_ << std::endl;
   this->body_ = body;
   this->checkForErrors();
 }

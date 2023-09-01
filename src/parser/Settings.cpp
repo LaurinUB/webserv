@@ -65,6 +65,15 @@ std::string Settings::getRouteRoot(unsigned int server_idx,
   return this->getServers()[server_idx].getRoutes()[route_idx].getRoot();
 }
 
+std::string Settings::getRouteEndpoint(unsigned int server_idx,
+                                   unsigned int route_idx) const {
+  if (server_idx >= this->getServers().size() ||
+      route_idx >= this->getServers()[server_idx].getRoutes().size()) {
+    throw std::runtime_error("invalid server or route on getRouteRoot call");
+  }
+  return this->getServers()[server_idx].getRoutes()[route_idx].getEndpoint();
+}
+
 bool Settings::getRouteAutoIndex(unsigned int server_idx,
                                  unsigned int route_idx) const {
   if (server_idx >= this->getServers().size() ||
@@ -106,17 +115,19 @@ unsigned int Settings::matchServer(int port) const {
   return res;
 }
 
-unsigned int Settings::matchLocationOfServer(
-    unsigned int server_idx, const std::string& endpoint) const {
+unsigned int Settings::matchLocationOfServer(unsigned int server_idx,
+                                             std::string endpoint) const {
   unsigned int res = 0;
-  for (std::vector<LocationSettings>::const_iterator it =
-           this->getServers()[server_idx].locations.begin();
-       it != this->getServers()[server_idx].locations.end(); ++it) {
-    size_t found_at = endpoint.find(it->getEndpoint());
-    if (found_at == 0) {
-      break;
+  for (size_t it = 0; it < this->getServers()[server_idx].locations.size();
+       ++it) {
+    size_t found_at = endpoint.find(
+        this->getServers()[server_idx].locations[it].getEndpoint());
+    if (found_at == 0 &&
+        this->getServers()[server_idx].locations[it].getEndpoint().size() > 1) {
+      std::cout << "returned to location " << res << std::endl;
+      return res;
     }
     res++;
   }
-  return res;
+  return 0;
 }
