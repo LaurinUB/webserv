@@ -93,6 +93,7 @@ Socket::Socket() {
   this->timestamp_ = std::time(NULL);
   this->timeout_ = 15.0;
   this->keepalive_ = false;
+  this->has_unfinished_req_ = false;
   this->state_ = RECEIVE;
 }
 
@@ -100,6 +101,7 @@ Socket::Socket(int index) {
   this->timestamp_ = std::time(NULL);
   this->timeout_ = 15.0;
   this->keepalive_ = false;
+  this->has_unfinished_req_ = false;
   this->state_ = RECEIVE;
   this->index_ = index;
 }

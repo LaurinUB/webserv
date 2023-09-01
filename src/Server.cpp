@@ -158,7 +158,7 @@ void Server::handleReceive(int i) {
     std::cerr << "Error: Failed reading from client socket" << std::endl;
     removeFd(i);
     return;
-  } else if (rec == 0) {
+  } else if (rec == 0 && this->pollfds_[i].revents & POLLHUP) {
     std::cerr << "Error: Client closed connection." << std::endl;
     removeFd(i);
     return;
@@ -194,6 +194,7 @@ void Server::handleReceive(int i) {
     this->sockets_[i].setState(SEND);
     this->pollfds_[i].events = POLLOUT;
   }
+  this->sockets_[i].updateTime();
 }
 
 void Server::sendResponse(int i) {
