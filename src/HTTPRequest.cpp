@@ -6,7 +6,7 @@
 
 //// Accessors
 
-std::map<std::string, std::string> HTTPRequest::getHeader() const {
+std::map<std::string, std::string>& HTTPRequest::getHeader() {
   return this->header_;
 }
 
@@ -131,6 +131,7 @@ HTTPRequest::HTTPRequest(const HTTPRequest& obj)
 }
 
 HTTPRequest& HTTPRequest::operator=(const HTTPRequest& obj) {
+  std::cout << "Assignment overload Request" << std::endl;
   this->body_ = obj.body_;
   this->header_ = obj.header_;
   this->request_method_ = obj.request_method_;

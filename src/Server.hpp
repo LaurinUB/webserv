@@ -62,8 +62,9 @@ class Server {
   void handleSend(int i);
   void checkSocketTimeout();
   void executeCGI(std::string uri, int i);
-  bool isCGI(HTTPRequest req);
-  void generateEnv(HTTPRequest req);
+  bool isCGI(const HTTPRequest& req);
+  bool isChunked(int i);
+  void generateEnv(const HTTPRequest& req);
 };
 
 #endif  // TCPSERVER_HPP_

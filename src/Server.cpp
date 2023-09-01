@@ -90,7 +90,7 @@ void Server::handleSend(int i) {
   }
 }
 
-void Server::generateEnv(HTTPRequest req) {
+void Server::generateEnv(const HTTPRequest& req) {
   int i = 0;
   std::string env[5];
   if (req.getMethod() == HTTPRequest::GET) {
@@ -136,7 +136,7 @@ void Server::executeCGI(std::string uri, int i) {
   waitpid(child, &status, 0);
 }
 
-bool Server::isCGI(HTTPRequest req) {
+bool Server::isCGI(const HTTPRequest& req) {
   if (req.getURI().empty() || req.getURI().size() < PYSIZE + 1) {
     return false;
   }
@@ -197,11 +197,23 @@ void Server::handleReceive(int i) {
   this->sockets_[i].updateTime();
 }
 
+bool Server::isChunked(int i) {
+  std::cout << this->sockets_[i].getRequest() << std::endl;
+  std::map<std::string, std::string>::iterator it =
+      this->sockets_[i].getRequest().getHeader().find("Transfer-Encoding");
+  if (it != this->sockets_[i].getRequest().getHeader().end()) {
+    return true;
+  }
+  return false;
+}
+
 void Server::sendResponse(int i) {
   int bytes_sent = 0;
   std::string res_string;
   if (this->sockets_[i].getState() == UNFINISHED) {
     res_string = this->sockets_[i].getResponse();
+  } else if (isChunked(i)) {
+    std::cout << "CHUNK" << std::endl;
   } else {
     HTTPResponse res(this->sockets_[i].getRequest(), this->settings_);
     res_string = res.toString();
@@ -320,6 +332,7 @@ Server& Server::operator=(const Server& obj) {
 
 Server::Server(const Settings& settings) : settings_(settings) {
   memset(this->pollfds_, -1, MAX_PORTS);
+  this->numfds_ = 0;
   for (size_t i = 0; i < this->settings_.getServers().size(); ++i) {
     if (startServer(this->settings_.getServers()[i].getName(),
                     this->settings_.getServers()[i].getPort())) {

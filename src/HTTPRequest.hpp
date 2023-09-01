@@ -33,7 +33,7 @@ class HTTPRequest {
   } method;
 
   //// Accessors
-  std::map<std::string, std::string> getHeader() const;
+  std::map<std::string, std::string>& getHeader();
   std::string getBody() const;
   HTTPRequest::method getMethod() const;
   std::string getURI() const;
