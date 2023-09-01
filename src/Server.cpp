@@ -168,7 +168,7 @@ void Server::handleReceive(int i) {
     this->sockets_[i].getRequest().appendBody(stringyfied_buff);
   } else {
     try {
-      HTTPRequest req(stringyfied_buff);
+      HTTPRequest req(stringyfied_buff, this->settings_);
       if (isCGI(req)) {
         std::cout << "Execute CGI" << std::endl;
         generateEnv(req);
