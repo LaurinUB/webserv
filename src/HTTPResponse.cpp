@@ -21,15 +21,10 @@ void HTTPResponse::handleGET(HTTPRequest& req) {
   std::string path;
   if (route_endpoint.compare(0, std::string::npos, "/") == 0) {
     path = location_path + req.getURI();
-    std::cout << "i am in /" << std::endl;
   } else {
     path = req.getURI().replace(0, route_endpoint.size(), location_path);
-    std::cout << "i am in replace" << std::endl;
   }
-  //if (req.getURI() == "/") {
-  //  path += "/index.html";
-  //}
-  std::cout << "path: " << path << std::endl;
+  std::cout << "actual file path: " << path << std::endl;
   std::string mimetype =
       path.substr(path.find_last_of('.') + 1, path.size() - 1);
   std::string content_type = this->mime_types.find(mimetype)->second;
@@ -77,7 +72,9 @@ std::string HTTPResponse::createResponseBody(std::string& path,
                                              HTTPRequest& req) {
   DIR* directory_list;
   directory_list = opendir(path.c_str());
-  if (directory_list != NULL && this->settings_.getRouteAutoIndex(0, 0)) {
+  if (directory_list != NULL &&
+      this->settings_.getRouteAutoIndex(req.getServerIndex(),
+                                        req.getLocationIndex())) {
     std::string res = this->buildDirIndexRes(directory_list, req, path);
     closedir(directory_list);
     return res;
