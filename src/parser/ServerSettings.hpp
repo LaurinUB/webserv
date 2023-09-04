@@ -9,6 +9,8 @@
 #include "LocationSettings.hpp"
 
 class ServerSettings : public ASettings {
+  friend class Parser;
+
  public:
   ServerSettings();
   virtual ~ServerSettings();
@@ -23,11 +25,10 @@ class ServerSettings : public ASettings {
   std::map<unsigned int, std::string> getErrorPages() const;
   unsigned int getMaxClientBodySize() const;
 
-  // TODO: this should be made private in the future but for now conflicts with
-  // parser
-  std::vector<LocationSettings> locations;
+  unsigned int matchLocation(const std::string& endpoint) const;
 
  private:
+  std::vector<LocationSettings> locations;
   unsigned int port_;
   std::string server_name_;
   std::map<unsigned int, std::string> error_pages_;

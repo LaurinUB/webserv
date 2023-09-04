@@ -35,9 +35,11 @@ class Socket {
   char* getAddressString() const;
   sockaddr_in& getAddress();
   bool isKeepalive() const;
+  int getListenSocket() const;
 
   void setIndex(int i);
   void setKeepalive(bool state);
+  void setListenSocket(int socket);
   void setPort(std::string ip, int port);
   void setState(sockState stat);
   void setRequest(HTTPRequest& req);
@@ -58,6 +60,7 @@ class Socket {
   std::string response_;
   HTTPRequest request_;
   bool has_unfinished_req_;
+  int listen_socket_;
 };
 
 #endif  // SOCKET_HPP_

@@ -59,3 +59,15 @@ std::map<unsigned int, std::string> ServerSettings::getErrorPages() const {
 unsigned int ServerSettings::getMaxClientBodySize() const {
   return this->max_client_body_size_;
 };
+
+unsigned int ServerSettings::matchLocation(const std::string& endpoint) const {
+  unsigned int res = 0;
+  for (size_t i = 0; i < this->locations.size(); ++i) {
+    size_t found_at = endpoint.find(this->locations[i].getEndpoint());
+    if (found_at == 0 && this->locations[i].getEndpoint().size() > 1) {
+      return res;
+    }
+    ++res;
+  }
+  return 0;
+}

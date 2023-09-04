@@ -61,7 +61,7 @@ class Server {
   void handleReceive(int i);
   void handleSend(int i);
   void checkSocketTimeout();
-  void executeCGI(std::string uri, int i);
+  void executeCGI(const HTTPRequest& req, int i);
   bool isCGI(HTTPRequest req);
   void generateEnv(HTTPRequest req);
 };
