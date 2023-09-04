@@ -90,7 +90,7 @@ void Server::handleSend(int i) {
   }
 }
 
-void Server::generateEnv(HTTPRequest req) {
+void Server::generateEnv(const HTTPRequest& req) {
   int i = 0;
   std::string env[5];
   if (req.getMethod() == HTTPRequest::GET) {
@@ -136,7 +136,7 @@ void Server::executeCGI(const HTTPRequest& req, int i) {
   waitpid(child, &status, 0);
 }
 
-bool Server::isCGI(HTTPRequest req) {
+bool Server::isCGI(const HTTPRequest& req) {
   if (req.getURI().empty() || req.getURI().size() < PYSIZE + 1) {
     return false;
   }

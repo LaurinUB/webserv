@@ -31,6 +31,7 @@
 #include <sstream>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "./parser/Settings.hpp"
 #include "HTTPRequest.hpp"
@@ -61,9 +62,9 @@ class Server {
   void handleReceive(int i);
   void handleSend(int i);
   void checkSocketTimeout();
+  bool isCGI(const HTTPRequest& req);
   void executeCGI(const HTTPRequest& req, int i);
-  bool isCGI(HTTPRequest req);
-  void generateEnv(HTTPRequest req);
+  void generateEnv(const HTTPRequest& req);
 };
 
 #endif  // TCPSERVER_HPP_

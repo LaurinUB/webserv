@@ -62,7 +62,7 @@ void Socket::setPort(std::string ip, int port) {
 
 void Socket::setState(sockState state) { this->state_ = state; }
 
-void Socket::setRequest(HTTPRequest& req) {
+void Socket::setRequest(const HTTPRequest& req) {
   this->request_ = req;
   if (req.getKeepalive()) {
     this->keepalive_ = true;

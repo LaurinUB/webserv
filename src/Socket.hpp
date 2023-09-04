@@ -42,7 +42,7 @@ class Socket {
   void setListenSocket(int socket);
   void setPort(std::string ip, int port);
   void setState(sockState stat);
-  void setRequest(HTTPRequest& req);
+  void setRequest(const HTTPRequest& req);
   bool hasUnfinishedRequest() const;
   void setUnfinishedRequest(bool value);
   void updateTime();
