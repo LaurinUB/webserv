@@ -44,9 +44,8 @@ class HTTPRequest {
   std::string getRequestError() const;
   unsigned int getContentLength() const;
   void appendBody(std::string input);
-
-  unsigned int getServerIndex() const;
-  unsigned int getLocationIndex() const;
+  const LocationSettings& getLocationSettings() const;
+  const ServerSettings& getServerSettings() const;
 
  private:
   std::map<std::string, std::string> header_;
@@ -58,9 +57,8 @@ class HTTPRequest {
   bool keepalive_;
   bool has_request_error_;
   std::string request_error_;
-  Settings settings_;
-  unsigned int server_index_;
-  unsigned int location_index_;
+  ServerSettings server_settings_;
+  LocationSettings location_settings_;
   //// Private Member Functions
   void removeTrailingWhitespace(std::string& str);
   method parseMethodToken(std::string& token);

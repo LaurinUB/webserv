@@ -10,11 +10,8 @@
 //// Private Member Functions
 
 void HTTPResponse::handleGET(HTTPRequest& req) {
-  std::string location_path = this->settings_.getRouteRoot(
-      req.getServerIndex(), req.getLocationIndex());
-  std::string route_endpoint =
-      this->settings_.getRouteEndpoint(req.getServerIndex(),
-                                       req.getLocationIndex());
+  std::string location_path = req.getLocationSettings().getRoot();
+  std::string route_endpoint = req.getLocationSettings().getEndpoint();
   std::cout << "URI: " << req.getURI() << std::endl;
   std::cout << "Location root: " << location_path << std::endl;
   std::cout << "Endpoint: " << route_endpoint << std::endl;
@@ -57,10 +54,7 @@ void HTTPResponse::handlePOST(HTTPRequest& req) {
   std::string destination = req.getURI();
   std::string filename = destination.substr(destination.find_last_of('/') + 1,
                                             destination.size() - 1);
-  req_file.open(this->settings_.getServers()[req.getServerIndex()]
-                    .locations[req.getLocationIndex()]
-                    .getRoot() +
-                "/" + filename);
+  req_file.open(req.getLocationSettings().getRoot() + "/" + filename);
   req_file << req.getBody();
   req_file.close();
   this->setResponseLine(STATUS_201);
@@ -72,9 +66,7 @@ std::string HTTPResponse::createResponseBody(std::string& path,
                                              HTTPRequest& req) {
   DIR* directory_list;
   directory_list = opendir(path.c_str());
-  if (directory_list != NULL &&
-      this->settings_.getRouteAutoIndex(req.getServerIndex(),
-                                        req.getLocationIndex())) {
+  if (directory_list != NULL && req.getLocationSettings().getAutoIndex()) {
     std::string res = this->buildDirIndexRes(directory_list, req, path);
     closedir(directory_list);
     return res;

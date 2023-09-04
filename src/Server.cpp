@@ -112,8 +112,8 @@ void Server::generateEnv(HTTPRequest req) {
   this->cgi_env_[j] = NULL;
 }
 
-void Server::executeCGI(std::string uri, int i) {
-  std::string executable = this->settings_.getRouteRoot(0, 0) + uri;
+void Server::executeCGI(const HTTPRequest& req, int i) {
+  std::string executable = req.getLocationSettings().getRoot() + req.getURI();
   char* arguments[3];
 
   arguments[0] = const_cast<char*>(INTERPRETER);
@@ -173,7 +173,7 @@ void Server::handleReceive(int i) {
       if (isCGI(req)) {
         std::cout << "Execute CGI" << std::endl;
         generateEnv(req);
-        executeCGI(req.getURI(), i);
+        executeCGI(req, i);
         removeFd(i);
         return;
       } else {

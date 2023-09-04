@@ -40,67 +40,6 @@ const std::vector<ServerSettings> Settings::getServers() const {
   return this->servers;
 };
 
-bool Settings::isMethodAllowedOnRoute(unsigned int server_idx,
-                                      unsigned int route_idx,
-                                      std::string method) const {
-  if (server_idx >= this->getServers().size() ||
-      route_idx >= this->getServers()[server_idx].getRoutes().size()) {
-    throw std::runtime_error("invalid server or route on getRouteRoot call");
-  }
-  std::vector<std::string> allowed_methods =
-      this->getServers()[server_idx].getRoutes()[route_idx].getAllowedMethods();
-  if (std::find(allowed_methods.begin(), allowed_methods.end(), method) !=
-      allowed_methods.end()) {
-    return true;
-  }
-  return false;
-}
-
-std::string Settings::getRouteRoot(unsigned int server_idx,
-                                   unsigned int route_idx) const {
-  if (server_idx >= this->getServers().size() ||
-      route_idx >= this->getServers()[server_idx].getRoutes().size()) {
-    throw std::runtime_error("invalid server or route on getRouteRoot call");
-  }
-  return this->getServers()[server_idx].getRoutes()[route_idx].getRoot();
-}
-
-std::string Settings::getRouteEndpoint(unsigned int server_idx,
-                                   unsigned int route_idx) const {
-  if (server_idx >= this->getServers().size() ||
-      route_idx >= this->getServers()[server_idx].getRoutes().size()) {
-    throw std::runtime_error("invalid server or route on getRouteRoot call");
-  }
-  return this->getServers()[server_idx].getRoutes()[route_idx].getEndpoint();
-}
-
-bool Settings::getRouteAutoIndex(unsigned int server_idx,
-                                 unsigned int route_idx) const {
-  if (server_idx >= this->getServers().size() ||
-      route_idx >= this->getServers()[server_idx].getRoutes().size()) {
-    throw std::runtime_error("invalid server or route on getRouteRoot call");
-  }
-  return this->getServers()[server_idx].getRoutes()[route_idx].getAutoIndex();
-}
-
-bool Settings::getRouteAllowUpload(unsigned int server_idx,
-                                   unsigned int route_idx) const {
-  if (server_idx >= this->getServers().size() ||
-      route_idx >= this->getServers()[server_idx].getRoutes().size()) {
-    throw std::runtime_error("invalid server or route on getRouteRoot call");
-  }
-  return this->getServers()[server_idx].getRoutes()[route_idx].getAllowUpload();
-}
-
-std::string Settings::getRouteUploadDir(unsigned int server_idx,
-                                        unsigned int route_idx) const {
-  if (server_idx >= this->getServers().size() ||
-      route_idx >= this->getServers()[server_idx].getRoutes().size()) {
-    throw std::runtime_error("invalid server or route on getRouteRoot call");
-  }
-  return this->getServers()[server_idx].getRoutes()[route_idx].getUploadDir();
-}
-
 unsigned int Settings::matchServer(int port) const {
   unsigned int res = 0;
   unsigned int i = 0;
@@ -113,21 +52,4 @@ unsigned int Settings::matchServer(int port) const {
     i++;
   }
   return res;
-}
-
-unsigned int Settings::matchLocationOfServer(unsigned int server_idx,
-                                             std::string endpoint) const {
-  unsigned int res = 0;
-  for (size_t it = 0; it < this->getServers()[server_idx].locations.size();
-       ++it) {
-    size_t found_at = endpoint.find(
-        this->getServers()[server_idx].locations[it].getEndpoint());
-    if (found_at == 0 &&
-        this->getServers()[server_idx].locations[it].getEndpoint().size() > 1) {
-      std::cout << "returned to location " << res << std::endl;
-      return res;
-    }
-    res++;
-  }
-  return 0;
 }

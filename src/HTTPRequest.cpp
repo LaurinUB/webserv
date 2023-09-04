@@ -24,12 +24,6 @@ std::string HTTPRequest::getProtocol() const { return this->protocol_version_; }
 
 bool HTTPRequest::getKeepalive() const { return this->keepalive_; }
 
-unsigned int HTTPRequest::getServerIndex() const { return this->server_index_; }
-
-unsigned int HTTPRequest::getLocationIndex() const {
-  return this->location_index_;
-}
-
 bool HTTPRequest::hasRequestError() const { return this->has_request_error_; }
 
 std::string HTTPRequest::getRequestError() const {
@@ -47,6 +41,14 @@ unsigned int HTTPRequest::getContentLength() const {
 }
 
 void HTTPRequest::appendBody(std::string input) { this->body_ += input; }
+
+const LocationSettings& HTTPRequest::getLocationSettings() const {
+  return this->location_settings_;
+}
+
+const ServerSettings& HTTPRequest::getServerSettings() const {
+  return this->server_settings_;
+}
 
 //// Private Member Functions
 
@@ -132,9 +134,8 @@ HTTPRequest::HTTPRequest(const HTTPRequest& obj)
       keepalive_(obj.keepalive_),
       has_request_error_(obj.has_request_error_),
       request_error_(obj.request_error_),
-      settings_(obj.settings_),
-      server_index_(obj.server_index_),
-      location_index_(obj.location_index_) {
+      server_settings_(obj.server_settings_),
+      location_settings_(obj.location_settings_) {
   *this = obj;
 }
 
@@ -148,9 +149,8 @@ HTTPRequest& HTTPRequest::operator=(const HTTPRequest& obj) {
   this->keepalive_ = obj.keepalive_;
   this->has_request_error_ = obj.has_request_error_;
   this->request_error_ = obj.request_error_;
-  this->settings_ = obj.settings_;
-  this->server_index_ = obj.server_index_;
-  this->location_index_ = obj.location_index_;
+  this->server_settings_ = obj.server_settings_;
+  this->location_settings_ = obj.location_settings_;
   return *this;
 }
 
@@ -159,7 +159,6 @@ HTTPRequest::HTTPRequest(std::string& input, int port,
   if (input.size() <= 1) {
     throw std::runtime_error("Error: tried to create request with size <= 1");
   }
-  this->settings_ = settings;
   std::size_t header_end = input.find("\r\n\r\n");
   std::string header(input.begin(), input.begin() + header_end);
   std::string body(input.begin() + header_end + 4, input.end());
@@ -187,9 +186,10 @@ HTTPRequest::HTTPRequest(std::string& input, int port,
   if (this->header_.find("Connection")->second.compare("keep-alive") == 0) {
     this->keepalive_ = true;
   }
-  this->server_index_ = settings.matchServer(port);
-  this->location_index_ =
-      settings.matchLocationOfServer(this->server_index_, this->getURI());
+  this->server_settings_ = settings.getServers()[settings.matchServer(port)];
+  this->location_settings_ =
+      this->server_settings_
+          .getRoutes()[this->server_settings_.matchLocation(this->getURI())];
   this->body_ = body;
   this->checkForErrors();
 }
@@ -211,7 +211,7 @@ void HTTPRequest::checkForErrors() {
     this->has_request_error_ = true;
     this->request_error_ = STATUS_414;
   } else if (this->getBody().size() >
-             settings_.getServers()[0].getMaxClientBodySize()) {
+             this->server_settings_.getMaxClientBodySize()) {
     this->has_request_error_ = true;
     this->request_error_ = STATUS_413;
   } else if (this->getMethod() == HTTPRequest::POST &&
