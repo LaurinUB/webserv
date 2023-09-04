@@ -1,27 +1,16 @@
 #include "HTTPResponse.hpp"
 
-#include <dirent.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <time.h>
-
-#include <sstream>
-
 //// Private Member Functions
 
-void HTTPResponse::handleGET(HTTPRequest& req) {
+void HTTPResponse::handleGET(const HTTPRequest& req) {
   std::string location_path = req.getLocationSettings().getRoot();
   std::string route_endpoint = req.getLocationSettings().getEndpoint();
-  std::cout << "URI: " << req.getURI() << std::endl;
-  std::cout << "Location root: " << location_path << std::endl;
-  std::cout << "Endpoint: " << route_endpoint << std::endl;
   std::string path;
   if (route_endpoint.compare(0, std::string::npos, "/") == 0) {
     path = location_path + req.getURI();
   } else {
     path = req.getURI().replace(0, route_endpoint.size(), location_path);
   }
-  std::cout << "actual file path: " << path << std::endl;
   std::string mimetype =
       path.substr(path.find_last_of('.') + 1, path.size() - 1);
   std::string content_type = this->mime_types.find(mimetype)->second;
@@ -38,7 +27,7 @@ void HTTPResponse::handleGET(HTTPRequest& req) {
     this->setResponseLine(STATUS_404);
     this->addToHeader("Content-Type", "text/html");
     this->body_ = this->createResponseBody(
-        settings_.getServers()[0].getErrorPages()[404], req);
+        req.getServerSettings().getErrorPages()[404], req);
     this->body_.replace(this->body_.find("${URI}"), 6, req.getURI());
     int size = this->body_.size();
     std::stringstream ss;
@@ -49,7 +38,7 @@ void HTTPResponse::handleGET(HTTPRequest& req) {
   return;
 }
 
-void HTTPResponse::handlePOST(HTTPRequest& req) {
+void HTTPResponse::handlePOST(const HTTPRequest& req) {
   std::ofstream req_file;
   std::string destination = req.getURI();
   std::string filename = destination.substr(destination.find_last_of('/') + 1,
@@ -62,8 +51,13 @@ void HTTPResponse::handlePOST(HTTPRequest& req) {
   this->body_ = "";
 }
 
-std::string HTTPResponse::createResponseBody(std::string& path,
-                                             HTTPRequest& req) {
+void HTTPResponse::handleDELETE(const HTTPRequest& req) {
+  (void)req;
+  std::cout << "HANDLE DELETE CALLED" << std::endl;
+}
+
+std::string HTTPResponse::createResponseBody(const std::string& path,
+                                             const HTTPRequest& req) {
   DIR* directory_list;
   directory_list = opendir(path.c_str());
   if (directory_list != NULL && req.getLocationSettings().getAutoIndex()) {
@@ -81,8 +75,9 @@ std::string HTTPResponse::createResponseBody(std::string& path,
   }
 }
 
-std::string HTTPResponse::buildDirIndexRes(DIR* directory, HTTPRequest& req,
-                                           std::string path) {
+std::string HTTPResponse::buildDirIndexRes(DIR* directory,
+                                           const HTTPRequest& req,
+                                           const std::string path) {
   std::string res = "<html><head><title>Index of " + req.getURI() +
                     "</title></head><body><h1>Index of " + req.getURI() +
                     "</h1><hr/><pre>";
@@ -153,8 +148,7 @@ HTTPResponse& HTTPResponse::operator=(const HTTPResponse& obj) {
   return *this;
 }
 
-HTTPResponse::HTTPResponse(HTTPRequest& req, const Settings& settings)
-    : settings_(settings) {
+HTTPResponse::HTTPResponse(const HTTPRequest& req) {
   HTTPRequest::method req_method = req.getMethod();
   if (req.hasRequestError()) {
     this->setResponseLine(req.getRequestError());
@@ -189,9 +183,7 @@ HTTPResponse::HTTPResponse(HTTPRequest& req, const Settings& settings)
       this->body_ = "";
       break;
     case HTTPRequest::DELETE:
-      this->setResponseLine(STATUS_501);
-      this->addToHeader("Content-Length", "0");
-      this->body_ = "";
+      this->handleDELETE(req);
       break;
     case HTTPRequest::TRACE:
       this->setResponseLine(STATUS_501);
