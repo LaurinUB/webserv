@@ -168,7 +168,9 @@ void HTTPRequest::unchunkBody() {
     pos = tmp.find('\n');
     std::stringstream fs(tmp.substr(0, pos));
     fs >> std::hex >> size;
-    if (size == 0) { break; }
+    if (size == 0) {
+      break;
+    }
     unchunked_body += tmp.substr(pos + 1, size);
     tmp = tmp.substr(pos + size);
   }
