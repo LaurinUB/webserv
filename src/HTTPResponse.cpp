@@ -65,6 +65,7 @@ std::string HTTPResponse::createResponseBody(const std::string& path,
     closedir(directory_list);
     return res;
   }
+  closedir(directory_list);
   std::ifstream file_stream(path);
   if (file_stream.is_open()) {
     std::stringstream file_string_stream;
