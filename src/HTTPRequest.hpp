@@ -1,8 +1,10 @@
 #ifndef HTTPREQUEST_HPP_
 #define HTTPREQUEST_HPP_
 
+#include <algorithm>
 #include <iostream>
 #include <map>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -34,7 +36,9 @@ class HTTPRequest {
 
   //// Accessors
   std::map<std::string, std::string>& getHeader();
+  unsigned int getContentLength() const;
   std::string getBody() const;
+  void appendBody(std::string input);
   HTTPRequest::method getMethod() const;
   std::string getURI() const;
   std::string getQueryParam() const;
@@ -42,8 +46,6 @@ class HTTPRequest {
   bool getKeepalive() const;
   bool hasRequestError() const;
   std::string getRequestError() const;
-  unsigned int getContentLength() const;
-  void appendBody(std::string input);
   const LocationSettings& getLocationSettings() const;
   const ServerSettings& getServerSettings() const;
 

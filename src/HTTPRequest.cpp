@@ -1,9 +1,5 @@
 #include "HTTPRequest.hpp"
 
-#include <algorithm>
-#include <iostream>
-#include <sstream>
-
 //// Accessors
 
 std::map<std::string, std::string>& HTTPRequest::getHeader() {
@@ -57,7 +53,6 @@ void HTTPRequest::removeTrailingWhitespace(std::string& str) {
   while (end >= 0 && std::isspace(str[end])) {
     end--;
   }
-
   str.erase(end + 1);
 }
 
