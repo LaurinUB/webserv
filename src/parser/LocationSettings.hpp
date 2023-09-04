@@ -16,6 +16,7 @@ class LocationSettings : public ASettings {
 
   std::vector<std::string> getAllowedMethods() const;
   std::string getRoot() const;
+  std::string getEndpoint() const;
   bool getAutoIndex() const;
   bool getAllowUpload() const;
   std::string getUploadDir() const;
@@ -23,6 +24,7 @@ class LocationSettings : public ASettings {
  private:
   std::vector<std::string> allowed_methods_;
   std::string root_;
+  std::string endpoint_;
   bool auto_index_;
   bool allow_upload_;
   std::string upload_dir_;

@@ -42,6 +42,8 @@ int Socket::getPort() const { return ntohs(this->socketAddress_.sin_port); }
 
 bool Socket::isKeepalive() const { return this->keepalive_; }
 
+int Socket::getListenSocket() const { return this->listen_socket_; }
+
 bool Socket::hasUnfinishedRequest() const { return this->has_unfinished_req_; }
 
 // setter Functions
@@ -49,6 +51,8 @@ bool Socket::hasUnfinishedRequest() const { return this->has_unfinished_req_; }
 void Socket::setIndex(int i) { this->index_ = i; }
 
 void Socket::setKeepalive(bool state) { this->keepalive_ = state; }
+
+void Socket::setListenSocket(int socket) { this->listen_socket_ = socket; }
 
 void Socket::setPort(std::string ip, int port) {
   this->socketAddress_.sin_family = AF_INET;
@@ -95,6 +99,7 @@ Socket::Socket() {
   this->keepalive_ = false;
   this->has_unfinished_req_ = false;
   this->state_ = RECEIVE;
+  this->listen_socket_ = 0;
 }
 
 Socket::Socket(int index) {
@@ -104,6 +109,7 @@ Socket::Socket(int index) {
   this->has_unfinished_req_ = false;
   this->state_ = RECEIVE;
   this->index_ = index;
+  this->listen_socket_ = 0;
 }
 
 Socket::~Socket() {
@@ -121,6 +127,7 @@ Socket& Socket::operator=(const Socket& obj) {
   this->timestamp_ = obj.timestamp_;
   this->socketAddress_ = obj.socketAddress_;
   this->state_ = obj.state_;
+  this->listen_socket_ = obj.listen_socket_;
   if (!this->response_.empty()) this->response_ = obj.response_;
   return *this;
 }

@@ -112,8 +112,8 @@ void Server::generateEnv(const HTTPRequest& req) {
   this->cgi_env_[j] = NULL;
 }
 
-void Server::executeCGI(std::string uri, int i) {
-  std::string executable = this->settings_.getRouteRoot(0, 0) + uri;
+void Server::executeCGI(const HTTPRequest& req, int i) {
+  std::string executable = req.getLocationSettings().getRoot() + req.getURI();
   char* arguments[3];
 
   arguments[0] = const_cast<char*>(INTERPRETER);
@@ -168,11 +168,12 @@ void Server::handleReceive(int i) {
     this->sockets_[i].getRequest().appendBody(stringyfied_buff);
   } else {
     try {
-      HTTPRequest req(stringyfied_buff, this->settings_);
+      HTTPRequest req(stringyfied_buff, this->sockets_[i].getListenSocket(),
+                      this->settings_);
       if (isCGI(req)) {
         std::cout << "Execute CGI" << std::endl;
         generateEnv(req);
-        executeCGI(req.getURI(), i);
+        executeCGI(req, i);
         removeFd(i);
         return;
       } else {
@@ -249,7 +250,7 @@ void Server::sendResponse(int i) {
   } else if (this->sockets_[i].getState() == UNFINISHED) {
     res_string = this->sockets_[i].getResponse();
   } else {
-    HTTPResponse res(this->sockets_[i].getRequest(), this->settings_);
+    HTTPResponse res(this->sockets_[i].getRequest());
     res_string = res.toString();
   }
   bytes_sent =
@@ -291,6 +292,7 @@ void Server::newConnection(int i) {
   new_poll.revents = 0;
   new_client.setState(RECEIVE);
   new_client.setIndex(index);
+  new_client.setListenSocket(this->sockets_[i].getPort());
   this->sockets_[index] = new_client;
   this->pollfds_[index] = new_poll;
   if (index == this->numfds_) {

@@ -62,8 +62,8 @@ class Server {
   void handleReceive(int i);
   void handleSend(int i);
   void checkSocketTimeout();
-  void executeCGI(std::string uri, int i);
   bool isCGI(const HTTPRequest& req);
+  void executeCGI(const HTTPRequest& req, int i);
   bool isChunked(int i);
   void handleChunked(int i);
   void generateEnv(const HTTPRequest& req);

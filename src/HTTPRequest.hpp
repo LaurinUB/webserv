@@ -1,8 +1,10 @@
 #ifndef HTTPREQUEST_HPP_
 #define HTTPREQUEST_HPP_
 
+#include <algorithm>
 #include <iostream>
 #include <map>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -18,7 +20,7 @@ class HTTPRequest {
   ~HTTPRequest();
   HTTPRequest(const HTTPRequest& obj);
   HTTPRequest& operator=(const HTTPRequest& obj);
-  HTTPRequest(std::string& input, const Settings& settings);
+  HTTPRequest(std::string& input, int port, const Settings& settings);
 
   typedef enum {
     UNKNOWN,
@@ -34,7 +36,9 @@ class HTTPRequest {
 
   //// Accessors
   std::map<std::string, std::string>& getHeader();
+  unsigned int getContentLength() const;
   std::string getBody() const;
+  void appendBody(std::string input);
   HTTPRequest::method getMethod() const;
   std::string getURI() const;
   std::string getQueryParam() const;
@@ -42,8 +46,8 @@ class HTTPRequest {
   bool getKeepalive() const;
   bool hasRequestError() const;
   std::string getRequestError() const;
-  unsigned int getContentLength() const;
-  void appendBody(std::string input);
+  const LocationSettings& getLocationSettings() const;
+  const ServerSettings& getServerSettings() const;
 
  private:
   std::map<std::string, std::string> header_;
@@ -55,7 +59,8 @@ class HTTPRequest {
   bool keepalive_;
   bool has_request_error_;
   std::string request_error_;
-  Settings settings_;
+  ServerSettings server_settings_;
+  LocationSettings location_settings_;
   //// Private Member Functions
   void removeTrailingWhitespace(std::string& str);
   method parseMethodToken(std::string& token);

@@ -2,8 +2,12 @@
 #define HTTPRESPONSE_HPP_
 
 #include <dirent.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <time.h>
 
 #include <fstream>
+#include <sstream>
 #include <string>
 
 #include "./parser/Settings.hpp"
@@ -17,7 +21,7 @@ class HTTPResponse {
   ~HTTPResponse();
   HTTPResponse(const HTTPResponse& obj);
   HTTPResponse& operator=(const HTTPResponse& obj);
-  HTTPResponse(HTTPRequest& req, const Settings& settings);
+  HTTPResponse(const HTTPRequest& req);
 
   //// Member Functions
   std::string toString() const;
@@ -29,16 +33,17 @@ class HTTPResponse {
   static std::map<std::string, std::string> getMimeTypes(std::string path);
 
  private:
-  Settings settings_;
   std::string request_line_;
   std::map<std::string, std::string> headers_;
   std::string body_;
   //// Private Member Functions
-  void handleGET(HTTPRequest& req);
-  void handlePOST(HTTPRequest& req);
-  std::string createResponseBody(std::string& path, HTTPRequest& req);
-  std::string buildDirIndexRes(DIR* directory, HTTPRequest& req,
-                               std::string path);
+  void handleGET(const HTTPRequest& req);
+  void handlePOST(const HTTPRequest& req);
+  void handleDELETE(const HTTPRequest& req);
+  std::string createResponseBody(const std::string& path,
+                                 const HTTPRequest& req);
+  std::string buildDirIndexRes(DIR* directory, const HTTPRequest& req,
+                               const std::string path);
 };
 
 #endif  // HTTPRESPONSE_HPP_

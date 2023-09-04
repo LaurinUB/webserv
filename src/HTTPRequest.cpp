@@ -1,9 +1,5 @@
 #include "HTTPRequest.hpp"
 
-#include <algorithm>
-#include <iostream>
-#include <sstream>
-
 //// Accessors
 
 std::map<std::string, std::string>& HTTPRequest::getHeader() {
@@ -42,6 +38,14 @@ unsigned int HTTPRequest::getContentLength() const {
 
 void HTTPRequest::appendBody(std::string input) { this->body_ += input; }
 
+const LocationSettings& HTTPRequest::getLocationSettings() const {
+  return this->location_settings_;
+}
+
+const ServerSettings& HTTPRequest::getServerSettings() const {
+  return this->server_settings_;
+}
+
 //// Private Member Functions
 
 void HTTPRequest::removeTrailingWhitespace(std::string& str) {
@@ -49,7 +53,6 @@ void HTTPRequest::removeTrailingWhitespace(std::string& str) {
   while (end >= 0 && std::isspace(str[end])) {
     end--;
   }
-
   str.erase(end + 1);
 }
 
@@ -126,7 +129,8 @@ HTTPRequest::HTTPRequest(const HTTPRequest& obj)
       keepalive_(obj.keepalive_),
       has_request_error_(obj.has_request_error_),
       request_error_(obj.request_error_),
-      settings_(obj.settings_) {
+      server_settings_(obj.server_settings_),
+      location_settings_(obj.location_settings_) {
   *this = obj;
 }
 
@@ -141,15 +145,16 @@ HTTPRequest& HTTPRequest::operator=(const HTTPRequest& obj) {
   this->keepalive_ = obj.keepalive_;
   this->has_request_error_ = obj.has_request_error_;
   this->request_error_ = obj.request_error_;
-  this->settings_ = obj.settings_;
+  this->server_settings_ = obj.server_settings_;
+  this->location_settings_ = obj.location_settings_;
   return *this;
 }
 
-HTTPRequest::HTTPRequest(std::string& input, const Settings& settings) {
+HTTPRequest::HTTPRequest(std::string& input, int port,
+                         const Settings& settings) {
   if (input.size() <= 1) {
     throw std::runtime_error("Error: tried to create request with size <= 1");
   }
-  this->settings_ = settings;
   std::size_t header_end = input.find("\r\n\r\n");
   std::string header(input.begin(), input.begin() + header_end);
   std::string body(input.begin() + header_end + 4, input.end());
@@ -177,6 +182,10 @@ HTTPRequest::HTTPRequest(std::string& input, const Settings& settings) {
   if (this->header_.find("Connection")->second.compare("keep-alive") == 0) {
     this->keepalive_ = true;
   }
+  this->server_settings_ = settings.getServers()[settings.matchServer(port)];
+  this->location_settings_ =
+      this->server_settings_
+          .getRoutes()[this->server_settings_.matchLocation(this->getURI())];
   this->body_ = body;
   this->checkForErrors();
 }
@@ -198,7 +207,7 @@ void HTTPRequest::checkForErrors() {
     this->has_request_error_ = true;
     this->request_error_ = STATUS_414;
   } else if (this->getBody().size() >
-             settings_.getServers()[0].getMaxClientBodySize()) {
+             this->server_settings_.getMaxClientBodySize()) {
     this->has_request_error_ = true;
     this->request_error_ = STATUS_413;
   } else if (this->getMethod() == HTTPRequest::POST &&
