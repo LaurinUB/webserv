@@ -57,7 +57,7 @@ void HTTPResponse::handleDELETE(const HTTPRequest& req) {
                                             destination.size() - 1);
   std::string absolute_path =
       req.getLocationSettings().getRoot() + "/" + filename;
-  if (remove(absolute_path.c_str()) != 0 ) {
+  if (remove(absolute_path.c_str()) != 0) {
     this->setResponseLine(STATUS_204);
     this->addToHeader("Content-Length", "0");
     this->body_ = "";
