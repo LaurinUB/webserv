@@ -104,6 +104,7 @@ void Server::generateEnv(const HTTPRequest& req) {
   }
   env[i] = "CONTENT_TYPE=text/html";
   env[i] = "SCRIPT_NAME=" + req.getURI();
+  env[i] = "QUERY_STRING=" + req.getQueryParam();
   int j = 0;
   while (j < i) {
     this->cgi_env_[j] = const_cast<char*>(env[j].c_str());
@@ -139,9 +140,12 @@ void Server::executeCGI(const HTTPRequest& req, int i) {
 bool Server::isCGI(const HTTPRequest& req) {
   if (req.getURI().empty() || req.getURI().size() < PYSIZE + 1) {
     return false;
-  }
-  if (!req.getURI().compare(req.getURI().size() - PYSIZE, req.getURI().size(),
-                            PYTHON)) {
+  } else if (access(
+                 (req.getLocationSettings().getRoot() + req.getURI()).c_str(),
+                 F_OK) == -1) {
+    return false;
+  } else if (!req.getURI().compare(req.getURI().size() - PYSIZE,
+                                   req.getURI().size(), PYTHON)) {
     return true;
   }
   return false;
