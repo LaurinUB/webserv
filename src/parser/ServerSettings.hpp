@@ -9,7 +9,8 @@
 #include "LocationSettings.hpp"
 
 class ServerSettings : public ASettings {
- friend class Parser;
+  friend class Parser;
+
  public:
   ServerSettings();
   virtual ~ServerSettings();

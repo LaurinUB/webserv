@@ -45,7 +45,7 @@ unsigned int Settings::matchServer(int port) const {
   unsigned int i = 0;
   for (std::vector<ServerSettings>::const_iterator it = this->servers.begin();
        it != this->servers.end(); ++it) {
-    if ((int) it->getPort() == port) {
+    if ((int)it->getPort() == port) {
       res = i;
       break;
     }
