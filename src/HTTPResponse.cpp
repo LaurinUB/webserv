@@ -52,8 +52,21 @@ void HTTPResponse::handlePOST(const HTTPRequest& req) {
 }
 
 void HTTPResponse::handleDELETE(const HTTPRequest& req) {
-  (void)req;
-  std::cout << "HANDLE DELETE CALLED" << std::endl;
+  std::string destination = req.getURI();
+  std::string filename = destination.substr(destination.find_last_of('/') + 1,
+                                            destination.size() - 1);
+  std::string absolute_path =
+      req.getLocationSettings().getRoot() + "/" + filename;
+  if (remove(absolute_path.c_str()) != 0 ) {
+    this->setResponseLine(STATUS_204);
+    this->addToHeader("Content-Length", "0");
+    this->body_ = "";
+  } else {
+    this->setResponseLine(STATUS_200);
+    this->addToHeader("Content-Length", "0");
+    this->body_ = "";
+  }
+  return;
 }
 
 std::string HTTPResponse::createResponseBody(const std::string& path,
