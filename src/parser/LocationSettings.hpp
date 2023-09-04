@@ -14,7 +14,7 @@ class LocationSettings : public ASettings {
   LocationSettings& operator=(const LocationSettings& obj);
   bool setValue(std::string key, std::string value);
 
-  std::vector<std::string> getAllowedMethods() const;
+  const std::vector<std::string>& getAllowedMethods() const;
   std::string getRoot() const;
   std::string getEndpoint() const;
   bool getAutoIndex() const;
