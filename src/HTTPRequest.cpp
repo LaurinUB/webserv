@@ -190,6 +190,8 @@ HTTPRequest::HTTPRequest(std::string& input, int port,
 }
 
 void HTTPRequest::checkForErrors() {
+  std::string methods[9] = {"UNKNOWN", "OPTIONS", "GET",   "HEAD",   "POST",
+                            "PUT",     "DELETE",  "TRACE", "CONNECT"};
   if (this->hasRequestError()) {
     return;
   }
@@ -216,6 +218,12 @@ void HTTPRequest::checkForErrors() {
   } else if (this->URI_.size() < 1 || this->protocol_version_.size() < 1) {
     this->has_request_error_ = true;
     this->request_error_ = STATUS_400;
+  } else if (std::find(this->location_settings_.getAllowedMethods().begin(),
+                       this->location_settings_.getAllowedMethods().end(),
+                       methods[this->request_method_]) ==
+             this->location_settings_.getAllowedMethods().end()) {
+    this->has_request_error_ = true;
+    this->request_error_ = STATUS_405;
   }
 }
 

@@ -42,7 +42,7 @@ bool LocationSettings::setValue(std::string key, std::string value) {
   return true;
 };
 
-std::vector<std::string> LocationSettings::getAllowedMethods() const {
+const std::vector<std::string>& LocationSettings::getAllowedMethods() const {
   return this->allowed_methods_;
 };
 
