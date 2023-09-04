@@ -198,56 +198,10 @@ void Server::handleReceive(int i) {
   this->sockets_[i].updateTime();
 }
 
-bool Server::isChunked(int i) {
-  if (this->sockets_[i].getState() == FINISHED) {
-    return false;
-  }
-  std::map<std::string, std::string>::iterator it =
-      this->sockets_[i].getRequest().getHeader().find("Transfer-Encoding");
-  if (it != this->sockets_[i].getRequest().getHeader().end()) {
-    return true;
-  }
-  return false;
-}
-
-void Server::handleChunked(int i) {
-  std::cout << "handle chunked" << std::endl;
-  std::string res_string;
-  unsigned int size;
-  size_t pos;
-  if (this->sockets_[i].getState() == UNFINISHED) {
-    std::stringstream response(this->sockets_[i].getResponse());
-    response >> std::hex >> size;
-    pos = this->sockets_[i].getResponse().find('\n');
-    res_string = this->sockets_[i].getResponse().substr(pos + 1, size);
-  } else {
-    std::stringstream response(this->sockets_[i].getRequest().getBody());
-    response  >> std::hex >> size;
-    pos = this->sockets_[i].getRequest().getBody().find('\n');
-    res_string = this->sockets_[i].getRequest().getBody().substr(pos + 1, size);
-  }
-  size_t bytes_sent = send(this->pollfds_[i].fd, res_string.data(), res_string.size(), 0);
-  if (bytes_sent < 0) {
-    std::cout << "Error: sending response to client" << std::endl;
-  }
-  std::cout << "Sending " << bytes_sent << " bytes" << std::endl;
-  if (size > 0) {
-    this->sockets_[i].handleUnfinished(bytes_sent + pos + 1, this->sockets_[i].getRequest().getBody());
-    this->pollfds_[i].events = POLLOUT;
-  } else {
-    this->sockets_[i].setState(FINISHED);
-    this->pollfds_[i].events = POLLIN;
-  }
-  // exit(0);
-}
-
 void Server::sendResponse(int i) {
   int bytes_sent = 0;
   std::string res_string;
-  if (isChunked(i)) {
-    handleChunked(i);
-    return;
-  } else if (this->sockets_[i].getState() == UNFINISHED) {
+  if (this->sockets_[i].getState() == UNFINISHED) {
     res_string = this->sockets_[i].getResponse();
   } else {
     HTTPResponse res(this->sockets_[i].getRequest());

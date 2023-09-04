@@ -150,6 +150,31 @@ HTTPRequest& HTTPRequest::operator=(const HTTPRequest& obj) {
   return *this;
 }
 
+bool HTTPRequest::isChunked() {
+  std::map<std::string, std::string>::iterator it =
+      this->getHeader().find("Transfer-Encoding");
+  if (it != this->getHeader().end()) {
+    return true;
+  }
+  return false;
+}
+
+void HTTPRequest::unchunkBody() {
+  std::string tmp = this->getBody();
+  std::string unchunked_body;
+  size_t pos = 0;
+  unsigned int size = 0;
+  while (tmp.size()) {
+    pos = tmp.find('\n');
+    std::stringstream fs(tmp.substr(0, pos));
+    fs >> std::hex >> size;
+    if (size == 0) { break; }
+    unchunked_body += tmp.substr(pos + 1, size);
+    tmp = tmp.substr(pos + size);
+  }
+  this->body_ = unchunked_body;
+}
+
 HTTPRequest::HTTPRequest(std::string& input, int port,
                          const Settings& settings) {
   if (input.size() <= 1) {
@@ -187,6 +212,9 @@ HTTPRequest::HTTPRequest(std::string& input, int port,
       this->server_settings_
           .getRoutes()[this->server_settings_.matchLocation(this->getURI())];
   this->body_ = body;
+  if (isChunked()) {
+    unchunkBody();
+  }
   this->checkForErrors();
 }
 

@@ -38,6 +38,8 @@ class HTTPRequest {
   std::map<std::string, std::string>& getHeader();
   unsigned int getContentLength() const;
   std::string getBody() const;
+  bool isChunked();
+  void unchunkBody();
   void appendBody(std::string input);
   HTTPRequest::method getMethod() const;
   std::string getURI() const;
