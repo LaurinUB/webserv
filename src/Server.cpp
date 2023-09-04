@@ -204,7 +204,7 @@ void Server::sendResponse(int i) {
   if (this->sockets_[i].getState() == UNFINISHED) {
     res_string = this->sockets_[i].getResponse();
   } else {
-    HTTPResponse res(this->sockets_[i].getRequest(), this->settings_);
+    HTTPResponse res(this->sockets_[i].getRequest());
     res_string = res.toString();
   }
   bytes_sent =
