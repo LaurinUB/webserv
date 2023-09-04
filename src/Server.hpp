@@ -31,6 +31,7 @@
 #include <sstream>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "./parser/Settings.hpp"
 #include "HTTPRequest.hpp"
@@ -64,6 +65,7 @@ class Server {
   void executeCGI(std::string uri, int i);
   bool isCGI(const HTTPRequest& req);
   bool isChunked(int i);
+  void handleChunked(int i);
   void generateEnv(const HTTPRequest& req);
 };
 
