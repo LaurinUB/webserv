@@ -105,17 +105,23 @@ std::string HTTPResponse::buildDirIndexRes(DIR* directory,
     if (test == NULL) {
       break;
     }
+    std::ifstream file((path + '/' + test->d_name).c_str(),
+                       std::ios::in | std::ios::binary);
+    file.seekg(0, std::ios::end);
+    int file_size = file.tellg();
+    file.close();
     if (std::string(test->d_name) == ".") {
       continue;
     }
     stat((path + std::string(test->d_name)).c_str(), &attr);
     char time_changed[20];
     strftime(time_changed, 20, "%d-%b-%Y %H:%M", localtime(&(attr.st_ctime)));
-    res += "<a href=\"" + std::string(test->d_name) + "\">" +
-           std::string(test->d_name) + "</a>";
+    res += "<a href=\"" + req.getLocationSettings().getEndpoint() + '/' +
+           std::string(test->d_name) + "\">" + std::string(test->d_name) +
+           "</a>";
     if (std::string(test->d_name) != "..") {
       res += "\t\t\t\t\t" + std::string(time_changed) + "\t\t" +
-             "file size should go here" + "\n";
+             std::to_string(file_size) + "\n";
     } else {
       res += "\n";
     }
