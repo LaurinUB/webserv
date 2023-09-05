@@ -1,8 +1,13 @@
 #include "ServerSettings.hpp"
 
-ServerSettings::ServerSettings(){};
+ServerSettings::ServerSettings()
+    : port_(8888), server_name_("0.0.0.0"), max_client_body_size_(1000) {
+  this->error_pages_[404] = "./data/404.html";
+  LocationSettings default_location;
+  this->locations.push_back(default_location);
+}
 
-ServerSettings::~ServerSettings(){};
+ServerSettings::~ServerSettings(){}
 
 ServerSettings::ServerSettings(const ServerSettings& obj)
     : port_(obj.port_),

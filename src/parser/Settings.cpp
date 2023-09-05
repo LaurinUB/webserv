@@ -2,7 +2,10 @@
 
 #include "Parser.hpp"
 
-Settings::Settings() {}
+Settings::Settings() {
+  ServerSettings default_server;
+  this->servers.push_back(default_server);
+}
 
 Settings::~Settings() {}
 

@@ -20,7 +20,10 @@ int main(int argc, char* argv[]) {
     return EXIT_FAILURE;
   }
   try {
-    Settings settings(conf_path);
+    Settings settings;
+    if (argc == 2) {
+      settings = Settings(conf_path);
+    }
     Server server = Server(settings);
     server.run();
   } catch (std::exception e) {
