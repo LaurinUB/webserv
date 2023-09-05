@@ -71,21 +71,23 @@ void HTTPResponse::handleDELETE(const HTTPRequest& req) {
 
 std::string HTTPResponse::createResponseBody(const std::string& path,
                                              const HTTPRequest& req) {
+  std::string URIpath = path;
   DIR* directory_list;
   directory_list = opendir(path.c_str());
   if (directory_list != NULL && req.getLocationSettings().getAutoIndex()) {
     std::string res = this->buildDirIndexRes(directory_list, req, path);
     closedir(directory_list);
     return res;
-  }
-  if (directory_list != NULL) {
+  } else if (directory_list != NULL &&
+             !req.getLocationSettings().getAutoIndex()) {
+    URIpath += '/' + req.getLocationSettings().getDefault();
     closedir(directory_list);
   }
-  std::ifstream file_stream(path);
-  if (file_stream.is_open()) {
-    std::stringstream file_string_stream;
-    file_string_stream << file_stream.rdbuf();
-    return file_string_stream.str();
+  std::ifstream fs(URIpath);
+  if (fs.is_open()) {
+    std::stringstream fss;
+    fss << fs.rdbuf();
+    return fss.str();
   } else {
     throw std::exception();
   }
