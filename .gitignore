@@ -6,6 +6,9 @@ webserv
 
 # macOS
 .DS_Store
+tester
+cgi_tester
+YoupiBanane/
 
 # Prerequisites
 *.d

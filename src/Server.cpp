@@ -104,6 +104,7 @@ void Server::generateEnv(const HTTPRequest& req) {
   }
   env[i] = "CONTENT_TYPE=text/html";
   env[i] = "SCRIPT_NAME=" + req.getURI();
+  env[i] = "QUERY_STRING=" + req.getQueryParam();
   int j = 0;
   while (j < i) {
     this->cgi_env_[j] = const_cast<char*>(env[j].c_str());
@@ -112,36 +113,83 @@ void Server::generateEnv(const HTTPRequest& req) {
   this->cgi_env_[j] = NULL;
 }
 
+void Server::cgi_timeout(pid_t child, int i) {
+  time_t timeout = std::time(NULL);
+  int status;
+  while (waitpid(child, &status, WNOHANG) != -1) {
+    double time = difftime(std::time(NULL), timeout);
+    if (time >= CGI_TIMEOUT) {
+      std::string res = "HTTP/1.1 ";
+      res += STATUS_408;
+      kill(child, SIGKILL);
+      send(this->pollfds_[i].fd, res.c_str(), res.size(), 0);
+      return;
+    }
+  }
+}
+
 void Server::executeCGI(const HTTPRequest& req, int i) {
   std::string executable = req.getLocationSettings().getRoot() + req.getURI();
   char* arguments[3];
+  int pipefd[2];
 
   arguments[0] = const_cast<char*>(INTERPRETER);
   arguments[1] = const_cast<char*>(executable.c_str());
   arguments[2] = NULL;
+  if (pipe(pipefd) == -1) {
+    std::cerr << "Error: pipe." << std::endl;
+    return;
+  }
   pid_t child = fork();
   if (child < 0) {
     std::cerr << "Error: fork." << std::endl;
+    return;
   } else if (child == 0) {
-    dup2(this->pollfds_[i].fd, STDOUT_FILENO);
-    close(this->pollfds_[i].fd);
-    std::cout << "HTTP/1.1 200 OK\n";
+    close(pipefd[0]);
+    dup2(pipefd[1], STDOUT_FILENO);
+    close(pipefd[1]);
     if (execve(arguments[1], arguments, this->cgi_env_) == -1) {
       std::cerr << "Error: execve." << std::endl;
     }
-    std::cout << "\nScript execution failed!" << std::endl;
+    std::cout << "HTTP/1.1 " << STATUS_422 << "\nScript execution failed!"
+              << std::endl;
     exit(EXIT_FAILURE);
   }
-  int status;
-  waitpid(child, &status, 0);
+  cgi_timeout(child, i);
+  close(pipefd[1]);
+  build_cgi_response(i, pipefd[0]);
+}
+
+void Server::build_cgi_response(int i, int pipefd) {
+  char buffer[BUFFER_SIZE];
+  std::string res;
+  while (read(pipefd, buffer, BUFFER_SIZE) > 0) {
+    res += buffer;
+  }
+  close(pipefd);
+  if (!res.compare(0, 8, "HTTP/1.1")) {
+    if (send(this->pollfds_[i].fd, res.c_str(), res.size(), 0) == -1) {
+      std::cerr << "Error: failed to send cgi" << std::endl;
+      return;
+    }
+  } else {
+    res.insert(0, "HTTP/1.1 200 OK\n");
+    if (send(this->pollfds_[i].fd, res.c_str(), res.size(), 0) == -1) {
+      std::cerr << "Error: failed to send cgi" << std::endl;
+      return;
+    }
+  }
 }
 
 bool Server::isCGI(const HTTPRequest& req) {
   if (req.getURI().empty() || req.getURI().size() < PYSIZE + 1) {
     return false;
-  }
-  if (!req.getURI().compare(req.getURI().size() - PYSIZE, req.getURI().size(),
-                            PYTHON)) {
+  } else if (access(
+                 (req.getLocationSettings().getRoot() + req.getURI()).c_str(),
+                 F_OK) == -1) {
+    return false;
+  } else if (!req.getURI().compare(req.getURI().size() - PYSIZE,
+                                   req.getURI().size(), PYTHON)) {
     return true;
   }
   return false;
