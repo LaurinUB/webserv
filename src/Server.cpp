@@ -147,7 +147,7 @@ void Server::executeCGI(const HTTPRequest& req, int i) {
   } else if (child == 0) {
     close(pipefd[0]);
     dup2(pipefd[1], STDOUT_FILENO);
-    close(pipefd[1]);;
+    close(pipefd[1]);
     if (execve(arguments[1], arguments, this->cgi_env_) == -1) {
       std::cerr << "Error: execve." << std::endl;
     }

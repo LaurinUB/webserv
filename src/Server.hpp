@@ -17,10 +17,10 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <poll.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <sys/time.h>
-#include <signal.h>
 #include <sys/types.h>
 #include <unistd.h>
 
