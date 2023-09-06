@@ -57,6 +57,9 @@ Parser::Parser(std::string& config_path) {
        i != tokenized_file.end(); ++i) {
   }
   this->tokens_ = tokenized_file;
+  if (this->tokens_.empty()) {
+    throw std::runtime_error("empty config");
+  }
   this->global = parseGlobal();
 }
 
