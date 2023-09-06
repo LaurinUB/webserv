@@ -113,7 +113,7 @@ void Server::generateEnv(const HTTPRequest& req) {
   this->cgi_env_[j] = NULL;
 }
 
-void Server::cgi_timeout(pid_t child, int i) {
+int Server::cgi_timeout(pid_t child, int i) {
   time_t timeout = std::time(NULL);
   int status;
   while (waitpid(child, &status, WNOHANG) != -1) {
@@ -122,10 +122,13 @@ void Server::cgi_timeout(pid_t child, int i) {
       std::string res = "HTTP/1.1 ";
       res += STATUS_408;
       kill(child, SIGKILL);
-      send(this->pollfds_[i].fd, res.c_str(), res.size(), 0);
-      return;
+      this->pollfds_[i].events = POLLOUT;
+      this->sockets_[i].setState(UNFINISHED);
+      this->sockets_[i].setResponse(res);
+      return EXIT_FAILURE;
     }
   }
+  return EXIT_SUCCESS;
 }
 
 void Server::executeCGI(const HTTPRequest& req, int i) {
@@ -150,13 +153,16 @@ void Server::executeCGI(const HTTPRequest& req, int i) {
     close(pipefd[1]);
     if (execve(arguments[1], arguments, this->cgi_env_) == -1) {
       std::cerr << "Error: execve." << std::endl;
+      std::cout << "HTTP/1.1 " << STATUS_500 << "\nScript execution failed!"
+                << std::endl;
+      exit(EXIT_FAILURE);
     }
-    std::cout << "HTTP/1.1 " << STATUS_422 << "\nScript execution failed!"
-              << std::endl;
-    exit(EXIT_FAILURE);
   }
-  cgi_timeout(child, i);
   close(pipefd[1]);
+  if (cgi_timeout(child, i)) {
+    close(pipefd[0]);
+    return;
+  }
   build_cgi_response(i, pipefd[0]);
 }
 
@@ -168,16 +174,16 @@ void Server::build_cgi_response(int i, int pipefd) {
   }
   close(pipefd);
   if (!res.compare(0, 8, "HTTP/1.1")) {
-    if (send(this->pollfds_[i].fd, res.c_str(), res.size(), 0) == -1) {
-      std::cerr << "Error: failed to send cgi" << std::endl;
-      return;
-    }
+    this->sockets_[i].setResponse(res);
+    this->pollfds_[i].events = POLLOUT;
+    this->sockets_[i].setState(UNFINISHED);
+    return;
   } else {
+    res.insert(0, ("Content-Length:" + std::to_string(res.size()) + "\n"));
     res.insert(0, "HTTP/1.1 200 OK\n");
-    if (send(this->pollfds_[i].fd, res.c_str(), res.size(), 0) == -1) {
-      std::cerr << "Error: failed to send cgi" << std::endl;
-      return;
-    }
+    this->pollfds_[i].events = POLLOUT;
+    this->sockets_[i].setState(UNFINISHED);
+    this->sockets_[i].setResponse(res);
   }
 }
 
@@ -218,11 +224,11 @@ void Server::handleReceive(int i) {
     try {
       HTTPRequest req(stringyfied_buff, this->sockets_[i].getListenSocket(),
                       this->settings_);
-      if (isCGI(req)) {
+      if (this->sockets_[i].getState() == RECEIVE && isCGI(req)) {
         std::cout << "Execute CGI" << std::endl;
+        this->sockets_[i].setRequest(req);
         generateEnv(req);
         executeCGI(req, i);
-        removeFd(i);
         return;
       } else {
         this->pollfds_[i].events = POLLOUT;

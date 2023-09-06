@@ -20,7 +20,9 @@ std::string HTTPRequest::getProtocol() const { return this->protocol_version_; }
 
 bool HTTPRequest::getKeepalive() const { return this->keepalive_; }
 
-bool HTTPRequest::hasRequestError() const { return this->has_request_error_; }
+unsigned int HTTPRequest::hasRequestError() const {
+  return this->has_request_error_;
+}
 
 std::string HTTPRequest::getRequestError() const {
   return this->request_error_;
@@ -226,31 +228,31 @@ void HTTPRequest::checkForErrors() {
     return;
   }
   if (this->protocol_version_.compare("HTTP/1.1")) {
-    this->has_request_error_ = true;
+    this->has_request_error_ = 505;
     this->request_error_ = STATUS_505;
   } else if (this->getContentLength() < this->body_.size()) {
-    this->has_request_error_ = true;
+    this->has_request_error_ = 413;
     this->request_error_ = STATUS_413;
   } else if (this->getURI().size() + this->getQueryParam().size() >
              MAX_CLIENT_HEADER_BUFFER) {
-    this->has_request_error_ = true;
+    this->has_request_error_ = 414;
     this->request_error_ = STATUS_414;
   } else if (this->getBody().size() >
              this->server_settings_.getMaxClientBodySize()) {
-    this->has_request_error_ = true;
+    this->has_request_error_ = 413;
     this->request_error_ = STATUS_413;
   } else if (this->getMethod() == HTTPRequest::POST &&
              this->header_.find("Content-Length") == this->header_.end()) {
-    this->has_request_error_ = true;
+    this->has_request_error_ = 411;
     this->request_error_ = STATUS_411;
   } else if (this->URI_.size() < 1 || this->protocol_version_.size() < 1) {
-    this->has_request_error_ = true;
+    this->has_request_error_ = 400;
     this->request_error_ = STATUS_400;
   } else if (std::find(this->location_settings_.getAllowedMethods().begin(),
                        this->location_settings_.getAllowedMethods().end(),
                        methods[this->request_method_]) ==
              this->location_settings_.getAllowedMethods().end()) {
-    this->has_request_error_ = true;
+    this->has_request_error_ = 405;
     this->request_error_ = STATUS_405;
   }
 }
