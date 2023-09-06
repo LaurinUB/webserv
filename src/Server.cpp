@@ -372,13 +372,18 @@ Server::Server(const Settings& settings) : settings_(settings) {
   memset(this->pollfds_, -1, MAX_PORTS);
   this->numfds_ = 0;
   for (size_t i = 0; i < this->settings_.getServers().size(); ++i) {
-    if (startServer(this->settings_.getServers()[i].getName(),
+    if (startServer(this->settings_.getServers()[i].getListen(),
                     this->settings_.getServers()[i].getPort())) {
       std::cout << "Error: failed to start Server with port "
                 << this->settings_.getServers()[i].getPort() << std::endl;
+    } else if (!this->settings_.getServers()[i].getName().empty()) {
+      std::cout << "Started server on "
+                << this->settings_.getServers()[i].getName() << " with Address "
+                << this->settings_.getServers()[i].getListen() << ":"
+                << this->settings_.getServers()[i].getPort() << std::endl;
     } else {
-      std::cout << "Startet server on "
-                << this->settings_.getServers()[i].getName() << " with Port "
+      std::cout << "Started server on "
+                << this->settings_.getServers()[i].getListen() << ":"
                 << this->settings_.getServers()[i].getPort() << std::endl;
     }
   }

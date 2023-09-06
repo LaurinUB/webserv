@@ -231,8 +231,6 @@ void HTTPRequest::checkForErrors() {
     this->has_request_error_ = 505;
     this->request_error_ = STATUS_505;
   } else if (this->getContentLength() < this->body_.size()) {
-    // TODO: this case leads to timeout in the servers main loop, we never get
-    // here
     this->has_request_error_ = 413;
     this->request_error_ = STATUS_413;
   } else if (this->getURI().size() + this->getQueryParam().size() >

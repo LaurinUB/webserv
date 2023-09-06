@@ -24,6 +24,19 @@ Settings::Settings(std::string& config_path) {
     std::cout << "Parser Exception: " << e.what() << std::endl;
     throw std::exception();
   }
+  // in case there is no server, create a default one
+  if (this->servers.size() == 0) {
+    ServerSettings default_server;
+    this->servers.push_back(default_server);
+  }
+  // in case a server has no route create a default one
+  for (std::vector<ServerSettings>::iterator it = this->servers.begin();
+       it != this->servers.end(); ++it) {
+    if (it->getRoutes().size() == 0) {
+      LocationSettings default_location;
+      it->locations.push_back(default_location);
+    }
+  }
 }
 
 void Settings::addServer(ServerSettings server) {
