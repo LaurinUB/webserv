@@ -5,7 +5,7 @@ ServerSettings::ServerSettings()
   this->error_pages_[404] = "./data/404.html";
 }
 
-ServerSettings::~ServerSettings(){}
+ServerSettings::~ServerSettings() {}
 
 ServerSettings::ServerSettings(const ServerSettings& obj)
     : port_(obj.port_),
