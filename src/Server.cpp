@@ -379,12 +379,12 @@ Server::Server(const Settings& settings) : settings_(settings) {
     } else if (!this->settings_.getServers()[i].getName().empty()) {
       std::cout << "Started server on "
                 << this->settings_.getServers()[i].getName() << " with Address "
-                << this->settings_.getServers()[i].getListen() << ":" <<
-          this->settings_.getServers()[i].getPort() << std::endl;
+                << this->settings_.getServers()[i].getListen() << ":"
+                << this->settings_.getServers()[i].getPort() << std::endl;
     } else {
       std::cout << "Started server on "
-                << this->settings_.getServers()[i].getListen() << ":" <<
-          this->settings_.getServers()[i].getPort() << std::endl;
+                << this->settings_.getServers()[i].getListen() << ":"
+                << this->settings_.getServers()[i].getPort() << std::endl;
     }
   }
 }
