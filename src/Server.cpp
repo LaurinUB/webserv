@@ -158,10 +158,11 @@ void Server::executeCGI(const HTTPRequest& req, int i) {
       exit(EXIT_FAILURE);
     }
   }
+  close(pipefd[1]);
   if (cgi_timeout(child, i)) {
+    close(pipefd[0]);
     return;
   }
-  close(pipefd[1]);
   build_cgi_response(i, pipefd[0]);
 }
 
