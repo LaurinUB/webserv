@@ -57,7 +57,11 @@ void Socket::setListenSocket(int socket) { this->listen_socket_ = socket; }
 void Socket::setPort(std::string ip, int port) {
   this->socketAddress_.sin_family = AF_INET;
   this->socketAddress_.sin_port = htons(port);
-  this->socketAddress_.sin_addr.s_addr = inet_addr(ip.c_str());
+  if (ip.empty()) {
+    this->socketAddress_.sin_addr.s_addr = INADDR_ANY;
+  } else {
+    this->socketAddress_.sin_addr.s_addr = inet_addr(ip.c_str());
+  }
 }
 
 void Socket::setState(sockState state) { this->state_ = state; }

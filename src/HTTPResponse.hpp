@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <time.h>
+#include <unistd.h>
 
 #include <fstream>
 #include <sstream>
@@ -44,6 +45,8 @@ class HTTPResponse {
                                  const HTTPRequest& req);
   std::string buildDirIndexRes(DIR* directory, const HTTPRequest& req,
                                const std::string path);
+  std::string buildErrorBody(const HTTPRequest& req, unsigned int status);
+  std::string stringifyBodyLen() const;
 };
 
 #endif  // HTTPRESPONSE_HPP_
