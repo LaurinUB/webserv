@@ -10,6 +10,7 @@
 
 class ServerSettings : public ASettings {
   friend class Parser;
+  friend class Settings;
 
  public:
   ServerSettings();

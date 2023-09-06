@@ -1,6 +1,14 @@
 #include "LocationSettings.hpp"
 
-LocationSettings::LocationSettings(){};
+LocationSettings::LocationSettings()
+    : root_("./www/"),
+      endpoint_("/"),
+      default_("index.html"),
+      auto_index_(false),
+      allow_upload_(false),
+      upload_dir_("./www/uploads") {
+  allowed_methods_.push_back("GET");
+};
 
 LocationSettings::~LocationSettings(){};
 

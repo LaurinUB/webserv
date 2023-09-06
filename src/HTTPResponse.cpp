@@ -116,9 +116,8 @@ std::string HTTPResponse::buildDirIndexRes(DIR* directory,
     stat((path + std::string(test->d_name)).c_str(), &attr);
     char time_changed[20];
     strftime(time_changed, 20, "%d-%b-%Y %H:%M", localtime(&(attr.st_ctime)));
-    res += "<a href=\"" + req.getLocationSettings().getEndpoint() + '/' +
-           std::string(test->d_name) + "\">" + std::string(test->d_name) +
-           "</a>";
+    res += "<a href=\"" + req.getURI() + '/' + std::string(test->d_name) +
+           "\">" + std::string(test->d_name) + "</a>";
     if (std::string(test->d_name) != "..") {
       res += "\t\t\t\t\t" + std::string(time_changed) + "\t\t" +
              std::to_string(file_size) + "\n";
