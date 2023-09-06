@@ -1,7 +1,10 @@
 #include "ServerSettings.hpp"
 
 ServerSettings::ServerSettings()
-    : port_(8888), server_name_("0.0.0.0"), max_client_body_size_(1000) {
+    : port_(8888),
+      listen_("0.0.0.0"),
+      server_name_("0.0.0.0"),
+      max_client_body_size_(1000) {
   this->error_pages_[404] = "./data/404.html";
 }
 
