@@ -188,10 +188,12 @@ HTTPResponse& HTTPResponse::operator=(const HTTPResponse& obj) {
 HTTPResponse::HTTPResponse(const HTTPRequest& req) {
   HTTPRequest::method req_method = req.getMethod();
   if (req.hasRequestError()) {
-    std::cout << "generating error response" << std::endl;
     this->setResponseLine(req.getRequestError());
     this->body_ = this->buildErrorBody(req, req.hasRequestError());
     this->addToHeader("Content-Length", this->stringifyBodyLen());
+    if (req.getRequestError() == STATUS_307) {
+      this->addToHeader("Location", req.getLocationSettings().getRedir());
+    }
     return;
   }
   switch (req_method) {

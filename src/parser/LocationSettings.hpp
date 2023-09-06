@@ -18,6 +18,7 @@ class LocationSettings : public ASettings {
   std::string getRoot() const;
   std::string getEndpoint() const;
   std::string getDefault() const;
+  std::string getRedir() const;
   bool getAutoIndex() const;
   bool getAllowUpload() const;
   std::string getUploadDir() const;
@@ -27,6 +28,7 @@ class LocationSettings : public ASettings {
   std::string root_;
   std::string endpoint_;
   std::string default_;
+  std::string redirect_;
   bool auto_index_;
   bool allow_upload_;
   std::string upload_dir_;

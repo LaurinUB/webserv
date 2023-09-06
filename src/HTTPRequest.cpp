@@ -254,6 +254,9 @@ void HTTPRequest::checkForErrors() {
              this->location_settings_.getAllowedMethods().end()) {
     this->has_request_error_ = 405;
     this->request_error_ = STATUS_405;
+  } else if (!this->location_settings_.getRedir().empty() && this->URI_ == this->location_settings_.getEndpoint()) {
+    this->has_request_error_ = 307;
+    this->request_error_ = STATUS_307;
   }
 }
 
