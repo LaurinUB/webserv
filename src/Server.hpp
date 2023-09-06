@@ -12,7 +12,7 @@
 #define INTERPRETER "/usr/bin/pyhton"
 #define PYTHON ".py"
 #define PYSIZE 3
-#define CGI_TIMEOUT 5.0
+#define CGI_TIMEOUT 3.0
 
 #include <arpa/inet.h>
 #include <fcntl.h>
@@ -66,7 +66,7 @@ class Server {
   void checkSocketTimeout();
   bool isCGI(const HTTPRequest& req);
   void build_cgi_response(int i, int pipfed);
-  void cgi_timeout(pid_t child, int i);
+  int cgi_timeout(pid_t child, int i);
   void executeCGI(const HTTPRequest& req, int i);
   void generateEnv(const HTTPRequest& req);
 };

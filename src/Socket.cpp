@@ -73,6 +73,8 @@ void Socket::setRequest(const HTTPRequest& req) {
   }
 }
 
+void Socket::setResponse(const std::string& str) { this->response_ = str; }
+
 void Socket::setUnfinishedRequest(bool value) {
   this->has_unfinished_req_ = value;
 }
