@@ -94,9 +94,6 @@ ServerSettings Parser::parseServer(
     }
     previous = it->second;
   }
-  if (res.getListen().empty()) {
-    res.setValue("listen", "0.0.0.0;");
-  }
   return res;
 }
 
