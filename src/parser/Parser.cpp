@@ -41,6 +41,7 @@ Parser::Parser(std::string& config_path) {
   std::ifstream file_stream(config_path);
   std::string line;
   std::vector<std::pair<std::string, token_type> > tokenized_file;
+  int bracket_count = 0;
   while (std::getline(file_stream, line)) {
     std::string token;
     std::istringstream iss(line);
@@ -50,15 +51,20 @@ Parser::Parser(std::string& config_path) {
       }
       tokenized_file.push_back(std::pair<std::string, token_type>(
           token, this->identifyTokenType(token)));
+      if (this->identifyTokenType(token) == OPEN_CBR_TOKEN) {
+        bracket_count += 1;
+      } else if (this->identifyTokenType(token) == CLOSE_CBR_TOKEN) {
+        bracket_count -= 1;
+      }
     }
-  }
-  for (std::vector<std::pair<std::string, token_type> >::iterator i =
-           tokenized_file.begin();
-       i != tokenized_file.end(); ++i) {
   }
   this->tokens_ = tokenized_file;
   if (this->tokens_.empty()) {
     throw std::runtime_error("empty config");
+  } else if (this->tokens_[0].second != Parser::HTTP_TOKEN) {
+    throw std::runtime_error("missing http block");
+  } else if (bracket_count != 0) {
+    throw std::runtime_error("unclosed block(s)");
   }
   this->global = parseGlobal();
 }
@@ -74,8 +80,8 @@ Settings Parser::parseGlobal() {
     } else if (it->second == VALUE_TOKEN) {
       res.settings_.insert(
           std::pair<std::string, std::string>((it - 1)->first, it->first));
-      std::cout << "GLOBAL ADDED: " << (it - 1)->first << ": " << it->first
-                << std::endl;
+    } else if (it->second == ROUTE_TOKEN) {
+      throw std::runtime_error("location setting in wrong scope");
     }
     previous = it->second;
   }
