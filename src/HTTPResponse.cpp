@@ -13,7 +13,14 @@ void HTTPResponse::handleGET(const HTTPRequest& req) {
   }
   std::string mimetype =
       path.substr(path.find_last_of('.') + 1, path.size() - 1);
-  std::string content_type = this->mime_types.find(mimetype)->second;
+  std::string content_type;
+  std::map<std::string, std::string>::iterator content_type_res =
+      this->mime_types.find(mimetype);
+  if (content_type_res == this->mime_types.end()) {
+    content_type = "application/octet-stream";
+  } else {
+    content_type = content_type_res->second;
+  }
   try {
     this->setResponseLine(STATUS_200);
     this->addToHeader("Content-Type", content_type);
