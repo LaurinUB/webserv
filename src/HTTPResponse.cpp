@@ -18,22 +18,12 @@ void HTTPResponse::handleGET(const HTTPRequest& req) {
     this->setResponseLine(STATUS_200);
     this->addToHeader("Content-Type", content_type);
     this->body_ = this->createResponseBody(path, req);
-    int size = this->body_.size();
-    std::stringstream ss;
-    ss << size;
-    std::string ssize = ss.str();
-    this->addToHeader("Content-Length", ssize);
+    this->addToHeader("Content-Length", this->stringifyBodyLen());
   } catch (std::exception& e) {
     this->setResponseLine(STATUS_404);
     this->addToHeader("Content-Type", "text/html");
-    this->body_ = this->createResponseBody(
-        req.getServerSettings().getErrorPages()[404], req);
-    this->body_.replace(this->body_.find("${URI}"), 6, req.getURI());
-    int size = this->body_.size();
-    std::stringstream ss;
-    ss << size;
-    std::string ssize = ss.str();
-    this->addToHeader("Content-Length", ssize);
+    this->body_ = this->buildErrorBody(req, 404);
+    this->addToHeader("Content-Length", this->stringifyBodyLen());
   }
   return;
 }
@@ -130,6 +120,30 @@ std::string HTTPResponse::buildDirIndexRes(DIR* directory,
   return res;
 }
 
+std::string HTTPResponse::buildErrorBody(const HTTPRequest& req,
+                                         unsigned int status) {
+  std::string response;
+  if (req.getServerSettings().getErrorPages().find(status) !=
+          req.getServerSettings().getErrorPages().end() &&
+      access(req.getServerSettings().getErrorPages()[status].c_str(), F_OK) ==
+          0) {
+    response = this->createResponseBody(
+        req.getServerSettings().getErrorPages()[status], req);
+  } else {
+    response = "Error " + req.getRequestError();
+  }
+  if (response.find("${URI}") != std::string::npos) {
+    response.replace(response.find("${URI}"), 6, req.getURI());
+  }
+  return response;
+}
+
+std::string HTTPResponse::stringifyBodyLen() const {
+  int size = this->body_.size();
+  std::stringstream ss;
+  ss << size;
+  return ss.str();
+}
 //// Static Members
 
 std::map<std::string, std::string> HTTPResponse::mime_types =
@@ -175,9 +189,10 @@ HTTPResponse& HTTPResponse::operator=(const HTTPResponse& obj) {
 HTTPResponse::HTTPResponse(const HTTPRequest& req) {
   HTTPRequest::method req_method = req.getMethod();
   if (req.hasRequestError()) {
+    std::cout << "generating error response" << std::endl;
     this->setResponseLine(req.getRequestError());
-    this->addToHeader("Content-Length", "0");
-    this->body_ = "";
+    this->body_ = this->buildErrorBody(req, req.hasRequestError());
+    this->addToHeader("Content-Length", this->stringifyBodyLen());
     return;
   }
   switch (req_method) {
