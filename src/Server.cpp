@@ -154,7 +154,7 @@ void Server::executeCGI(const HTTPRequest& req, int i) {
     if (execve(arguments[1], arguments, this->cgi_env_) == -1) {
       std::cerr << "Error: execve." << std::endl;
       std::cout << "HTTP/1.1 " << STATUS_500 << "\nScript execution failed!"
-        << std::endl;
+                << std::endl;
       exit(EXIT_FAILURE);
     }
   }
