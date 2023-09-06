@@ -46,7 +46,7 @@ class HTTPRequest {
   std::string getQueryParam() const;
   std::string getProtocol() const;
   bool getKeepalive() const;
-  bool hasRequestError() const;
+  unsigned int hasRequestError() const;
   std::string getRequestError() const;
   const LocationSettings& getLocationSettings() const;
   const ServerSettings& getServerSettings() const;
@@ -59,7 +59,7 @@ class HTTPRequest {
   std::string query_param_;
   std::string protocol_version_;
   bool keepalive_;
-  bool has_request_error_;
+  unsigned int has_request_error_;
   std::string request_error_;
   ServerSettings server_settings_;
   LocationSettings location_settings_;
