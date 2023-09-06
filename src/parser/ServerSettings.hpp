@@ -22,6 +22,7 @@ class ServerSettings : public ASettings {
   std::vector<LocationSettings> getRoutes() const;
   unsigned int getPort() const;
   std::string getName() const;
+  std::string getListen() const;
   std::map<unsigned int, std::string> getErrorPages() const;
   unsigned int getMaxClientBodySize() const;
 
@@ -30,6 +31,7 @@ class ServerSettings : public ASettings {
  private:
   std::vector<LocationSettings> locations;
   unsigned int port_;
+  std::string listen_;
   std::string server_name_;
   std::map<unsigned int, std::string> error_pages_;
   unsigned int max_client_body_size_;
