@@ -129,6 +129,7 @@ HTTPRequest::HTTPRequest(const HTTPRequest& obj)
       query_param_(obj.query_param_),
       protocol_version_(obj.protocol_version_),
       keepalive_(obj.keepalive_),
+      hostname_(obj.hostname_),
       has_request_error_(obj.has_request_error_),
       request_error_(obj.request_error_),
       server_settings_(obj.server_settings_),
@@ -144,6 +145,7 @@ HTTPRequest& HTTPRequest::operator=(const HTTPRequest& obj) {
   this->query_param_ = obj.query_param_;
   this->protocol_version_ = obj.protocol_version_;
   this->keepalive_ = obj.keepalive_;
+  this->hostname_ = obj.hostname_;
   this->has_request_error_ = obj.has_request_error_;
   this->request_error_ = obj.request_error_;
   this->server_settings_ = obj.server_settings_;
@@ -210,7 +212,11 @@ HTTPRequest::HTTPRequest(std::string& input, int port,
   if (this->header_.find("Connection")->second.compare("keep-alive") == 0) {
     this->keepalive_ = true;
   }
-  this->server_settings_ = settings.getServers()[settings.matchServer(port)];
+  if (this->header_.find("Host") != this->header_.end()) {
+    this->hostname_ = this->header_.find("Host")->second;
+  }
+  this->server_settings_ =
+      settings.getServers()[settings.matchServer(port, this->hostname_)];
   this->location_settings_ =
       this->server_settings_
           .getRoutes()[this->server_settings_.matchLocation(this->getURI())];

@@ -59,6 +59,7 @@ class HTTPRequest {
   std::string query_param_;
   std::string protocol_version_;
   bool keepalive_;
+  std::string hostname_;
   unsigned int has_request_error_;
   std::string request_error_;
   ServerSettings server_settings_;

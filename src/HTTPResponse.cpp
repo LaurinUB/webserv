@@ -268,5 +268,5 @@ void HTTPResponse::setResponseLine(const std::string& status_code) {
 
 void HTTPResponse::addToHeader(const std::string& key,
                                const std::string& value) {
-  this->headers_.insert(std::pair<std::string, std::string>(key, value));
+  this->headers_[key] = value;
 }

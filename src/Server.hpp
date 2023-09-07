@@ -53,6 +53,8 @@ class Server {
   size_t numfds_;
   pollfd pollfds_[MAX_PORTS];
   std::map<int, Socket> sockets_;
+  std::vector<int> used_ports_;
+  std::vector<std::string> used_names_;
   Settings settings_;
   char* cgi_env_[8];
 
