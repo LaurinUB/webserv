@@ -11,19 +11,8 @@ void HTTPResponse::handleGET(const HTTPRequest& req) {
   } else {
     path = req.getURI().replace(0, route_endpoint.size(), location_path);
   }
-  std::string mimetype =
-      path.substr(path.find_last_of('.') + 1, path.size() - 1);
-  std::string content_type;
-  std::map<std::string, std::string>::iterator content_type_res =
-      this->mime_types.find(mimetype);
-  if (content_type_res == this->mime_types.end()) {
-    content_type = "application/octet-stream";
-  } else {
-    content_type = content_type_res->second;
-  }
   try {
     this->setResponseLine(STATUS_200);
-    this->addToHeader("Content-Type", content_type);
     this->body_ = this->createResponseBody(path, req);
     this->addToHeader("Content-Length", this->stringifyBodyLen());
   } catch (std::exception& e) {
@@ -80,6 +69,18 @@ std::string HTTPResponse::createResponseBody(const std::string& path,
     URIpath += '/' + req.getLocationSettings().getDefault();
     closedir(directory_list);
   }
+  std::string mimetype =
+      URIpath.substr(URIpath.find_last_of('.') + 1, URIpath.size() - 1);
+  std::string content_type;
+  std::map<std::string, std::string>::iterator content_type_res =
+      this->mime_types.find(mimetype);
+  // default has to be appended otherwise the content-type is never found
+  if (content_type_res == this->mime_types.end()) {
+    content_type = "application/octet-stream";
+  } else {
+    content_type = content_type_res->second;
+  }
+  this->addToHeader("Content-Type", content_type);
   std::ifstream fs(URIpath);
   if (fs.is_open()) {
     std::stringstream fss;
