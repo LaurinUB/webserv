@@ -29,12 +29,19 @@ Settings::Settings(std::string& config_path) {
     ServerSettings default_server;
     this->servers.push_back(default_server);
   }
-  // in case a server has no route create a default one
+  // in case a server has no route create a default one, no allowed method
+  // specified ? add GET as default
   for (std::vector<ServerSettings>::iterator it = this->servers.begin();
        it != this->servers.end(); ++it) {
     if (it->getRoutes().size() == 0) {
       LocationSettings default_location;
       it->locations.push_back(default_location);
+    }
+    for (std::vector<LocationSettings>::iterator lt = it->locations.begin();
+         lt != it->locations.end(); ++lt) {
+      if (lt->allowed_methods_.empty()) {
+        lt->allowed_methods_.push_back("GET");
+      }
     }
   }
 }

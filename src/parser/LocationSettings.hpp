@@ -7,6 +7,7 @@
 #include "ASettings.hpp"
 
 class LocationSettings : public ASettings {
+ friend class Settings;
  public:
   LocationSettings();
   virtual ~LocationSettings();
