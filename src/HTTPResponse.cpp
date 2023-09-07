@@ -29,7 +29,8 @@ void HTTPResponse::handlePOST(const HTTPRequest& req) {
   std::string destination = req.getURI();
   std::string filename = destination.substr(destination.find_last_of('/') + 1,
                                             destination.size() - 1);
-  req_file.open(req.getLocationSettings().getRoot() + "/" + filename);
+  req_file.open(req.getLocationSettings().getRoot() +
+                req.getLocationSettings().getUploadDir() + "/" + filename);
   req_file << req.getBody();
   req_file.close();
   this->setResponseLine(STATUS_201);
