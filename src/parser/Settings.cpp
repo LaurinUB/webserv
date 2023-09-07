@@ -60,14 +60,16 @@ const std::vector<ServerSettings> Settings::getServers() const {
   return this->servers;
 }
 
-unsigned int Settings::matchServer(int port) const {
+unsigned int Settings::matchServer(int port, const std::string& name) const {
   unsigned int res = 0;
   unsigned int i = 0;
   for (std::vector<ServerSettings>::const_iterator it = this->servers.begin();
        it != this->servers.end(); ++it) {
-    if ((int)it->getPort() == port) {
+    if ((int)it->getPort() == port && it->getName() == name) {
       res = i;
       break;
+    } else if ((int)it->getPort() == port) {
+      res = i;
     }
     i++;
   }
