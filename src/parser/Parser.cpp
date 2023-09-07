@@ -100,6 +100,8 @@ ServerSettings Parser::parseServer(
         std::string error("In Server Unknown key: " + (it - 1)->first);
         throw std::runtime_error(error.c_str());
       }
+    } else if (it->second == SERVER_TOKEN) {
+      throw std::runtime_error("Nested server not allowed");
     }
     previous = it->second;
   }
@@ -115,6 +117,8 @@ LocationSettings Parser::parseRoute(
         std::string error("In Location Unknown key: " + (it - 1)->first);
         throw std::runtime_error(error.c_str());
       }
+    } else if (it->second == SERVER_TOKEN || it->second == ROUTE_TOKEN) {
+      throw std::runtime_error("Nested location not allowed");
     }
   }
   return res;
