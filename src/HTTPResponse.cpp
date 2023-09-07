@@ -123,6 +123,9 @@ std::string HTTPResponse::buildDirIndexRes(DIR* directory,
     }
   }
   res += "</pre><hr/></body></html>";
+  while (res.find("//") != std::string::npos) {
+    res = res.erase(res.find("//"), 1);
+  }
   return res;
 }
 

@@ -6,9 +6,7 @@ LocationSettings::LocationSettings()
       default_("index.html"),
       auto_index_(false),
       allow_upload_(false),
-      upload_dir_("./www/uploads") {
-  allowed_methods_.push_back("GET");
-}
+      upload_dir_("./www/uploads") {}
 
 LocationSettings::~LocationSettings() {}
 
