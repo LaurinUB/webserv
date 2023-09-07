@@ -105,6 +105,7 @@ Socket::Socket() {
   this->keepalive_ = false;
   this->has_unfinished_req_ = false;
   this->state_ = RECEIVE;
+  this->index_ = -1;
   this->listen_socket_ = 0;
 }
 
@@ -118,11 +119,7 @@ Socket::Socket(int index) {
   this->listen_socket_ = 0;
 }
 
-Socket::~Socket() {
-  if (PRINT) {
-    std::cout << "Socket: Destrucor called" << std::endl;
-  }
-}
+Socket::~Socket() {}
 
 Socket::Socket(const Socket& obj) { *this = obj; }
 
@@ -132,8 +129,10 @@ Socket& Socket::operator=(const Socket& obj) {
   this->timeout_ = obj.timeout_;
   this->timestamp_ = obj.timestamp_;
   this->socketAddress_ = obj.socketAddress_;
+  this->has_unfinished_req_ = obj.has_unfinished_req_;
   this->state_ = obj.state_;
   this->listen_socket_ = obj.listen_socket_;
-  if (!this->response_.empty()) this->response_ = obj.response_;
+  this->request_ = obj.request_;
+  this->response_ = obj.response_;
   return *this;
 }

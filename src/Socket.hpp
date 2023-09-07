@@ -13,8 +13,6 @@
 
 #include "HTTPRequest.hpp"
 
-#define PRINT false
-
 enum sockState { RECEIVE, SEND, FINISHED, SERVER, UNFINISHED };
 
 class Socket {

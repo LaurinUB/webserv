@@ -33,9 +33,6 @@ void Server::run() {
         pollError(i);
       }
     }
-    if (PRINT) {
-      std::cout << this->numfds_ << std::endl;
-    }
     while (this->pollfds_[this->numfds_ - 1].fd == -1) {
       this->numfds_--;
     }
@@ -87,7 +84,9 @@ void Server::handleSend(int i) {
   sendResponse(i);
   if (!this->sockets_[i].isKeepalive() &&
       this->sockets_[i].getState() != UNFINISHED) {
-    std::cout << "Closing socket" << std::endl;
+    if (PRINT) {
+      std::cout << "Closing socket" << std::endl;
+    }
     removeFd(i);
   }
 }
@@ -207,15 +206,20 @@ void Server::handleReceive(int i) {
   char buffer[BUFFER_SIZE] = {0};
   ssize_t rec = 0;
 
-  std::cout << "== Connected on socket: " << this->pollfds_[i].fd
-            << " ==" << std::endl;
+  if (PRINT) {
+    std::cout << "== Connected on socket: " << this->pollfds_[i].fd
+              << " ==" << std::endl;
+  }
   rec = recv(this->pollfds_[i].fd, buffer, BUFFER_SIZE, O_NONBLOCK);
   if (rec < 0) {
     std::cerr << "Error: Failed reading from client socket" << std::endl;
     removeFd(i);
     return;
   } else if (rec == 0 && this->pollfds_[i].revents & POLLHUP) {
-    std::cerr << "Error: Client closed connection." << std::endl;
+    if (PRINT) {
+      std::cout << "Client closed connection on " << this->pollfds_[i].fd
+                << std::endl;
+    }
     removeFd(i);
     return;
   }
@@ -236,7 +240,9 @@ void Server::handleReceive(int i) {
         this->pollfds_[i].events = POLLOUT;
         this->sockets_[i].setRequest(req);
         this->sockets_[i].setState(SEND);
-        std::cout << "Received from socket: " << pollfds_[i].fd << std::endl;
+        if (PRINT) {
+          std::cout << "Received from socket: " << pollfds_[i].fd << std::endl;
+        }
       }
     } catch (std::exception& e) {
       std::cout << e.what() << std::endl;
@@ -263,20 +269,25 @@ void Server::sendResponse(int i) {
     HTTPResponse res(this->sockets_[i].getRequest());
     res_string = res.toString();
   }
-  bytes_sent =
-      send(this->pollfds_[i].fd, res_string.data(), res_string.size(), 0);
+  bytes_sent = send(this->pollfds_[i].fd, res_string.data(), res_string.size(),
+                    MSG_DONTWAIT);
   if (bytes_sent < 0) {
     std::cout << "Error: sending response to client" << std::endl;
+    removeFd(i);
+    return;
   } else if (static_cast<size_t>(bytes_sent) < res_string.size()) {
     this->sockets_[i].handleUnfinished(bytes_sent, res_string);
     this->pollfds_[i].events = POLLOUT;
   } else {
+    this->sockets_[i].getResponse().clear();
     this->sockets_[i].setState(RECEIVE);
     this->pollfds_[i].events = POLLIN;
   }
   this->sockets_[i].updateTime();
-  std::cout << "Sending to Socket: " << pollfds_[i].fd << " of size "
-            << bytes_sent << std::endl;
+  if (PRINT) {
+    std::cout << "Sending to client: " << pollfds_[i].fd << " of size "
+              << bytes_sent << std::endl;
+  }
 }
 
 void Server::newConnection(int i) {
@@ -284,10 +295,10 @@ void Server::newConnection(int i) {
     std::cout << "Error: no new Connection possible." << std::endl;
     return;
   }
-  Socket new_client;
   socklen_t addrlen = sizeof(struct sockaddr);
   pollfd new_poll;
   size_t index = searchFreePoll();
+  Socket new_client(index);
   new_poll.fd = accept(this->pollfds_[i].fd,
                        (struct sockaddr*)&new_client.getAddress(), &addrlen);
   if (new_poll.fd < 0) {
@@ -300,16 +311,16 @@ void Server::newConnection(int i) {
   }
   new_poll.events = POLLIN;
   new_poll.revents = 0;
-  new_client.setState(RECEIVE);
-  new_client.setIndex(index);
   new_client.setListenSocket(this->sockets_[i].getPort());
   this->sockets_[index] = new_client;
   this->pollfds_[index] = new_poll;
   if (index == this->numfds_) {
     this->numfds_++;
   }
-  std::cout << "New connection success on : " << new_client.getAddressString()
-            << " with socket nbr: " << new_poll.fd << std::endl;
+  if (PRINT) {
+    std::cout << "New connection success on : " << new_client.getAddressString()
+              << " with socket nbr: " << new_poll.fd << std::endl;
+  }
 }
 
 size_t Server::searchFreePoll() {
@@ -344,7 +355,9 @@ int Server::pollError(int i) {
 }
 
 void Server::removeFd(int i) {
-  std::cout << "removing fd: " << this->pollfds_[i].fd << std::endl;
+  if (PRINT) {
+    std::cout << "removing fd: " << this->pollfds_[i].fd << std::endl;
+  }
   shutdown(this->pollfds_[i].fd, SHUT_RDWR);
   close(this->pollfds_[i].fd);
   this->pollfds_[i].fd = -1;
@@ -392,6 +405,7 @@ Server::Server(const Settings& settings) : settings_(settings) {
                     this->settings_.getServers()[i].getPort())) {
       std::cout << "Error: failed to start Server with port "
                 << this->settings_.getServers()[i].getPort() << std::endl;
+      exit(EXIT_FAILURE);
     } else if (!this->settings_.getServers()[i].getName().empty()) {
       std::cout << "Started server on "
                 << this->settings_.getServers()[i].getName() << " with Address "
