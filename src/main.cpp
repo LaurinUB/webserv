@@ -13,6 +13,8 @@ int main(int argc, char* argv[]) {
   std::string conf_path;
   if (argc == 2) {
     conf_path = argv[1];
+  } else if (argc == 1) {
+    conf_path = "./config/default.conf";
   } else {
     std::cerr << "Error: wrong amount of arguments" << std::endl;
     return EXIT_FAILURE;
