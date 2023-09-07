@@ -146,7 +146,12 @@ void Server::executeCGI(const HTTPRequest& req, int i) {
   char* arguments[3];
   int pipefd[2];
 
-  arguments[0] = const_cast<char*>(INTERPRETER);
+  if (!executable.compare(executable.size() - CGI_SIZE, executable.size(),
+                          PY)) {
+    arguments[0] = const_cast<char*>(PYTHON);
+  } else {
+    arguments[0] = const_cast<char*>(BASH);
+  }
   arguments[1] = const_cast<char*>(executable.c_str());
   arguments[2] = NULL;
   if (pipe(pipefd) == -1) {
@@ -198,11 +203,13 @@ void Server::build_cgi_response(int i, int pipefd) {
 
 bool Server::isCGI(const HTTPRequest& req) {
   std::string uri = replaceURIEndpoint(req);
-  if (uri.empty() || uri.size() < PYSIZE + 1) {
+  if (uri.empty() || uri.size() < CGI_SIZE + 1) {
     return false;
   } else if (access(uri.c_str(), F_OK) == -1) {
     return false;
-  } else if (!uri.compare(uri.size() - PYSIZE, uri.size(), PYTHON)) {
+  } else if (!uri.compare(uri.size() - CGI_SIZE, uri.size(), PY)) {
+    return true;
+  } else if (!uri.compare(uri.size() - CGI_SIZE, uri.size(), SH)) {
     return true;
   }
   return false;
