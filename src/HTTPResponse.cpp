@@ -74,7 +74,6 @@ std::string HTTPResponse::createResponseBody(const std::string& path,
   std::string content_type;
   std::map<std::string, std::string>::iterator content_type_res =
       this->mime_types.find(mimetype);
-  // default has to be appended otherwise the content-type is never found
   if (content_type_res == this->mime_types.end()) {
     content_type = "application/octet-stream";
   } else {
