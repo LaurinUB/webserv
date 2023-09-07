@@ -95,17 +95,14 @@ void Server::generateEnv(const HTTPRequest& req) {
   int i = 0;
   std::string env[5];
   if (req.getMethod() == HTTPRequest::GET) {
-    env[i] = "REQUEST_METHOD=GET";
-    i++;
+    env[i++] = "REQUEST_METHOD=GET";
   } else {
-    env[i] = "REQUEST_METHOD=POST";
-    i++;
-    env[i] = "CONTENT_LENGTH=" + std::to_string(req.getBody().size());
-    i++;
+    env[i++] = "REQUEST_METHOD=POST";
+    env[i++] = "CONTENT_LENGTH=" + std::to_string(req.getBody().size());
   }
-  env[i] = "CONTENT_TYPE=text/html";
-  env[i] = "SCRIPT_NAME=" + req.getURI();
-  env[i] = "QUERY_STRING=" + req.getQueryParam();
+  env[i++] = "CONTENT_TYPE=text/html";
+  env[i++] = "SCRIPT_NAME=" + req.getURI();
+  env[i++] = "QUERY_STRING=" + req.getQueryParam();
   int j = 0;
   while (j < i) {
     this->cgi_env_[j] = const_cast<char*>(env[j].c_str());
@@ -132,8 +129,20 @@ int Server::cgi_timeout(pid_t child, int i) {
   return EXIT_SUCCESS;
 }
 
+std::string Server::replaceURIEndpoint(const HTTPRequest& req) {
+  std::string location_path = req.getLocationSettings().getRoot();
+  std::string route_endpoint = req.getLocationSettings().getEndpoint();
+  std::string path;
+  if (route_endpoint.compare(0, std::string::npos, "/") == 0) {
+    path = location_path + req.getURI();
+  } else {
+    path = req.getURI().replace(0, route_endpoint.size(), location_path);
+  }
+  return path;
+}
+
 void Server::executeCGI(const HTTPRequest& req, int i) {
-  std::string executable = req.getLocationSettings().getRoot() + req.getURI();
+  std::string executable = replaceURIEndpoint(req);
   char* arguments[3];
   int pipefd[2];
 
@@ -154,8 +163,8 @@ void Server::executeCGI(const HTTPRequest& req, int i) {
     close(pipefd[1]);
     if (execve(arguments[1], arguments, this->cgi_env_) == -1) {
       std::cerr << "Error: execve." << std::endl;
-      std::cout << "HTTP/1.1 " << STATUS_500 << "\nScript execution failed!"
-                << std::endl;
+      std::cout << "HTTP/1.1 " << STATUS_500
+                << "\r\n\r\nScript execution failed!" << std::endl;
       exit(EXIT_FAILURE);
     }
   }
@@ -175,13 +184,12 @@ void Server::build_cgi_response(int i, int pipefd) {
   }
   close(pipefd);
   if (!res.compare(0, 8, "HTTP/1.1")) {
-    this->sockets_[i].setResponse(res);
     this->pollfds_[i].events = POLLOUT;
     this->sockets_[i].setState(UNFINISHED);
+    this->sockets_[i].setResponse(res);
     return;
   } else {
-    res.insert(0, ("Content-Length:" + std::to_string(res.size()) + "\n"));
-    res.insert(0, "HTTP/1.1 200 OK\n");
+    res.insert(0, "HTTP/1.1 200 OK\r\n");
     this->pollfds_[i].events = POLLOUT;
     this->sockets_[i].setState(UNFINISHED);
     this->sockets_[i].setResponse(res);
@@ -189,14 +197,12 @@ void Server::build_cgi_response(int i, int pipefd) {
 }
 
 bool Server::isCGI(const HTTPRequest& req) {
-  if (req.getURI().empty() || req.getURI().size() < PYSIZE + 1) {
+  std::string uri = replaceURIEndpoint(req);
+  if (uri.empty() || uri.size() < PYSIZE + 1) {
     return false;
-  } else if (access(
-                 (req.getLocationSettings().getRoot() + req.getURI()).c_str(),
-                 F_OK) == -1) {
+  } else if (access(uri.c_str(), F_OK) == -1) {
     return false;
-  } else if (!req.getURI().compare(req.getURI().size() - PYSIZE,
-                                   req.getURI().size(), PYTHON)) {
+  } else if (!uri.compare(uri.size() - PYSIZE, uri.size(), PYTHON)) {
     return true;
   }
   return false;
@@ -231,8 +237,7 @@ void Server::handleReceive(int i) {
       HTTPRequest req(stringyfied_buff, this->sockets_[i].getListenSocket(),
                       this->settings_);
       if (this->sockets_[i].getState() == RECEIVE && isCGI(req)) {
-        std::cout << "Execute CGI" << std::endl;
-        this->sockets_[i].setRequest(req);
+        this->sockets_[i].setKeepalive(false);
         generateEnv(req);
         executeCGI(req, i);
         return;

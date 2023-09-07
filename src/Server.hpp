@@ -58,6 +58,7 @@ class Server {
   Settings settings_;
   char* cgi_env_[8];
 
+  std::string replaceURIEndpoint(const HTTPRequest& req);
   int startServer(std::string ip, int port);
   int pollError(int i);
   void removeFd(int i);
