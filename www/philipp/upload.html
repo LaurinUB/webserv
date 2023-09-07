@@ -1,21 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Home - VIMServe</title>
+    <title>Upload - VIMServe</title>
     <link rel="stylesheet" type="text/css" href="styles.css"/>
     <link rel="icon" href="luntiet-.jpg"/>
     <script defer src="script.js"></script>
   </head>
   <body>
-    <span>VIMServe</span>
+    <span>Upload file to vim-serve</span>
     <nav>
       <a href="/">Home</a>
       <a href="/upload.html">Upload</a>
       <a href="/about.html">About</a>
     </nav>
-    <p id="test"> Hello from your Server</p>
-    <img id="laurin" alt="laurin" src="luntiet-.jpg" />
-    <audio controls src="mp3_soviet.mp3"><p>couldnt load audio</p></audio>
+    <form name="upload"
+          method="POST"
+          enctype="multipart/form-data"
+          action="/file-upload"
+    >
+      <input type="file" name="file1">
+      <input type="submit" name="submit" value="Upload">
+    </form>
     <footer>
       <ul>
         <li><a href="https://github.com/LaurinUB/webserv">GitHub</a></li>
