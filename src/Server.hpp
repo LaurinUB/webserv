@@ -13,6 +13,7 @@
 #define PYTHON ".py"
 #define PYSIZE 3
 #define CGI_TIMEOUT 3.0
+#define PRINT false
 
 #include <arpa/inet.h>
 #include <fcntl.h>
