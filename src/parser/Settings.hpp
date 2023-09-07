@@ -30,7 +30,7 @@ class Settings : public ASettings {
                            unsigned int route_idx) const;
   std::string getRouteUploadDir(unsigned int server_idx,
                                 unsigned int route_idx) const;
-  unsigned int matchServer(int port) const;
+  unsigned int matchServer(int port, const std::string& name) const;
   unsigned int matchLocationOfServer(unsigned int server_idx,
                                      std::string endpoint) const;
 
