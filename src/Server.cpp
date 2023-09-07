@@ -76,6 +76,8 @@ int Server::startServer(std::string ip, int port) {
   this->sockets_[this->numfds_] = serv;
   this->pollfds_[this->numfds_] = new_poll;
   this->numfds_++;
+  this->used_ports_.push_back(port);
+  this->used_names_.push_back(ip);
   return EXIT_SUCCESS;
 }
 
@@ -378,6 +380,14 @@ Server::Server(const Settings& settings) : settings_(settings) {
   memset(this->pollfds_, -1, MAX_PORTS);
   this->numfds_ = 0;
   for (size_t i = 0; i < this->settings_.getServers().size(); ++i) {
+    if (std::find(this->used_ports_.begin(), this->used_ports_.end(),
+                  this->settings_.getServers()[i].getPort()) !=
+            this->used_ports_.end() &&
+        std::find(this->used_names_.begin(), this->used_names_.end(),
+                  this->settings_.getServers()[i].getName()) ==
+            this->used_names_.end()) {
+      continue;
+    }
     if (startServer(this->settings_.getServers()[i].getListen(),
                     this->settings_.getServers()[i].getPort())) {
       std::cout << "Error: failed to start Server with port "
