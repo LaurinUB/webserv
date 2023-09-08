@@ -9,9 +9,11 @@
 #define BUFFER_SIZE 30640
 #define QUEUE_LEN 40
 #define TIMEOUT 5000
-#define INTERPRETER "/usr/bin/pyhton"
-#define PYTHON ".py"
-#define PYSIZE 3
+#define PYTHON "/usr/bin/pyhton"
+#define BASH "/bin/bash"
+#define PY ".py"
+#define SH ".sh"
+#define CGI_SIZE 3
 #define CGI_TIMEOUT 3.0
 #define PRINT false
 
@@ -58,6 +60,7 @@ class Server {
   Settings settings_;
   char* cgi_env_[8];
 
+  std::string replaceURIEndpoint(const HTTPRequest& req);
   int startServer(std::string ip, int port);
   int pollError(int i);
   void removeFd(int i);
